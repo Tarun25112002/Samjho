@@ -2,7 +2,7 @@
 
 CBSE Class 10 & 12 board-exam preparation platform.
 
-**Status: Phases 0–3 complete and verified. Phase 4 (admin content management) is next.**
+**Status: Phases 0–4 complete and verified. Phase 5 (practice mode) is next.**
 Setup and commands are in the [root README](../README.md); the phase plan is in [07-roadmap-risks-questions.md](./07-roadmap-risks-questions.md#1-development-phases).
 
 | Doc                                                                | Contents                                                                                                                                                  |

@@ -4,11 +4,13 @@ CBSE Class 10 & 12 board-exam preparation platform.
 
 Practise questions, understand your mistakes, and rehearse the full 3-hour board exam before you sit it.
 
-> **Status: Phase 3 complete** — foundation, domain model and seeded database;
+> **Status: Phase 4 complete** — foundation, domain model and seeded database;
 > authentication (Clerk sign-in, server-side JWT verification, onboarding,
-> profile); and the catalog: subject and chapter browsing, a `QuestionRenderer`
-> that handles all ten question types with KaTeX maths, and admin taxonomy CRUD.
-> A student can sign up, onboard, and read every question in the bank.
+> profile); the catalog, with a `QuestionRenderer` that handles all ten question
+> types with KaTeX maths; and content management: type-driven question authoring
+> with sub-parts and provenance, publish/withdraw with a revision log,
+> preview-as-student, and bulk import with a dry run. A student can sign up,
+> onboard and read the bank; an editor can write it.
 > Specification and architecture live in [`docs/`](./docs/README.md).
 
 ---
@@ -98,7 +100,9 @@ apps/
 packages/
   contracts/       Zod schemas shared by both apps — the single source of truth
                    for everything crossing the network boundary
-  ui/              app-agnostic components: QuestionRenderer, MathText, DataState
+  ui/              app-agnostic components: QuestionRenderer, MathText, DataState,
+                   and toPreviewQuestion — the projection that makes the admin
+                   preview literally the student's view
   exam-blueprints/ CBSE paper structures as validated config, plus the validator
   config/          tsconfig / eslint / prettier presets
 docs/              Product spec, architecture, data model, exam engine, roadmap
@@ -143,6 +147,22 @@ Decisions that were made deliberately and are easy to get wrong later:
   requests those columns either. `question.test.ts` searches the raw response
   body for the solution text, because the failure mode is a field nobody thought
   to assert on.
+- **Question validity is a table, not a switch statement.** `QUESTION_TYPE_RULES`
+  in contracts says what each of the ten types requires — how many options,
+  whether a correct value is forbidden because the tick on the option _is_ the
+  key, whether the body must contain a blank or a table. The admin form reads it
+  to decide what to render, the API runs it on every write, and bulk import gets
+  it free. A rule enforced only in the form is a rule with two holes.
+- **A question's version is not its revision number.** `Question.version`
+  identifies the content a student saw and moves only when the content hash does;
+  the revision log has its own counter and records everything, publishes and
+  withdrawals included. Merging them means either a unique-constraint collision on
+  the second withdrawal or a version bump for an edit that changed nothing.
+- **A nested read inside a Prisma interactive transaction issues its relation
+  queries concurrently on that transaction's one connection.** `pg` tolerates it
+  and deprecates it; the version that removes it would turn the write into a
+  runtime error. So the admin editor re-reads and diffs _after_ the commit —
+  which it needed to do anyway for the response.
 - **Withdrawing is the delete.** Taxonomy foreign keys are `onDelete: Restrict`,
   so nothing anyone has used can be removed; `isActive: false` hides a subject
   or chapter _and_ its questions, via the single `STUDENT_VISIBLE_QUESTION`

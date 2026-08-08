@@ -16,6 +16,8 @@ import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { buildQuestionRouter } from "./modules/questions/question.routes.js";
+import { buildQuestionAdminRouter } from "./modules/questions/question.admin.routes.js";
+import { buildAdminDashboardRouter } from "./modules/questions/dashboard.routes.js";
 import { buildClerkWebhookRouter } from "./modules/webhooks/clerk.routes.js";
 
 export const API_PREFIX = "/api/v1";
@@ -133,6 +135,8 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   // day the public SEO pages need an unauthenticated catalog (Phase 9) nobody
   // can open up the writes by loosening one `router.use`.
   router.use("/admin/catalog", buildCatalogAdminRouter(verifyToken));
+  router.use("/admin/questions", buildQuestionAdminRouter(verifyToken));
+  router.use("/admin/dashboard", buildAdminDashboardRouter(verifyToken));
 
   return router;
 }

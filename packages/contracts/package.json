@@ -19,6 +19,8 @@
     "dev": "tsc --build --watch --preserveWatchOutput",
     "typecheck": "tsc --build --dry",
     "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
@@ -28,6 +30,7 @@
     "@samjho/config": "workspace:*",
     "eslint": "^10.8.1",
     "rimraf": "^6.1.3",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.10"
   }
 }

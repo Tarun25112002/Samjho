@@ -204,7 +204,7 @@ export type GradedQuestion = z.infer<typeof gradedQuestionSchema>;
  * HTTP client spells repeated parameters differently. Normalising at the edge
  * means no handler ever writes `Array.isArray(req.query.type)`.
  */
-function multiValue<T extends z.ZodType<unknown, string>>(item: T) {
+export function multiValue<T extends z.ZodType<unknown, string>>(item: T) {
   return z
     .union([z.string(), z.array(z.string())])
     .transform((value) =>

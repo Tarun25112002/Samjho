@@ -40,6 +40,12 @@ Question CRUD with type-driven forms, sub-part editing, provenance capture, publ
 >
 > It is safe because Phase 3's `QuestionRenderer` already provides preview-as-student, so admins can see exactly what they are creating before the student runner exists.
 
+> **Gate note, Phase 4 (shipped).** Three of the four gate conditions are proven by tests: a case-based question with sub-parts can be created, previewed and published (`question.admin.test.ts`, `preview.test.tsx`); import rejects a malformed file with row-level errors carrying the file index and the author's own reference; and the licensing gate refuses publication either way in.
+>
+> The fourth — **median entry time under 90 seconds, measured** — is only half measured, and honestly so. What was measured is the system's share: **31 ms median to save an MCQ, 67 ms median to save and publish a case study with three sub-parts** (20 runs each, local Postgres). The remaining ~89.9 seconds is a human typing, and only a human with a paper in front of them can produce that number. What the build does to earn it: the form is shaped by the question type so nothing irrelevant is on screen, every metadata field has a default, and **"Save and add another" carries the chapter, topics, type and provenance forward** — so a second MCQ down the same paper is six text fields and two clicks. **Someone must sit an editor down with a real paper and time ten questions before bulk entry begins**; if the median misses, the lever is the form, not the API.
+>
+> One content rule was loosened during that measurement rather than left as written: the minimum length on a worked solution was ten characters, which is right for a question stem and wrong for a solution — the answer to "state the peak current drawn" is "8 A", and a floor of ten would have made editors pad real content to get past the form.
+
 ### Phase 5 — Practice mode (~5–6 days)
 
 Session creation with the full filter set, question selection service, runner UI, answer submission + auto-grading, subjective self-evaluation, feedback panel, mistake-reason capture, session results, `QuestionAttempt` writes, incremental `TopicMastery`/`MistakeRecord` updates, bookmarks.
