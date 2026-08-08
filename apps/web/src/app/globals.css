@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/**
+ * Tailwind v4 configures itself in CSS. `@theme` variables become utility
+ * classes automatically — `--color-ink-500` gives you `text-ink-500`, `bg-ink-500`
+ * and so on.
+ *
+ * These are placeholder tokens so Phase 0 has something coherent to render. The
+ * real palette and type scale are Phase 3 work (see docs/01-information-
+ * architecture.md §9): warm and calm rather than SaaS-blue, with the five
+ * semantic answer states — correct / incorrect / partial / review / unattempted —
+ * defined as first-class tokens.
+ */
+@theme {
+  --color-ink-50: oklch(0.98 0.005 85);
+  --color-ink-100: oklch(0.95 0.008 85);
+  --color-ink-300: oklch(0.75 0.015 85);
+  --color-ink-500: oklch(0.55 0.02 85);
+  --color-ink-700: oklch(0.35 0.02 85);
+  --color-ink-900: oklch(0.18 0.015 85);
+  --color-ink-950: oklch(0.12 0.012 85);
+
+  --color-brand-400: oklch(0.72 0.14 45);
+  --color-brand-500: oklch(0.64 0.16 45);
+  --color-brand-600: oklch(0.56 0.16 45);
+
+  --color-success: oklch(0.65 0.15 155);
+  --color-danger: oklch(0.62 0.19 25);
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+}
+
+/* Dark mode from day one — the primary usage window is late at night. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      @apply bg-ink-950 text-ink-100;
+    }
+  }
+
+  /* Never remove focus rings — only restyle them. Keyboard users, including
+     every student navigating the exam palette by keyboard, depend on these. */
+  :focus-visible {
+    @apply outline-brand-500 outline-2 outline-offset-2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

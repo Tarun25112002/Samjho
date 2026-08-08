@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  # A new push to a PR cancels the previous run — no point burning minutes on
+  # a commit that has already been superseded.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  PNPM_VERSION: "10.32.1"
+
+jobs:
+  verify:
+    name: Typecheck · Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: samjho
+          POSTGRES_PASSWORD: samjho
+          POSTGRES_DB: samjho_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U samjho"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "postgresql://samjho:samjho@localhost:5432/samjho_test?schema=public"
+      API_URL: "http://localhost:4000"
+      NEXT_PUBLIC_API_URL: "http://localhost:4000"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # --frozen-lockfile fails if the lockfile doesn't match package.json,
+      # rather than silently resolving different versions than a developer ran.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @samjho/api db:generate
+
+      - name: Format check
+        run: pnpm format:check
+
+      # One turbo invocation so tasks run in dependency order and in parallel
+      # where they can. `^build` means packages/contracts compiles before
+      # anything that imports it.
+      - name: Verify
+        run: pnpm check

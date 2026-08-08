@@ -1,0 +1,31 @@
+{
+  "name": "@samjho/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch --preserveWatchOutput",
+    "typecheck": "tsc --build --dry",
+    "lint": "eslint src",
+    "clean": "rimraf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@samjho/config": "workspace:*",
+    "eslint": "^10.8.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^7.0.2"
+  }
+}

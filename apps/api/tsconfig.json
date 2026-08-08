@@ -1,0 +1,11 @@
+{
+  "extends": "@samjho/config/tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "composite": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/generated"],
+  "references": [{ "path": "../../packages/contracts" }]
+}

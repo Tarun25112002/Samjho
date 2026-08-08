@@ -1,0 +1,22 @@
+// Samjho database schema.
+//
+// Phase 0 deliberately defines no models. The full domain model — questions as
+// a tree, exam slots with internal choice, attempts, mastery rollups — lands in
+// Phase 1, designed in docs/03-data-model.md.
+//
+// What exists here is the plumbing: a generated client and a verified
+// connection, which is what /ready needs to be meaningful.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+
+  // Set once we move to a pooled connection (PgBouncer/Neon). Migrations must
+  // bypass the pooler, so they need a direct URL:
+  // directUrl = env("DIRECT_URL")
+}

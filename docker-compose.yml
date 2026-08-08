@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: samjho-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: samjho
+      POSTGRES_PASSWORD: samjho
+      POSTGRES_DB: samjho
+    ports:
+      - "5432:5432"
+    volumes:
+      - samjho-pgdata:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      # Without this, `docker compose up -d` returns as soon as the container
+      # starts — which is several seconds before Postgres accepts connections.
+      test: ["CMD-SHELL", "pg_isready -U samjho -d samjho"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  samjho-pgdata:

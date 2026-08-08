@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm 10 blocks postinstall scripts by default. These three need them:
+#   esbuild / @tailwindcss/oxide — download native binaries
+#   prisma                       — generates the client
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "@tailwindcss/oxide"
+  - esbuild
+  - prisma
+  - unrs-resolver
