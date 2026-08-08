@@ -1,7 +1,51 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "stream",
-  "globalEnv": ["NODE_ENV"],
+  // Turborepo 2 runs tasks in strict environment mode: a variable not declared
+  // here is *removed* from the task's environment, not merely uncached. That is
+  // a good default — it makes "works on my machine because of a stray shell
+  // export" impossible — but it means every variable a task needs must be
+  // listed, and the failure when one is missing looks like a config bug rather
+  // than a turbo one.
+  //
+  // The split between the two lists below is the part worth understanding.
+  //
+  // `globalEnv` — values that change the *output*. Anything with a NEXT_PUBLIC_
+  // prefix is substituted into the JavaScript bundle at build time, so a build
+  // made with one value is a genuinely different artifact from one made with
+  // another. These belong in the cache key, and a change to them must bust it.
+  "globalEnv": [
+    "NODE_ENV",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL"
+  ],
+
+  // `globalPassThroughEnv` — values a task *reads at runtime* but which never
+  // end up in a build artifact. They are forwarded to the task and deliberately
+  // excluded from the cache key.
+  //
+  // Excluding them is not laziness. Two of these are secrets, and a cache key
+  // derived from a secret is a hash of that secret sitting in a shared cache.
+  // Beyond that, keying on DATABASE_URL would mean pointing at a different
+  // database invalidates every typecheck in the repo, which is nonsense: the
+  // compiler's output does not depend on where the data lives.
+  "globalPassThroughEnv": [
+    "PORT",
+    "LOG_LEVEL",
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "WEB_ORIGIN",
+    "API_URL",
+    "CLERK_ISSUER_URL",
+    "CLERK_SECRET_KEY",
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+    "CLERK_AUTHORIZED_PARTIES",
+    "CLERK_JWKS_URL"
+  ],
   "globalDependencies": ["**/.env.*local", "tsconfig.json"],
   "tasks": {
     "build": {

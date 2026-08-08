@@ -290,9 +290,30 @@ model StudentProfile {
   /// parental consent is not an edge case. Recorded from day one even though
   /// the consent *flow* lands in Phase 2 — retrofitting a consent timestamp
   /// onto users who signed up without one is not possible after the fact.
+  ///
+  /// These four fields say four different things and must not be conflated:
+  ///
+  ///   parentEmail          the address a parent was named at, captured at onboarding
+  ///   parentConsentToken   minted at onboarding so the verification email can be
+  ///                        sent later without a backfill; never leaves the server
+  ///   guardianDeclaredAt   when the *student* declared a guardian permits this
+  ///                        account. An assertion by a minor. NOT consent.
+  ///   parentConsentAt      when the parent themselves verifiably acted. Real
+  ///                        consent under DPDP. Stays NULL through the closed
+  ///                        pilot (docs/07 Q7) because no parent has acted yet.
+  ///
+  /// Writing an acknowledgement into parentConsentAt would make the pilot
+  /// indistinguishable from verified consent in the one table a regulator would
+  /// read. Two columns is a cheap price for that distinction.
   parentEmail        String?
   parentConsentAt    DateTime?
   parentConsentToken String?   @unique
+  guardianDeclaredAt DateTime?
+
+  /// When the terms and privacy policy were accepted, and which version. The
+  /// version matters: "they agreed" is worthless without "to what".
+  termsAcceptedAt      DateTime?
+  termsAcceptedVersion String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

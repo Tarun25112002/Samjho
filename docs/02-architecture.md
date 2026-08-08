@@ -215,11 +215,22 @@ CRUD             /admin/exam-papers · /admin/blueprints
 GET              /admin/users  ·  PATCH /admin/users/:id/role
 ```
 
+**Identity & profile** _(Phase 2, shipped)_
+
+```
+GET   /me                             → user + student profile + onboarding state
+POST  /me/onboarding                  → idempotent; creates profile, target exam, enrolments
+PATCH /me/profile                     → partial edit; class level and board deliberately absent
+GET   /catalog/subjects?board=&classLevel=
+```
+
 **Webhooks**
 
 ```
 POST /webhooks/clerk                  → Svix-signature-verified user sync
 ```
+
+> Mounted **before** `express.json()`. Svix signs the bytes Clerk sent; once the JSON parser has consumed the stream those bytes are gone, and re-serialising the object does not reproduce them. The handler is awaited before responding, so a failed write returns 500 and Svix retries — safe precisely because every handler is an upsert.
 
 ### Data fetching split in Next.js
 
@@ -267,6 +278,17 @@ Three layers, all required:
 3. **Field-level** — the student serializer strips answer keys, as above.
 
 Next.js middleware additionally gates route groups (redirect unauthenticated → `/sign-in`, non-onboarded → `/welcome`, non-admin → 404 on `/admin`). This is **UX only**. The API never trusts it.
+
+> **Corrections, Phase 2.** Four things landed differently from the sketch above. Recorded here rather than edited silently, because the reasons are the interesting part.
+>
+> 1. **`loadUser` does not cache.** The plan said "cached briefly". It is one hit on a unique index — under a millisecond — and a cache would open a window in which a suspended account keeps working and a revoked admin role keeps applying. Trading correctness of authorization data for a sub-millisecond saving is a bad trade. If it ever shows up in a profile, the fix is a short TTL with explicit invalidation on role and status writes, added deliberately.
+> 2. **Verification uses `jose`, not `@clerk/backend`.** `createTokenVerifier` takes a key-resolution function, so tests generate an RSA key pair and sign real tokens against the real code path — no mock of the thing under test. It also keeps the identity provider a configuration detail. The cost is that Clerk-specific claim handling is ours to get right, which is why each check in `lib/token-verifier.ts` says what it is for.
+> 3. **The onboarding gate is not in middleware.** "Has a `StudentProfile`" lives in our database, not the session, so checking it in middleware would mean an API call in front of every request. It moved into the `(app)` layout, which already fetches `/me` to render the shell. This is also Clerk's current advice: protect close to the resource. Middleware now decides only signed-in versus signed-out, which it can answer from the cookie alone.
+> 4. **`middleware.ts` is `proxy.ts`.** Next 16 renamed it. Same file, same position in the lifecycle.
+>
+> Two things the sketch got right and are worth restating because the tests now prove them: **role never comes from a token claim or Clerk metadata** — `upsertFromClerk` deliberately omits `role` and `status` from its update, so even a perfectly signed webhook cannot promote an account — and **`user.deleted` anonymises rather than cascades**, keeping the pseudonymous learning record coherent while erasing the personal data.
+>
+> One route-shape note: there is no `GET /users/:id`. Every `/me` route takes its subject from `req.user.id`, so the commonest authorization bug in an app like this — an id parameter a caller can tamper with — is not merely guarded against but unexpressible.
 
 ---
 

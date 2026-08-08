@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
@@ -22,7 +23,18 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {/*
+          Inside <body>, not wrapping <html>. Clerk injects script tags and a
+          context provider; wrapping the document element instead makes it own
+          the <html> render, which fights with Next's own streaming.
+
+          Note there is no `appearance` prop yet. Styling Clerk's components to
+          match the product is Phase 3 work, once the design tokens in
+          globals.css stop being placeholders.
+        */}
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
     </html>
   );
 }

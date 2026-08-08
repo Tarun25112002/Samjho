@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { errorResponseSchema, type ApiError } from "@samjho/contracts";
 import type { z } from "zod";
 
@@ -110,4 +111,42 @@ export async function apiFetch<T extends z.ZodType>(
   }
 
   return parsed.data;
+}
+
+/**
+ * Server-side fetch carrying the signed-in user's Clerk token.
+ *
+ * Server Components only — `auth()` reads the request context, which does not
+ * exist in the browser. Client Components reach the API through the BFF route
+ * handler at `/api/v1/*` instead, so a token never has to be handled in
+ * client-side JavaScript at all.
+ *
+ * The token is fetched per call rather than cached. Clerk session tokens live
+ * about a minute and `getToken()` refreshes transparently; holding one across
+ * requests would eventually forward an expired token and produce a 401 that
+ * looks like a bug in the API.
+ */
+export async function apiFetchAuthed<T extends z.ZodType>(
+  path: string,
+  schema: T,
+  options: RequestOptions = {},
+): Promise<z.infer<T>> {
+  const { getToken } = await auth();
+  const token = await getToken();
+
+  if (token === null) {
+    // Reachable when a session expires between the route guard and the fetch.
+    // Throwing the same shape as any other API failure keeps callers from
+    // needing a special case for it.
+    throw new ApiClientError(401, {
+      code: "UNAUTHENTICATED",
+      message: "Your session has expired. Please sign in again.",
+      requestId: "client",
+    });
+  }
+
+  return apiFetch(path, schema, {
+    ...options,
+    headers: { ...options.headers, authorization: `Bearer ${token}` },
+  });
 }

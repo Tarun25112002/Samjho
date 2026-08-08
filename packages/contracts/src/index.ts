@@ -17,3 +17,7 @@ export * from "./common/pagination.js";
 export * from "./common/error-codes.js";
 export * from "./health/health.schema.js";
 export * from "./question/question-enums.js";
+export * from "./catalog/subject.schema.js";
+export * from "./auth/auth-enums.js";
+export * from "./auth/me.schema.js";
+export * from "./auth/onboarding.schema.js";
