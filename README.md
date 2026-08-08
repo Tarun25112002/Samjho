@@ -11,11 +11,11 @@ Practise questions, understand your mistakes, and rehearse the full 3-hour board
 
 ## Prerequisites
 
-| Tool | Version |
-| --- | --- |
-| Node | ≥ 22 (developed on 24) |
-| pnpm | 10.x — `npm i -g pnpm` |
-| Docker | for local Postgres |
+| Tool   | Version                |
+| ------ | ---------------------- |
+| Node   | ≥ 22 (developed on 24) |
+| pnpm   | 10.x — `npm i -g pnpm` |
+| Docker | for local Postgres     |
 
 ## Setup
 
@@ -40,16 +40,16 @@ pnpm dev
 
 Run from the repo root; Turborepo fans them out in dependency order.
 
-| Command | Does |
-| --- | --- |
-| `pnpm dev` | Both apps in watch mode |
-| `pnpm check` | typecheck → lint → test → build. **The gate — run before every commit.** |
-| `pnpm typecheck` / `lint` / `test` / `build` | Individually |
-| `pnpm format` / `format:check` | Prettier |
-| `pnpm db:up` / `db:down` / `db:logs` | Local Postgres |
-| `pnpm --filter @samjho/api db:generate` | Regenerate the Prisma client |
-| `pnpm --filter @samjho/api db:migrate` | Create/apply a migration |
-| `pnpm --filter @samjho/api db:studio` | Browse the database |
+| Command                                      | Does                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------ |
+| `pnpm dev`                                   | Both apps in watch mode                                                  |
+| `pnpm check`                                 | typecheck → lint → test → build. **The gate — run before every commit.** |
+| `pnpm typecheck` / `lint` / `test` / `build` | Individually                                                             |
+| `pnpm format` / `format:check`               | Prettier                                                                 |
+| `pnpm db:up` / `db:down` / `db:logs`         | Local Postgres                                                           |
+| `pnpm --filter @samjho/api db:generate`      | Regenerate the Prisma client                                             |
+| `pnpm --filter @samjho/api db:migrate`       | Create/apply a migration                                                 |
+| `pnpm --filter @samjho/api db:studio`        | Browse the database                                                      |
 
 ## Layout
 

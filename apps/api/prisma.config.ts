@@ -15,8 +15,17 @@ import { defineConfig, env } from "prisma/config";
  *
  * This file configures the CLI only. The *runtime* connection is established in
  * src/lib/prisma.ts via a driver adapter.
+ *
+ * The try/catch is load-bearing, not defensive noise: `loadEnvFile` throws
+ * ENOENT when the file is absent, and it is absent in CI and in production,
+ * where the environment is injected by the platform. Optional chaining does not
+ * help — it guards against the *method* being missing, not the *file*.
  */
-process.loadEnvFile?.(".env");
+try {
+  process.loadEnvFile();
+} catch {
+  // No .env file — rely on the ambient environment.
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

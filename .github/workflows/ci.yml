@@ -13,7 +13,6 @@ concurrency:
 
 env:
   NODE_VERSION: "24"
-  PNPM_VERSION: "10.32.1"
 
 jobs:
   verify:
@@ -37,18 +36,23 @@ jobs:
           --health-retries 10
 
     env:
+      # CI has no .env files — the whole point of validating config at boot is
+      # that the platform can inject these instead. Anything that *requires* a
+      # .env file on disk is a bug, and this job is what catches it.
       DATABASE_URL: "postgresql://samjho:samjho@localhost:5432/samjho_test?schema=public"
       API_URL: "http://localhost:4000"
       NEXT_PUBLIC_API_URL: "http://localhost:4000"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      # Must precede setup-node: the `cache: pnpm` option below needs the pnpm
+      # binary on PATH to resolve the store location.
+      # No `version` input — it is inferred from `packageManager` in the root
+      # package.json, so the version lives in exactly one place.
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -61,11 +65,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @samjho/api db:generate
 
-      - name: Format check
-        run: pnpm format:check
-
-      # One turbo invocation so tasks run in dependency order and in parallel
-      # where they can. `^build` means packages/contracts compiles before
-      # anything that imports it.
+      # Identical to what `pnpm check` runs locally — format, then one turbo
+      # invocation so tasks run in dependency order and in parallel where they
+      # can (`^build` means packages/contracts compiles before its consumers).
       - name: Verify
         run: pnpm check
