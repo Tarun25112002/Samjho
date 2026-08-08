@@ -3,14 +3,17 @@ import { readinessResponseSchema, type ReadinessResponse } from "@samjho/contrac
 import { ApiClientError, ApiParseError, apiFetch } from "@/lib/api-client";
 
 /**
- * Phase 0 scaffold status page.
+ * Unauthenticated status page.
  *
  * Its job is to prove the wiring end to end: this React Server Component calls
  * the Express API over HTTP, the response is parsed against a schema shared by
  * both apps, and the result renders. If this page shows "ready", the whole
  * spine — monorepo, shared contracts, API, database — is connected.
  *
- * The real landing page arrives in Phase 9.
+ * Deliberately kept public and token-free even now that auth exists. When
+ * something is broken, "is the API up?" must be answerable *without* a working
+ * session — a status page that needs you to sign in is useless in exactly the
+ * outage where you need it.
  */
 
 // Never cached: a status page showing a stale "ready" is worse than useless.
@@ -60,13 +63,12 @@ export default async function StatusPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header className="space-y-2">
-        <p className="text-brand-600 text-sm font-medium tracking-wide uppercase">Phase 0</p>
+        <p className="text-brand-600 text-sm font-medium tracking-wide uppercase">System status</p>
         <h1 className="text-ink-900 dark:text-ink-50 text-3xl font-semibold tracking-tight">
           Samjho
         </h1>
         <p className="text-ink-500 dark:text-ink-300 text-base">
-          CBSE Class 10 &amp; 12 board exam preparation. Foundation scaffold — no product features
-          yet.
+          Live health of the API and its database, checked on every page load.
         </p>
       </header>
 
