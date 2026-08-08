@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Samjho React library",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+
+    // `react-jsx`, not `preserve`. A library has to emit real JavaScript —
+    // `preserve` leaves JSX in the output for a bundler to finish, and there is
+    // no bundler between this package and the app that imports it.
+    "jsx": "react-jsx",
+
+    // Deliberately absent: `noEmit`. Unlike apps/web, this project's whole
+    // purpose is its output.
+    "types": []
+  }
+}

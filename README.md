@@ -4,9 +4,11 @@ CBSE Class 10 & 12 board-exam preparation platform.
 
 Practise questions, understand your mistakes, and rehearse the full 3-hour board exam before you sit it.
 
-> **Status: Phase 2 complete** — foundation, domain model and seeded database,
-> plus authentication: Clerk sign-in, server-side JWT verification, onboarding,
-> and a profile. A student can sign up, onboard and reach `/home`.
+> **Status: Phase 3 complete** — foundation, domain model and seeded database;
+> authentication (Clerk sign-in, server-side JWT verification, onboarding,
+> profile); and the catalog: subject and chapter browsing, a `QuestionRenderer`
+> that handles all ten question types with KaTeX maths, and admin taxonomy CRUD.
+> A student can sign up, onboard, and read every question in the bank.
 > Specification and architecture live in [`docs/`](./docs/README.md).
 
 ---
@@ -96,6 +98,7 @@ apps/
 packages/
   contracts/       Zod schemas shared by both apps — the single source of truth
                    for everything crossing the network boundary
+  ui/              app-agnostic components: QuestionRenderer, MathText, DataState
   exam-blueprints/ CBSE paper structures as validated config, plus the validator
   config/          tsconfig / eslint / prettier presets
 docs/              Product spec, architecture, data model, exam engine, roadmap
@@ -129,6 +132,26 @@ Decisions that were made deliberately and are easy to get wrong later:
   Prisma's schema language cannot express them. If a migration is ever
   regenerated they must be re-added — `src/test/db-constraints.test.ts` fails if
   they go missing.
+- **A unique index over a nullable column does not constrain the NULL rows.**
+  Postgres treats NULL as distinct from NULL, so the four-column subject
+  uniqueness key allowed any number of identical subjects with no `variant` —
+  which is nearly all of them. A hand-written partial index covers exactly those
+  rows. Worth remembering before adding another nullable column to a key.
+- **A student never sees an answer key, structurally.** `StudentQuestion` has no
+  `answer` property and `QuestionOption` has no `isCorrect`, so a leak is a
+  compile error rather than a forgotten strip; the repository's select never
+  requests those columns either. `question.test.ts` searches the raw response
+  body for the solution text, because the failure mode is a field nobody thought
+  to assert on.
+- **Withdrawing is the delete.** Taxonomy foreign keys are `onDelete: Restrict`,
+  so nothing anyone has used can be removed; `isActive: false` hides a subject
+  or chapter _and_ its questions, via the single `STUDENT_VISIBLE_QUESTION`
+  clause, and can be undone.
+- **The question renderer promotes single-line `$…$` to display maths.**
+  remark-math only treats `$` as display when the fences sit on their own lines,
+  and content authors write it inline constantly. Fixing it in `MathText` rather
+  than in the content means the rule cannot be broken by whoever types the next
+  two thousand questions.
 - **No secret ever gets a `NEXT_PUBLIC_` prefix** — those values are inlined
   into the browser bundle. The AI provider key (Phase 7) lives only in
   `apps/api`.

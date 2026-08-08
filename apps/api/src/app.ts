@@ -12,8 +12,10 @@ import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
 import { buildMeRouter } from "./modules/auth/auth.routes.js";
+import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { buildQuestionRouter } from "./modules/questions/question.routes.js";
 import { buildClerkWebhookRouter } from "./modules/webhooks/clerk.routes.js";
 
 export const API_PREFIX = "/api/v1";
@@ -125,6 +127,12 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
 
   router.use("/me", buildMeRouter(verifyToken));
   router.use("/catalog", buildCatalogRouter(verifyToken));
+  router.use("/questions", buildQuestionRouter(verifyToken));
+
+  // Mounted under its own prefix rather than as extra verbs on /catalog, so the
+  // day the public SEO pages need an unauthenticated catalog (Phase 9) nobody
+  // can open up the writes by loosening one `router.use`.
+  router.use("/admin/catalog", buildCatalogAdminRouter(verifyToken));
 
   return router;
 }

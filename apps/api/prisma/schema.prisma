@@ -397,6 +397,13 @@ model Subject {
   enrolments       SubjectEnrolment[]
   progress         SubjectProgress[]
 
+  /// Does NOT constrain rows where `variant` is NULL — Postgres treats NULL as
+  /// distinct from NULL, and NULL is the normal case here (only Maths has a
+  /// variant). The migration
+  /// `20260808201500_unique_subject_identity_without_variant` adds a partial
+  /// unique index covering exactly those rows. Prisma cannot express a partial
+  /// index, so `prisma db push` on a fresh database would silently omit it —
+  /// use `migrate deploy`.
   @@unique([board, classLevel, code, variant])
   @@unique([slug])
   @@index([board, classLevel, isActive])
