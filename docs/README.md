@@ -1,7 +1,9 @@
 # Samjho — Design Documents
 
 CBSE Class 10 & 12 board-exam preparation platform.
-**Phase 1 specification — no implementation code yet. Awaiting approval.**
+
+**Status: Phase 0 (foundation scaffold) complete and verified. Phase 1 (data model & seed) is next.**
+Setup and commands are in the [root README](../README.md); the phase plan is in [07-roadmap-risks-questions.md](./07-roadmap-risks-questions.md#1-development-phases).
 
 | Doc                                                                | Contents                                                                                                                                                  |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |

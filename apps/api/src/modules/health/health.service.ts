@@ -1,6 +1,7 @@
 import type { DependencyCheck, HealthResponse, ReadinessResponse } from "@samjho/contracts";
 
 import { config } from "../../lib/config.js";
+import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/prisma.js";
 
 /**
@@ -34,11 +35,23 @@ async function checkDependency(
     await probe();
     return { name, status: "up", latencyMs: Math.round(performance.now() - start), error: null };
   } catch (error) {
+    const latencyMs = Math.round(performance.now() - start);
+
+    // Log the real failure — an operator needs the detail.
+    logger.error({ err: error, dependency: name }, `Readiness check failed: ${name}`);
+
     return {
       name,
       status: "down",
-      latencyMs: Math.round(performance.now() - start),
-      error: error instanceof Error ? error.message : "Unknown error",
+      latencyMs,
+      // But do not return it. /ready is typically reachable without auth, and a
+      // raw driver error happily volunteers connection strings, host names and
+      // query text. In development the detail is worth more than the exposure.
+      error: config.isProduction
+        ? "unavailable"
+        : error instanceof Error
+          ? error.message.replace(/\s+/g, " ").trim().slice(0, 200)
+          : "Unknown error",
     };
   }
 }

@@ -51,6 +51,16 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Next.js fetch cache options; server-side calls only. */
   next?: { revalidate?: number; tags?: string[] };
+  /**
+   * Non-2xx statuses whose body should still be parsed as a success envelope.
+   *
+   * Needed because a few endpoints use the status code to signal something to
+   * infrastructure while still returning a meaningful payload. `/ready` is the
+   * example: it answers 503 so an orchestrator pulls the instance out of the
+   * load balancer, but the body describes *which* dependency is down — which is
+   * exactly what a human wants to read.
+   */
+  allowStatuses?: number[];
 }
 
 /**
@@ -64,7 +74,7 @@ export async function apiFetch<T extends z.ZodType>(
   schema: T,
   options: RequestOptions = {},
 ): Promise<z.infer<T>> {
-  const { body, headers, next, ...rest } = options;
+  const { body, headers, next, allowStatuses, ...rest } = options;
 
   const response = await fetch(`${serverEnv.API_URL}${path}`, {
     ...rest,
@@ -78,7 +88,7 @@ export async function apiFetch<T extends z.ZodType>(
 
   const payload: unknown = await response.json().catch(() => null);
 
-  if (!response.ok) {
+  if (!response.ok && !allowStatuses?.includes(response.status)) {
     const parsedError = errorResponseSchema.safeParse(payload);
     throw new ApiClientError(
       response.status,

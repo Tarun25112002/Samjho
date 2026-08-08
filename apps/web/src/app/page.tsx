@@ -22,7 +22,12 @@ type ProbeResult =
 
 async function probeApi(): Promise<ProbeResult> {
   try {
-    return { ok: true, readiness: await apiFetch("/ready", readinessResponseSchema) };
+    // 503 is expected when a dependency is down — the body still describes
+    // which one, and that is the interesting part of this page.
+    return {
+      ok: true,
+      readiness: await apiFetch("/ready", readinessResponseSchema, { allowStatuses: [503] }),
+    };
   } catch (error) {
     if (error instanceof ApiClientError) {
       return {
@@ -78,6 +83,11 @@ export default async function StatusPage() {
 
         {result.ok ? (
           <dl className="space-y-3 text-sm">
+            <Row
+              label="Overall"
+              value={result.readiness.status}
+              ok={result.readiness.status === "ready"}
+            />
             <Row label="Web → API" value="connected" ok />
             <Row
               label="API"

@@ -1,6 +1,23 @@
 import { z } from "zod";
 
 /**
+ * Load `.env` from this app's directory, if present.
+ *
+ * Node 22+ can do this natively, so no `dotenv` dependency. It lives here
+ * rather than in server.ts so that *every* entry point — the server, tests,
+ * scripts, jobs — gets the same environment without having to remember to load
+ * it first.
+ *
+ * Missing file is fine and expected: in production the platform injects real
+ * environment variables and there is no `.env` on disk.
+ */
+try {
+  process.loadEnvFile();
+} catch {
+  // No .env file — rely on the ambient environment.
+}
+
+/**
  * Environment configuration, validated once at boot.
  *
  * Why validate instead of reading `process.env.FOO` where it's needed:
