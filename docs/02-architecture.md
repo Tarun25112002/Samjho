@@ -43,18 +43,18 @@
                   └─────────────────┘
 ```
 
-Shared, versioned in the monorepo: **Zod schemas and TypeScript types** (`packages/contracts`) imported by *both* web and api. This is what makes the frontend/backend split cheap instead of painful — one definition of `CreateQuestionInput`, used for the API's runtime validation and the form's client-side validation and the response type.
+Shared, versioned in the monorepo: **Zod schemas and TypeScript types** (`packages/contracts`) imported by _both_ web and api. This is what makes the frontend/backend split cheap instead of painful — one definition of `CreateQuestionInput`, used for the API's runtime validation and the form's client-side validation and the response type.
 
 ### Why keep a separate Express API? (the brief allows changing this)
 
 **Recommendation: keep it.** Next.js Route Handlers could host all of this, and for a solo developer that would mean one deployment instead of two. The honest case for two:
 
-- **The exam engine needs to be provably server-authoritative.** A clean, separately deployed API where *every* mutation is validated server-side makes it structurally impossible to accidentally trust the client. In a single Next app, the boundary between "server component that reads the DB" and "client component" is real but easy to blur under deadline pressure — which is exactly how exam-integrity bugs get shipped.
+- **The exam engine needs to be provably server-authoritative.** A clean, separately deployed API where _every_ mutation is validated server-side makes it structurally impossible to accidentally trust the client. In a single Next app, the boundary between "server component that reads the DB" and "client component" is real but easy to blur under deadline pressure — which is exactly how exam-integrity bugs get shipped.
 - **Background work is coming** — the auto-submit sweeper, AI usage rollups, and later spaced-repetition scheduling. These want a long-lived Node process, which Express gives you and Next's serverless model does not.
 - **A future mobile app or teacher portal** consumes the same API without refactoring.
 - **The learning goal is explicit.** Seeing routes → services → repositories as separate, testable layers is worth more pedagogically than the deployment convenience of merging them.
 
-**The costs, stated plainly:** two deploys, CORS configuration, an extra network hop, and the risk of type drift between apps. The first three are one-time setup. The fourth is solved by `packages/contracts` — which is *why* that package exists.
+**The costs, stated plainly:** two deploys, CORS configuration, an extra network hop, and the risk of type drift between apps. The first three are one-time setup. The fourth is solved by `packages/contracts` — which is _why_ that package exists.
 
 **The one concession:** Next.js Route Handlers are used as a thin BFF for browser-initiated calls, so the Clerk session token never has to be handled manually in client JS, and so we can stream AI responses through a same-origin endpoint. They forward to Express; they contain no business logic.
 
@@ -119,7 +119,7 @@ samjho/
 
 Two structural choices worth explaining:
 
-**`packages/contracts` is the keystone.** It exports Zod schemas; types are *derived* (`z.infer`), never hand-written in parallel. Express validates requests with the schema; the web app validates forms with the same schema and types its fetch responses from it. A breaking API change becomes a TypeScript error in the web app at build time rather than a runtime 400 in production.
+**`packages/contracts` is the keystone.** It exports Zod schemas; types are _derived_ (`z.infer`), never hand-written in parallel. Express validates requests with the schema; the web app validates forms with the same schema and types its fetch responses from it. A breaking API change becomes a TypeScript error in the web app at build time rather than a runtime 400 in production.
 
 **`apps/api/src/modules/*` is the modular-monolith seam.** Each module owns its routes, service, repository, and schemas. The rule that keeps it modular: **modules call other modules through their service layer, never through another module's repository, and never by importing another module's Prisma queries.** Honour that and any module could later become a separate service without a rewrite. Ignore it and you have a big ball of mud with folders. There is no microservice plan — this is just about keeping the option open for free.
 
@@ -130,6 +130,7 @@ Two structural choices worth explaining:
 ## 3. API design
 
 ### Conventions
+
 - Base: `/api/v1`. Versioned from day one — it costs nothing now and everything later.
 - REST-ish, resource-oriented. Plural nouns. Verbs only for genuine state transitions (`POST /exam-attempts/:id/submit`).
 - All request bodies, query params, and route params validated by Zod at the edge. **A handler never sees unvalidated input.**
@@ -139,7 +140,8 @@ Two structural choices worth explaining:
 
 ### Endpoint map (MVP)
 
-**Catalog** *(cacheable, mostly public)*
+**Catalog** _(cacheable, mostly public)_
+
 ```
 GET  /catalog/subjects?classLevel=12&board=CBSE
 GET  /catalog/subjects/:id
@@ -148,13 +150,16 @@ GET  /catalog/chapters/:id            → chapter + topics + question counts by 
 ```
 
 **Questions**
+
 ```
 GET  /questions                       → filtered, paginated (student view: no answer key)
 GET  /questions/:id                   → answer key omitted unless the student has attempted it
 ```
+
 > Critical: the student-facing question serializer **strips `correctAnswer`, `solution`, and `markingScheme`** unless the attempt is graded. Two separate serializers (`toStudentQuestion`, `toAdminQuestion`), never one function with a boolean flag — flags get passed wrong.
 
 **Practice**
+
 ```
 POST /practice-sessions               { filters, count } → creates session + materialised question list
 GET  /practice-sessions/:id           → session + current position + progress
@@ -165,6 +170,7 @@ GET  /practice-sessions               → history
 ```
 
 **Exams**
+
 ```
 GET  /exam-papers?subjectId=&classLevel=
 GET  /exam-papers/:id                 → structure/instructions, NOT the questions
@@ -178,6 +184,7 @@ GET  /exam-attempts/:id/result
 ```
 
 **Progress**
+
 ```
 GET  /progress/summary
 GET  /progress/subjects/:id
@@ -188,6 +195,7 @@ POST /bookmarks  ·  DELETE /bookmarks/:questionId
 ```
 
 **AI**
+
 ```
 POST /ai/conversations                { questionId, attemptId? }
 POST /ai/conversations/:id/messages   { action, content? } → SSE stream
@@ -196,6 +204,7 @@ GET  /ai/usage                        → quota remaining
 ```
 
 **Admin** — `/admin/*`, role-gated
+
 ```
 GET|POST         /admin/questions
 GET|PATCH|DELETE /admin/questions/:id
@@ -207,17 +216,18 @@ GET              /admin/users  ·  PATCH /admin/users/:id/role
 ```
 
 **Webhooks**
+
 ```
 POST /webhooks/clerk                  → Svix-signature-verified user sync
 ```
 
 ### Data fetching split in Next.js
 
-| Case | Mechanism | Why |
-| --- | --- | --- |
-| Initial page data (dashboard, chapter list, exam list) | Server Component → server-side API client with the Clerk token | Fast first paint, no client waterfall, no loading flash |
-| Interactive/mutating (practice runner, exam runner, admin forms) | Client Component → TanStack Query → BFF route handler → Express | Needs caching, optimistic updates, retries, offline queueing |
-| AI responses | BFF route handler proxying an SSE stream | Streaming needs a same-origin endpoint; keeps tokens off the client |
+| Case                                                             | Mechanism                                                       | Why                                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Initial page data (dashboard, chapter list, exam list)           | Server Component → server-side API client with the Clerk token  | Fast first paint, no client waterfall, no loading flash             |
+| Interactive/mutating (practice runner, exam runner, admin forms) | Client Component → TanStack Query → BFF route handler → Express | Needs caching, optimistic updates, retries, offline queueing        |
+| AI responses                                                     | BFF route handler proxying an SSE stream                        | Streaming needs a same-origin endpoint; keeps tokens off the client |
 
 TanStack Query is worth adding to the stack: the exam runner needs request retry, mutation queueing, and background refetch, and hand-rolling those is exactly the kind of thing that produces lost-answer bugs.
 
@@ -253,7 +263,7 @@ Roles: `STUDENT`, `ADMIN`, `CONTENT_EDITOR` (can draft/edit but not publish or m
 Three layers, all required:
 
 1. **Route-level** — `requireAuth`, `requireRole`.
-2. **Resource-level (ownership)** — the service verifies that the requested `practiceSession` / `examAttempt` / `bookmark` belongs to `req.user.id`. This is the single most commonly missed check in apps like this: it is trivially easy to write `GET /exam-attempts/:id` that returns *anyone's* attempt. Enforced by always querying with the ownership predicate in the `WHERE` clause (`findFirst({ where: { id, userId } })`), never by fetching then comparing — the former cannot be forgotten silently.
+2. **Resource-level (ownership)** — the service verifies that the requested `practiceSession` / `examAttempt` / `bookmark` belongs to `req.user.id`. This is the single most commonly missed check in apps like this: it is trivially easy to write `GET /exam-attempts/:id` that returns _anyone's_ attempt. Enforced by always querying with the ownership predicate in the `WHERE` clause (`findFirst({ where: { id, userId } })`), never by fetching then comparing — the former cannot be forgotten silently.
 3. **Field-level** — the student serializer strips answer keys, as above.
 
 Next.js middleware additionally gates route groups (redirect unauthenticated → `/sign-in`, non-onboarded → `/welcome`, non-admin → 404 on `/admin`). This is **UX only**. The API never trusts it.
@@ -273,11 +283,11 @@ Next.js middleware additionally gates route groups (redirect unauthenticated →
 
 Proportionate, not dogmatic — weighted to where the risk actually is.
 
-| Layer | Tool | What is tested |
-| --- | --- | --- |
-| Unit | Vitest | **Grading logic, exam blueprint validation, timer/deadline math, score aggregation.** Pure functions, exhaustively tested. This is where correctness bugs cost the most. |
-| Integration | Vitest + Supertest + Postgres (Testcontainers or a test DB) | Every API route: auth, validation, ownership enforcement, idempotency. |
-| Component | Vitest + Testing Library | `QuestionRenderer` per question type; exam palette; answer inputs. |
-| E2E | Playwright | Three flows only: sign-up→onboard→practice; full exam with a forced mid-exam reload; admin create→publish→appears in practice. |
+| Layer       | Tool                                                        | What is tested                                                                                                                                                           |
+| ----------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Unit        | Vitest                                                      | **Grading logic, exam blueprint validation, timer/deadline math, score aggregation.** Pure functions, exhaustively tested. This is where correctness bugs cost the most. |
+| Integration | Vitest + Supertest + Postgres (Testcontainers or a test DB) | Every API route: auth, validation, ownership enforcement, idempotency.                                                                                                   |
+| Component   | Vitest + Testing Library                                    | `QuestionRenderer` per question type; exam palette; answer inputs.                                                                                                       |
+| E2E         | Playwright                                                  | Three flows only: sign-up→onboard→practice; full exam with a forced mid-exam reload; admin create→publish→appears in practice.                                           |
 
 Non-negotiable tests before the exam engine is considered done: submit-twice, submit-after-deadline, resume-after-refresh, clock-skewed client, concurrent answer saves.

@@ -5,7 +5,10 @@
     "outDir": "./dist",
     "composite": true
   },
+  // src/generated (the Prisma client) must be included — it is imported, and a
+  // project has to list every file it compiles. ESLint still ignores it; there
+  // is no value in linting generated code.
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/generated"],
+  "exclude": ["node_modules", "dist"],
   "references": [{ "path": "../../packages/contracts" }]
 }

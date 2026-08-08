@@ -12,13 +12,13 @@
     "./eslint/next": "./eslint/next.js"
   },
   "dependencies": {
-    "@eslint/js": "^10.8.1",
+    "@eslint/js": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^16.6.0",
+    "globals": "^17.9.0",
     "typescript-eslint": "^8.66.0"
   },
   "peerDependencies": {
     "eslint": "^10.8.1",
-    "typescript": "^7.0.2"
+    "typescript": "~5.9.3"
   }
 }

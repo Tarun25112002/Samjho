@@ -10,7 +10,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - samjho-pgdata:/var/lib/postgresql/data
+      # Postgres 18+ expects the mount at /var/lib/postgresql, not .../data.
+      # The image stores data in a major-version subdirectory so `pg_upgrade
+      # --link` works across versions; mounting at /data refuses to start.
+      - samjho-pgdata:/var/lib/postgresql
       - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
     healthcheck:
       # Without this, `docker compose up -d` returns as soon as the container

@@ -60,8 +60,8 @@ export default async function StatusPage() {
           Samjho
         </h1>
         <p className="text-ink-500 dark:text-ink-300 text-base">
-          CBSE Class 10 &amp; 12 board exam preparation. Foundation scaffold — no product
-          features yet.
+          CBSE Class 10 &amp; 12 board exam preparation. Foundation scaffold — no product features
+          yet.
         </p>
       </header>
 

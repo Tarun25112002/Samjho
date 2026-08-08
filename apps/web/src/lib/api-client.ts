@@ -1,7 +1,11 @@
 import { errorResponseSchema, type ApiError } from "@samjho/contracts";
 import type { z } from "zod";
 
-import { serverEnv } from "./env.js";
+// No `.js` extension here, unlike apps/api. The web app resolves modules the
+// bundler way; the API uses Node's `nodenext`, which requires explicit
+// extensions on relative imports. Same language, two resolution modes — worth
+// knowing which app you're in.
+import { serverEnv } from "./env";
 
 /**
  * Typed client for the Express API.

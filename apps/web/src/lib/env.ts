@@ -37,11 +37,7 @@ function parseOrThrow<T extends z.ZodType>(schema: T, source: unknown, label: st
  * Server-only config. Importing this from a Client Component is a build error,
  * which is the point — it makes the boundary enforced rather than remembered.
  */
-export const serverEnv = parseOrThrow(
-  serverEnvSchema,
-  { API_URL: process.env.API_URL },
-  "server",
-);
+export const serverEnv = parseOrThrow(serverEnvSchema, { API_URL: process.env.API_URL }, "server");
 
 /**
  * Must reference `process.env.NEXT_PUBLIC_*` literally. Next replaces these at

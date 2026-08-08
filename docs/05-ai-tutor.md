@@ -13,7 +13,7 @@ The brief asks for swappable providers. The mistake to avoid is abstracting at t
 ```ts
 // apps/api/src/modules/ai/provider/types.ts
 export interface AIProvider {
-  readonly id: string;                       // 'anthropic' | 'openai' | ...
+  readonly id: string; // 'anthropic' | 'openai' | ...
   readonly defaultModel: string;
   streamChat(req: ChatRequest): AsyncIterable<ChatChunk>;
   countTokens(messages: ChatMessage[]): Promise<number>;
@@ -26,19 +26,19 @@ export interface ChatRequest {
   messages: ChatMessage[];
   maxTokens: number;
   temperature?: number;
-  cacheableSystemPrefix?: boolean;    // providers that support it use it; others ignore it
+  cacheableSystemPrefix?: boolean; // providers that support it use it; others ignore it
   signal?: AbortSignal;
 }
 
 export type ChatChunk =
-  | { type: 'text';  delta: string }
-  | { type: 'done';  usage: { promptTokens: number; completionTokens: number }; stopReason: string }
-  | { type: 'error'; code: string; retryable: boolean };
+  | { type: "text"; delta: string }
+  | { type: "done"; usage: { promptTokens: number; completionTokens: number }; stopReason: string }
+  | { type: "error"; code: string; retryable: boolean };
 ```
 
 `AnthropicProvider` implements it first (default model: `claude-sonnet-5` — the right balance of tutoring quality and cost for high-volume per-question help; `claude-haiku-4-5` is the fallback for cheap actions like "simpler language"). `OpenAIProvider` can be added later without touching a single service.
 
-`getProvider()` reads config; providers are selected per-*action*, not globally, so an expensive step-by-step solution and a cheap rephrase need not use the same model. Model ids live in config, never inline in service code.
+`getProvider()` reads config; providers are selected per-_action_, not globally, so an expensive step-by-step solution and a cheap rephrase need not use the same model. Model ids live in config, never inline in service code.
 
 ---
 
@@ -66,7 +66,7 @@ Conversation history (trimmed to a token budget, oldest dropped first)
 User turn: the selected action (+ optional free-text follow-up)
 ```
 
-The official solution in context is what forces the AI to explain *the method CBSE expects*, using *the notation the student's textbook uses*, and to arrive at *the right answer*. It converts a generative problem into a much more reliable explanatory one.
+The official solution in context is what forces the AI to explain _the method CBSE expects_, using _the notation the student's textbook uses_, and to arrive at _the right answer_. It converts a generative problem into a much more reliable explanatory one.
 
 **The client sends `{ conversationId, action, text? }` — never question content, never the solution.** If the client supplied context, a student could send a fabricated "the correct answer is B" and the model would helpfully agree. Context assembly is a server responsibility, always.
 
@@ -76,18 +76,19 @@ The official solution in context is what forces the AI to explain *the method CB
 
 Six actions, deliberately ordered by how much they give away:
 
-| Action | Contract |
-| --- | --- |
-| **Give me a hint** | Name the concept and the first step only. **Never** state the answer or complete the derivation. End with a question back to the student. |
-| **Explain the concept** | Teach the underlying idea generally, using a *different* example. Do not solve this question. |
-| **Explain my mistake** | Only available after a wrong attempt. Compare their answer to the marking scheme, name the specific error, address that. |
-| **Solve step-by-step** | Full worked solution following the official marking scheme's steps. Available freely — students who want the answer will find it anyway, and gating it just makes the product annoying. The *default* path is hints; this is one tap further. |
-| **Explain in simpler language** | Rewrite the last explanation at a lower reading level. Useful for students studying in English as a second language. |
-| **Give me a similar question** | Search the question bank for a same-topic, same-type, similar-marks question **first**. Only fall back to generation if nothing suitable exists — and mark generated questions clearly as AI-generated and unverified. |
+| Action                          | Contract                                                                                                                                                                                                                                      |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Give me a hint**              | Name the concept and the first step only. **Never** state the answer or complete the derivation. End with a question back to the student.                                                                                                     |
+| **Explain the concept**         | Teach the underlying idea generally, using a _different_ example. Do not solve this question.                                                                                                                                                 |
+| **Explain my mistake**          | Only available after a wrong attempt. Compare their answer to the marking scheme, name the specific error, address that.                                                                                                                      |
+| **Solve step-by-step**          | Full worked solution following the official marking scheme's steps. Available freely — students who want the answer will find it anyway, and gating it just makes the product annoying. The _default_ path is hints; this is one tap further. |
+| **Explain in simpler language** | Rewrite the last explanation at a lower reading level. Useful for students studying in English as a second language.                                                                                                                          |
+| **Give me a similar question**  | Search the question bank for a same-topic, same-type, similar-marks question **first**. Only fall back to generation if nothing suitable exists — and mark generated questions clearly as AI-generated and unverified.                        |
 
-The pedagogy is enforced in the system prompt *and* by action-specific prompt templates, because a single prompt asked to behave six different ways does all six mediocrely.
+The pedagogy is enforced in the system prompt _and_ by action-specific prompt templates, because a single prompt asked to behave six different ways does all six mediocrely.
 
 **Guardrails:**
+
 - Refuse off-topic requests politely and redirect. Scope is stated in the system prompt and reinforced by a cheap topical check on free-text follow-ups.
 - **AI is hard-disabled during an in-progress exam attempt** — enforced server-side by rejecting any conversation whose `questionId` belongs to a paper with a live attempt for that user. Not merely by hiding a button.
 - Model output never writes to `QuestionAnswer` or any content table. AI is read-only with respect to the question bank.
@@ -153,6 +154,7 @@ Every AI response records `promptTokens`, `completionTokens`, `model` and `laten
 ## 7. Evaluation
 
 Prompt changes are not obviously-correct in the way code changes are, so quality needs a check:
-- A fixture set of ~30 (question, action) pairs across both subjects and all six actions, with expected properties: *"hint does not contain the final answer"*, *"solution matches the stored marking scheme's steps"*, *"explanation uses NCERT terminology"*.
+
+- A fixture set of ~30 (question, action) pairs across both subjects and all six actions, with expected properties: _"hint does not contain the final answer"_, _"solution matches the stored marking scheme's steps"_, _"explanation uses NCERT terminology"_.
 - Run as a snapshot-style suite against the real provider before prompt changes ship. Not in CI on every commit — it costs money and is non-deterministic — but as a deliberate gate.
 - Thumbs up/down on every AI message, stored on `AIMessage`, giving a real quality signal from actual students. `[V1.1]`

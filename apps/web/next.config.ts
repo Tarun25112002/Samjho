@@ -3,10 +3,14 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   reactStrictMode: true,
 
-  // Fail the production build on type or lint errors rather than shipping them.
-  // Next's defaults already do this; making it explicit documents the intent.
+  // Fail the production build on type errors rather than shipping them. Next's
+  // default already does this; making it explicit documents the intent.
+  //
+  // There is no `eslint` key here: Next 16 removed the built-in `next lint`
+  // integration. Linting is now a separate `eslint src` task, which is better
+  // anyway — turbo runs it in parallel with the build instead of serialising it
+  // inside one.
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: false },
 
   // Applied to every response. The API sets its own via helmet; these cover the
   // pages themselves. A full CSP lands in Phase 9, once every script source is

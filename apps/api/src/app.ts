@@ -1,7 +1,10 @@
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
-import pinoHttp from "pino-http";
+// Named import, not default: pino-http is CommonJS but ships ESM-style types,
+// so its `export default` does not correspond to a real runtime export. The
+// named binding is correct on both sides.
+import { pinoHttp } from "pino-http";
 
 import { config } from "./lib/config.js";
 import { logger } from "./lib/logger.js";

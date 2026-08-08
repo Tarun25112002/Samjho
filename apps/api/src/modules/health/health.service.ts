@@ -25,7 +25,10 @@ export function getHealth(): HealthResponse {
 }
 
 /** Times a dependency probe and converts a throw into a `down` result. */
-async function checkDependency(name: string, probe: () => Promise<unknown>): Promise<DependencyCheck> {
+async function checkDependency(
+  name: string,
+  probe: () => Promise<unknown>,
+): Promise<DependencyCheck> {
   const start = performance.now();
   try {
     await probe();

@@ -6,6 +6,11 @@
 //
 // What exists here is the plumbing: a generated client and a verified
 // connection, which is what /ready needs to be meaningful.
+//
+// Note there is no `url` here. Prisma 7 removed connection URLs from the schema:
+// the CLI reads it from prisma.config.ts, and the runtime client gets it through
+// a driver adapter (see src/lib/prisma.ts). One less place for a credential to
+// end up somewhere it shouldn't.
 
 generator client {
   provider = "prisma-client"
@@ -14,9 +19,4 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-
-  // Set once we move to a pooled connection (PgBouncer/Neon). Migrations must
-  // bypass the pooler, so they need a direct URL:
-  // directUrl = env("DIRECT_URL")
 }

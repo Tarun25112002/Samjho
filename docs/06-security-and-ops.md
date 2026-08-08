@@ -8,18 +8,18 @@
 
 Realistic threats, in rough order of likelihood:
 
-| # | Threat | Impact | Mitigation |
-| --- | --- | --- | --- |
-| T1 | Student reads the answer key from the network tab during an exam | Destroys the product's core value | Separate `QuestionAnswer` table; `toStudentQuestion` serializer; integration test asserting no answer fields in exam payloads |
-| T2 | Student manipulates client clock or replays requests to extend exam time | Invalid results | Server-authoritative `deadlineAt`; every write checks expiry; three-way auto-submit |
-| T3 | IDOR — reading or writing another student's attempt/session/bookmark | Data breach | Ownership predicate in the `WHERE` clause of every query, never fetch-then-compare |
-| T4 | Question bank scraped wholesale | Loss of the main asset | Rate limits on question endpoints; pagination caps; no bulk export endpoint; anomaly alerting on per-user request volume |
-| T5 | AI endpoint abused as a free LLM proxy | Direct financial loss | Auth + rate limit + daily quota + strict server-assembled prompts + topical scope enforcement |
-| T6 | Prompt injection via student free-text into the tutor | Jailbreak, off-scope use | Student text is always a *user* turn, never system; context assembled server-side; output is displayed, never executed or persisted to content tables |
-| T7 | Non-admin reaching admin endpoints | Content corruption | Server-side role check on every admin route; role stored in our DB, not client-visible metadata; `/admin` returns 404 to non-admins |
-| T8 | Stored XSS via question rich text or admin-uploaded content | Session compromise | Sanitise HTML server-side on write **and** on render; strict allowlist; CSP |
-| T9 | Credential stuffing | Account takeover | Delegated to Clerk (bot protection, breach detection, MFA available) |
-| T10 | Leaked secrets in the repo or client bundle | Total compromise | Secrets only in the API process; `.env.example` with no values; secret scanning in CI; no `NEXT_PUBLIC_` secret ever |
+| #   | Threat                                                                   | Impact                            | Mitigation                                                                                                                                            |
+| --- | ------------------------------------------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | Student reads the answer key from the network tab during an exam         | Destroys the product's core value | Separate `QuestionAnswer` table; `toStudentQuestion` serializer; integration test asserting no answer fields in exam payloads                         |
+| T2  | Student manipulates client clock or replays requests to extend exam time | Invalid results                   | Server-authoritative `deadlineAt`; every write checks expiry; three-way auto-submit                                                                   |
+| T3  | IDOR — reading or writing another student's attempt/session/bookmark     | Data breach                       | Ownership predicate in the `WHERE` clause of every query, never fetch-then-compare                                                                    |
+| T4  | Question bank scraped wholesale                                          | Loss of the main asset            | Rate limits on question endpoints; pagination caps; no bulk export endpoint; anomaly alerting on per-user request volume                              |
+| T5  | AI endpoint abused as a free LLM proxy                                   | Direct financial loss             | Auth + rate limit + daily quota + strict server-assembled prompts + topical scope enforcement                                                         |
+| T6  | Prompt injection via student free-text into the tutor                    | Jailbreak, off-scope use          | Student text is always a _user_ turn, never system; context assembled server-side; output is displayed, never executed or persisted to content tables |
+| T7  | Non-admin reaching admin endpoints                                       | Content corruption                | Server-side role check on every admin route; role stored in our DB, not client-visible metadata; `/admin` returns 404 to non-admins                   |
+| T8  | Stored XSS via question rich text or admin-uploaded content              | Session compromise                | Sanitise HTML server-side on write **and** on render; strict allowlist; CSP                                                                           |
+| T9  | Credential stuffing                                                      | Account takeover                  | Delegated to Clerk (bot protection, breach detection, MFA available)                                                                                  |
+| T10 | Leaked secrets in the repo or client bundle                              | Total compromise                  | Secrets only in the API process; `.env.example` with no values; secret scanning in CI; no `NEXT_PUBLIC_` secret ever                                  |
 
 ---
 
@@ -30,13 +30,14 @@ Realistic threats, in rough order of likelihood:
 **Output.** Never return raw errors. Never return Prisma errors. Never return stack traces. One error middleware, one envelope, a `requestId` for support correlation.
 
 **Rate limiting**, tiered by cost and risk:
-| Scope | Limit |
-| --- | --- |
-| Global per IP | 300 req / min |
-| Authenticated per user | 120 req / min |
-| AI messages | 10 / 5 min + daily quota |
-| Exam attempt creation | 5 / hour |
-| Auth-adjacent + webhooks | tight, separate bucket |
+
+| Scope                    | Limit                    |
+| ------------------------ | ------------------------ |
+| Global per IP            | 300 req / min            |
+| Authenticated per user   | 120 req / min            |
+| AI messages              | 10 / 5 min + daily quota |
+| Exam attempt creation    | 5 / hour                 |
+| Auth-adjacent + webhooks | tight, separate bucket   |
 
 Backed by Postgres initially (one fewer moving part); moved to Redis when traffic justifies it. `express-rate-limit` with a shared store, keyed on user id where authenticated and IP otherwise.
 
@@ -59,6 +60,7 @@ This is the part that is easy to get wrong and expensive to fix.
 **Collect the minimum.** Class, board, subjects, target exam session, and an email (owned by Clerk). **Do not collect** date of birth, precise location, phone number, school address, or a photograph unless a feature genuinely requires it. Every additional field about a minor is a liability with no offsetting benefit at this stage.
 
 **India's DPDP Act 2023 treats users under 18 as children**, requiring verifiable parental consent for processing their data and **prohibiting behavioural advertising and tracking directed at children**. Practical consequences for this build:
+
 - **No third-party advertising or behavioural-tracking SDKs. Ever.** This is not a nice-to-have; it is the rule that most constrains future monetisation, so it should be known now rather than discovered later.
 - Analytics must be first-party and privacy-preserving (self-hosted or cookieless). No Google Analytics or Meta Pixel on authenticated pages.
 - A parental-consent flow will be required at some point. This should be a deliberate legal decision before scaling, not something bolted on. **Flagged as open question Q7 and risk R6** — get advice from an Indian lawyer, not from this document.
@@ -72,7 +74,7 @@ This is the part that is easy to get wrong and expensive to fix.
 
 ## 4. Content licensing (the non-technical risk that could stop the project)
 
-Restated here because it is a *compliance* issue, not just a schema one. CBSE question papers are not free to reproduce commercially by default. The architecture supports whichever position you take (`QuestionSource.licenceStatus`, and a repository-level default filter that excludes `RESTRICTED` from student queries) — but **the position itself is a decision you need to make before bulk content entry**, because re-sourcing 5,000 questions later is ruinous.
+Restated here because it is a _compliance_ issue, not just a schema one. CBSE question papers are not free to reproduce commercially by default. The architecture supports whichever position you take (`QuestionSource.licenceStatus`, and a repository-level default filter that excludes `RESTRICTED` from student queries) — but **the position itself is a decision you need to make before bulk content entry**, because re-sourcing 5,000 questions later is ruinous.
 
 The default this spec assumes, and the one most established Indian players operate on: **adapted questions** — same concept, same difficulty, same pattern, changed numbers and context, attributed as "based on CBSE 2023 Q17". Verbatim reproduction is limited to what is defensible, marked as such, and easy to purge if challenged.
 
@@ -87,6 +89,7 @@ The default this spec assumes, and the one most established Indian players opera
 **Error tracking.** Sentry on both apps, with `requestId` and `userId` (never email) as tags, source maps uploaded, and PII scrubbing on.
 
 **Metrics that matter here** — not vanity dashboards:
+
 - `exam_attempts_lost` (attempts in `IN_PROGRESS` past deadline that the sweeper had to rescue) — **should be near zero; a rise means the client-side save path is broken**
 - Answer-save failure rate and p99 latency
 - Sweeper job run duration and rescued-attempt count
@@ -101,12 +104,12 @@ The default this spec assumes, and the one most established Indian players opera
 
 ## 6. Environments & deployment
 
-| Env | Purpose |
-| --- | --- |
-| Local | Docker Compose Postgres, seeded, Clerk dev instance |
-| Preview | Per-PR web deploy against a shared staging API + branch database |
-| Staging | Full mirror, production-like data volume for query profiling |
-| Production | — |
+| Env        | Purpose                                                          |
+| ---------- | ---------------------------------------------------------------- |
+| Local      | Docker Compose Postgres, seeded, Clerk dev instance              |
+| Preview    | Per-PR web deploy against a shared staging API + branch database |
+| Staging    | Full mirror, production-like data volume for query profiling     |
+| Production | —                                                                |
 
 **Deployment shape:** `apps/web` → Vercel (Next.js's native home, ISR and edge caching for marketing/SEO pages). `apps/api` → a long-running container platform (Railway / Render / Fly). Postgres → managed with PITR (Neon, Supabase, or RDS). Long-running matters: the sweeper job and SSE streaming both fit poorly in a serverless model.
 

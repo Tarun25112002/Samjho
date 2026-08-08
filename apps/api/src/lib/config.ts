@@ -23,7 +23,8 @@ const envSchema = z.object({
   /** Origins allowed to call this API. Comma-separated. */
   WEB_ORIGIN: z.string().default("http://localhost:3000"),
 
-  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+  // "silent" is a real Pino level, used to keep test output readable.
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 
 export type Env = z.infer<typeof envSchema>;
