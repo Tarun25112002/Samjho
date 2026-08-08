@@ -1,0 +1,16 @@
+{
+  // The seed lives outside src/, so the main project cannot compile it: a
+  // composite project's rootDir is src/, and widening that would drag prisma/
+  // into dist/. It still has to be type-checked — it is the code most likely to
+  // silently drift from the schema — so it gets its own no-emit project.
+  "extends": "@samjho/config/tsconfig/node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node"]
+  },
+  "include": ["prisma/**/*.ts", "src/generated/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,16 +1,19 @@
 // Samjho database schema.
 //
-// Phase 0 deliberately defines no models. The full domain model — questions as
-// a tree, exam slots with internal choice, attempts, mastery rollups — lands in
-// Phase 1, designed in docs/03-data-model.md.
-//
-// What exists here is the plumbing: a generated client and a verified
-// connection, which is what /ready needs to be meaningful.
+// Designed in docs/03-data-model.md — read that for the *why*. This file is the
+// mechanical expression of those decisions, and the comments here point back at
+// them rather than repeating them.
 //
 // Note there is no `url` here. Prisma 7 removed connection URLs from the schema:
 // the CLI reads it from prisma.config.ts, and the runtime client gets it through
 // a driver adapter (see src/lib/prisma.ts). One less place for a credential to
 // end up somewhere it shouldn't.
+//
+// Two integrity rules cannot be expressed in Prisma schema syntax and live as
+// hand-written CHECK constraints in the migration instead:
+//   • QuestionAttempt belongs to exactly one of a practice session or an exam.
+//   • Question sub-part trees are capped at depth 1.
+// They are enforced by the database because application code forgets.
 
 generator client {
   provider = "prisma-client"
@@ -19,4 +22,1131 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Enums
+//
+//  QuestionType, Difficulty and BloomLevel are mirrored in @samjho/contracts
+//  because they cross the network boundary. That duplication is asserted by a
+//  test rather than trusted — see src/modules/catalog/enum-parity.test.ts.
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum Role {
+  STUDENT
+  CONTENT_EDITOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum Board {
+  CBSE
+}
+
+enum Language {
+  ENGLISH
+  HINDI
+}
+
+/// Class 10 now has two board attempts a year: February (mandatory) and May
+/// (optional), scored best-of-two. A student's target is a session *and* a
+/// phase, which is what drives the countdown and the revision plan.
+enum ExamPhase {
+  PHASE_1
+  PHASE_2
+}
+
+enum QuestionType {
+  MCQ
+  ASSERTION_REASON
+  VERY_SHORT_ANSWER
+  SHORT_ANSWER
+  LONG_ANSWER
+  CASE_BASED
+  NUMERICAL
+  TRUE_FALSE
+  FILL_BLANK
+  MATCH_FOLLOWING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum BloomLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYSE
+  EVALUATE
+  CREATE
+}
+
+enum QuestionStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+/// Where a question came from. Required on every question — see docs §2.4.
+enum SourceType {
+  ORIGINAL
+  CBSE_BOARD_PAPER
+  CBSE_SAMPLE_PAPER
+  NCERT
+  ADAPTED
+  THIRD_PARTY
+}
+
+/// Whether the content is safe to serve. RESTRICTED rows stay in the database
+/// for reference but are filtered out of every student-facing query by a
+/// repository-level predicate, not by remembering to add a WHERE clause.
+enum LicenceStatus {
+  CLEARED
+  FAIR_USE_CLAIMED
+  NEEDS_REVIEW
+  RESTRICTED
+}
+
+enum AssetKind {
+  IMAGE
+  DIAGRAM
+  GRAPH
+  TABLE
+}
+
+enum PaperType {
+  PAST_PAPER
+  SAMPLE_PAPER
+  GENERATED_MOCK
+}
+
+enum PaperStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// A slot with internal choice holds a MAIN item and an OR item.
+enum SlotVariant {
+  MAIN
+  OR
+}
+
+enum PracticeMode {
+  QUICK
+  CUSTOM
+  CHAPTER
+  MISTAKE_REVIEW
+  BOOKMARKS
+  PREVIOUS_YEAR
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+/// The exam attempt state machine from docs/04-exam-engine.md §4.
+enum ExamAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EVALUATING
+  COMPLETED
+  ABANDONED
+}
+
+/// Why an attempt ended. Three of these are automatic, and telling them apart
+/// matters: a spike in AUTO_TIMEOUT_SWEEPER means students are losing sessions.
+enum SubmissionReason {
+  STUDENT
+  AUTO_TIMEOUT_CLIENT
+  AUTO_TIMEOUT_SERVER
+  AUTO_TIMEOUT_SWEEPER
+  ADMIN
+}
+
+enum AnswerStatus {
+  UNANSWERED
+  ANSWERED
+  MARKED_FOR_REVIEW
+  ANSWERED_AND_MARKED
+}
+
+/// How a question's marks were decided. Honesty matters here: SELF-evaluated
+/// marks are the student's own assessment against the marking scheme, and every
+/// score built from them is labelled as such rather than presented as objective.
+enum EvaluationMode {
+  AUTO
+  SELF
+  AI
+  PENDING
+}
+
+/// Why a student got it wrong. Captured at review time because "you keep making
+/// calculation slips" is actionable and "you got 12 wrong" is not.
+enum MistakeReason {
+  CONCEPT_NOT_KNOWN
+  CONCEPT_MISAPPLIED
+  CALCULATION_ERROR
+  MISREAD_QUESTION
+  INCOMPLETE_ANSWER
+  RAN_OUT_OF_TIME
+  SILLY_MISTAKE
+  GUESSED
+}
+
+enum AIContext {
+  PRACTICE
+  REVIEW
+  CHAPTER
+}
+
+enum AIRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+/// The six tutor actions from docs/05-ai-tutor.md.
+enum AIAction {
+  EXPLAIN
+  HINT
+  SIMPLER
+  WHY_WRONG
+  SIMILAR
+  STEP_BY_STEP
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Identity
+// ═══════════════════════════════════════════════════════════════════════════
+
+model User {
+  id       String  @id @default(cuid())
+  /// Clerk is the identity provider; this is the join back to it.
+  clerkId  String  @unique
+  email    String  @unique
+  name     String?
+  imageUrl String?
+
+  /// Role lives here rather than in Clerk metadata. Clerk metadata is editable
+  /// from the frontend SDK surface and is a claim about a user; this is our
+  /// authorization decision, and it belongs in our database.
+  role   Role       @default(STUDENT)
+  status UserStatus @default(ACTIVE)
+
+  lastSeenAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  studentProfile    StudentProfile?
+  practiceSessions  PracticeSession[]
+  examAttempts      ExamAttempt[]
+  questionAttempts  QuestionAttempt[]
+  bookmarks         Bookmark[]
+  mistakeRecords    MistakeRecord[]
+  topicMastery      TopicMastery[]
+  subjectProgress   SubjectProgress[]
+  aiConversations   AIConversation[]
+  aiUsage           AIUsageLedger[]
+  authoredQuestions Question[]         @relation("QuestionAuthor")
+  questionRevisions QuestionRevision[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model StudentProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classLevel        Int
+  board             Board    @default(CBSE)
+  school            String?
+  preferredLanguage Language @default(ENGLISH)
+
+  /// Null until onboarding completes. Route guards key off this, so it is a
+  /// timestamp rather than a boolean — "when did they finish" answers more
+  /// questions than "did they".
+  onboardedAt DateTime?
+
+  /// DPDP Act 2023: essentially every Class 10 user is a minor, so verifiable
+  /// parental consent is not an edge case. Recorded from day one even though
+  /// the consent *flow* lands in Phase 2 — retrofitting a consent timestamp
+  /// onto users who signed up without one is not possible after the fact.
+  parentEmail        String?
+  parentConsentAt    DateTime?
+  parentConsentToken String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  targetExams TargetExam[]
+  enrolments  SubjectEnrolment[]
+
+  @@index([classLevel, board])
+  @@map("student_profiles")
+}
+
+model TargetExam {
+  id        String         @id @default(cuid())
+  profileId String
+  profile   StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  /// The board session year, e.g. "2027".
+  session  String
+  phase    ExamPhase
+  examDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, session, phase])
+  @@map("target_exams")
+}
+
+model SubjectEnrolment {
+  id        String         @id @default(cuid())
+  profileId String
+  profile   StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, subjectId])
+  @@index([subjectId, isActive])
+  @@map("subject_enrolments")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Curriculum
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Subject {
+  id         String @id @default(cuid())
+  board      Board  @default(CBSE)
+  classLevel Int
+  /// Stable short code used by blueprints: "MATH", "SCI", "PHY".
+  code       String
+  name       String
+  slug       String
+
+  /// Maths Basic vs Standard. Same syllabus and paper shape, different
+  /// difficulty — a variant, not a separate subject.
+  variant String?
+
+  /// Never a constant: 80 for Class 10, 70 for Class 12 Physics. Any code that
+  /// assumes one of these is wrong for the other.
+  theoryMarks   Int
+  hasPractical  Boolean @default(false)
+  /// Internal assessment marks, excluded from everything this platform scores.
+  internalMarks Int     @default(0)
+
+  syllabusYear String
+  isActive     Boolean @default(true)
+  orderIndex   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapters         Chapter[]
+  syllabusVersions SyllabusVersion[]
+  questions        Question[]
+  blueprints       ExamBlueprint[]
+  examPapers       ExamPaper[]
+  enrolments       SubjectEnrolment[]
+  progress         SubjectProgress[]
+
+  @@unique([board, classLevel, code, variant])
+  @@unique([slug])
+  @@index([board, classLevel, isActive])
+  @@map("subjects")
+}
+
+/// CBSE drops and rationalises chapters most years. Without this, a 2019 paper
+/// on a since-deleted chapter surfaces in a 2027 student's practice set.
+model SyllabusVersion {
+  id        String  @id @default(cuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  academicYear String
+  isCurrent    Boolean @default(false)
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectId, academicYear])
+  @@index([subjectId, isCurrent])
+  @@map("syllabus_versions")
+}
+
+model Chapter {
+  id        String  @id @default(cuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  name           String
+  slug           String
+  orderIndex     Int
+  ncertChapterNo Int?
+
+  /// Groups chapters within a subject — "Physics"/"Chemistry"/"Biology" for
+  /// Class 10 Science, syllabus unit names for Class 12. Null for Maths, which
+  /// has no such grouping. See docs §2.6 for why this beat both a Unit table
+  /// and three separate Subject rows.
+  domain String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  topics    Topic[]
+  questions Question[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId, domain, orderIndex])
+  @@index([subjectId, isActive])
+  @@map("chapters")
+}
+
+model Topic {
+  id        String  @id @default(cuid())
+  chapterId String
+  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  name       String
+  slug       String
+  orderIndex Int
+  isActive   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questionTopics QuestionTopic[]
+  mastery        TopicMastery[]
+
+  @@unique([chapterId, slug])
+  @@index([chapterId, orderIndex])
+  @@map("topics")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Questions
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Question {
+  id        String  @id @default(cuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  chapterId String
+  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  type      QuestionType
+  /// Rich text with LaTeX. Rendered by QuestionRenderer, never with dangerouslySetInnerHTML.
+  body      String
+  /// CBSE publishes bilingually. Nullable and unused in MVP (Q5) — but adding
+  /// the column now costs nothing, and adding it later means backfilling every
+  /// question that has been written by then.
+  bodyHindi String?
+
+  marks               Int
+  difficulty          Difficulty @default(MEDIUM)
+  /// Recalculated from real accuracy data once there is any. Stated difficulty
+  /// is an author's guess and is wrong often enough to be worth measuring.
+  observedDifficulty  Float?
+  bloomLevel          BloomLevel @default(UNDERSTAND)
+  expectedTimeSeconds Int
+
+  status      QuestionStatus @default(DRAFT)
+  /// Bumped when an edit changes meaning. Attempts record the version they saw.
+  version     Int            @default(1)
+  /// Hash of the meaning-bearing fields, so "did this actually change?" is a
+  /// comparison rather than a judgement call.
+  contentHash String?
+
+  /// Sub-part of a case-based or multi-part question. Depth is capped at 1 by a
+  /// CHECK constraint in the migration: a sub-part cannot itself be a container.
+  parentId     String?
+  parent       Question?  @relation("QuestionSubParts", fields: [parentId], references: [id], onDelete: Cascade)
+  subParts     Question[] @relation("QuestionSubParts")
+  /// Position among siblings. Null for top-level questions.
+  subPartIndex Int?
+
+  /// True for the stimulus-holding parent of a case study. Container questions
+  /// are never attempted directly — their sub-parts are.
+  isContainer Boolean @default(false)
+
+  authorId String?
+  author   User?   @relation("QuestionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  answer          QuestionAnswer?
+  source          QuestionSource?
+  options         QuestionOption[]
+  topics          QuestionTopic[]
+  assets          QuestionAsset[]
+  revisions       QuestionRevision[]
+  slotItems       ExamSlotItem[]
+  attempts        QuestionAttempt[]
+  bookmarks       Bookmark[]
+  mistakes        MistakeRecord[]
+  aiConversations AIConversation[]
+
+  // The practice-selection hot path filters on several of these at once over
+  // what will become by far the largest table. Composite indexes are ordered
+  // most-selective-first for the queries in docs §4.
+  @@index([subjectId, status, difficulty])
+  @@index([chapterId, status, type])
+  @@index([subjectId, chapterId, status, marks])
+  @@index([parentId])
+  @@index([status, publishedAt])
+  @@map("questions")
+}
+
+/// Split out from Question deliberately. With the answer key as columns on
+/// Question, every student-facing query must remember to `select` around it.
+/// As a relation, the default query returns no answer data at all and exposing
+/// it takes an explicit `include` — the safe path becomes the lazy path.
+model QuestionAnswer {
+  id         String   @id @default(cuid())
+  questionId String   @unique
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  /// The canonical answer, for auto-graded types.
+  correctValue   String?
+  /// Other spellings/forms accepted as correct, normalised before comparison.
+  acceptedValues String[] @default([])
+  /// Numerical tolerance, absolute. "9.8" and "9.80" both pass; "9.7" may not.
+  tolerance      Float?
+  unit           String?
+
+  /// Worked solution shown after answering.
+  solution      String
+  /// Step-by-step marks allocation, mirroring CBSE's own marking schemes. This
+  /// is what students self-evaluate against for subjective questions, so its
+  /// shape is load-bearing rather than decorative: [{ step, marks, keyPoints }].
+  markingScheme Json?
+  /// Why the answer is what it is — the AI tutor's fallback when quota runs out.
+  explanation   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("question_answers")
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  /// "A", "B", "C", "D".
+  label      String
+  body       String
+  isCorrect  Boolean @default(false)
+  orderIndex Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([questionId, label])
+  @@index([questionId, orderIndex])
+  @@map("question_options")
+}
+
+model QuestionTopic {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  topicId    String
+  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Restrict)
+
+  /// Exactly one primary topic per question; the rest are secondary. Mastery
+  /// attribution uses the primary, browsing uses all of them.
+  isPrimary Boolean @default(false)
+
+  @@unique([questionId, topicId])
+  @@index([topicId, questionId])
+  @@index([questionId])
+  @@map("question_topics")
+}
+
+/// Provenance is required, not optional. Reproducing CBSE and publisher content
+/// in a paid product is a real legal exposure (R2), and "which paper, which set,
+/// which question number" is also information students actively want.
+model QuestionSource {
+  id         String   @id @default(cuid())
+  questionId String   @unique
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  sourceType             SourceType
+  year                   Int?
+  /// "Feb 2026", "May 2026" — matters now that Class 10 has two sittings.
+  examSession            String?
+  paperCode              String?
+  setNumber              String?
+  originalQuestionNumber String?
+  sourceUrl              String?
+
+  /// The field this whole table exists for. Defaults to NEEDS_REVIEW so that
+  /// content entered without a deliberate licensing decision is conservative
+  /// rather than silently served.
+  licenceStatus   LicenceStatus @default(NEEDS_REVIEW)
+  attributionText String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sourceType, year])
+  @@index([licenceStatus])
+  @@map("question_sources")
+}
+
+model QuestionAsset {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  kind       AssetKind
+  url        String
+  /// Required, not nullable. Diagrams are unavoidable in Physics and Maths, and
+  /// a question that is invisible to a screen reader is a question a blind
+  /// student cannot answer.
+  altText    String
+  caption    String?
+  orderIndex Int       @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([questionId, orderIndex])
+  @@map("question_assets")
+}
+
+/// Audit trail for meaning-changing edits. Together with the snapshot stored on
+/// each attempt, this is what makes it safe to correct a published question:
+/// past attempts keep being scored against the version the student actually saw.
+model QuestionRevision {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  version    Int
+  /// What changed, field by field.
+  diff       Json
+  reason     String?
+  editedById String?
+  editedBy   User?   @relation(fields: [editedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([questionId, version])
+  @@index([questionId])
+  @@map("question_revisions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Exams — blueprint → paper → section → slot → slot item
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// The *rule*: how a paper for this subject is shaped. Validated by
+/// @samjho/exam-blueprints before it is ever written here.
+model ExamBlueprint {
+  id        String  @id @default(cuid())
+  /// Stable identifier from the blueprint package, e.g. "cbse-10-science-2026".
+  key       String
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  name            String
+  academicYear    String
+  version         Int    @default(1)
+  totalMarks      Int
+  totalQuestions  Int
+  durationMinutes Int
+
+  /// The full validated blueprint document. Stored as JSON because it *is*
+  /// configuration — normalising it into tables would make a pattern change a
+  /// migration, which is exactly what this design exists to avoid.
+  structure Json
+
+  /// Whether this was checked against the official CBSE sample paper PDF rather
+  /// than a coaching-site summary. Papers must not be generated from an
+  /// unverified blueprint once real students are being scored.
+  verifiedAgainstOfficial Boolean @default(false)
+  sourceUrl               String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  papers ExamPaper[]
+
+  @@unique([key, version])
+  @@index([subjectId, isActive])
+  @@map("exam_blueprints")
+}
+
+/// A *concrete* paper: a real past paper entered by an admin, or one generated
+/// from a blueprint.
+model ExamPaper {
+  id          String         @id @default(cuid())
+  blueprintId String?
+  blueprint   ExamBlueprint? @relation(fields: [blueprintId], references: [id], onDelete: SetNull)
+  subjectId   String
+  subject     Subject        @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  title     String
+  slug      String    @unique
+  paperType PaperType
+  year      Int?
+  setCode   String?
+
+  totalMarks          Int
+  durationMinutes     Int
+  generalInstructions String[] @default([])
+
+  status      PaperStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sections ExamSection[]
+  attempts ExamAttempt[]
+
+  @@index([subjectId, status])
+  @@index([paperType, year])
+  @@map("exam_papers")
+}
+
+model ExamSection {
+  id      String    @id @default(cuid())
+  paperId String
+  paper   ExamPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  name             String
+  orderIndex       Int
+  instructions     String?
+  /// The section default. Null when the section mixes marks and every slot
+  /// carries its own — see the mixed-marks fixture in @samjho/exam-blueprints.
+  marksPerQuestion Int?
+
+  createdAt DateTime @default(now())
+
+  slots ExamSlot[]
+
+  @@unique([paperId, orderIndex])
+  @@index([paperId])
+  @@map("exam_sections")
+}
+
+/// A *position* in the paper — "question 29, 3 marks, Section C". Not a
+/// question: real papers say "attempt either Q29 or Q29(OR)", so a position can
+/// hold alternatives. This indirection is what makes internal choice work
+/// without special cases in scoring, review and analytics.
+model ExamSlot {
+  id        String      @id @default(cuid())
+  sectionId String
+  section   ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  /// As printed on the paper. Not the same as orderIndex — papers number
+  /// continuously across sections while orderIndex restarts.
+  questionNumber Int
+  orderIndex     Int
+  marks          Int
+  /// True where the student may skip the position entirely (rare, but real).
+  isOptional     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  items   ExamSlotItem[]
+  answers ExamAnswer[]
+
+  @@unique([sectionId, orderIndex])
+  @@index([sectionId])
+  @@map("exam_slots")
+}
+
+model ExamSlotItem {
+  id     String   @id @default(cuid())
+  slotId String
+  slot   ExamSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  variantLabel SlotVariant @default(MAIN)
+  orderIndex   Int         @default(0)
+
+  createdAt DateTime @default(now())
+
+  chosenBy ExamAnswer[]
+
+  @@unique([slotId, variantLabel])
+  @@index([questionId])
+  @@map("exam_slot_items")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Attempts
+// ═══════════════════════════════════════════════════════════════════════════
+
+model PracticeSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mode         PracticeMode
+  /// The filters the student chose, kept so a session can be repeated.
+  filtersJson  Json
+  /// The question set is materialised at creation rather than re-queried. A
+  /// student's session must not change shape because an admin published new
+  /// content halfway through it.
+  questionIds  String[]
+  currentIndex Int          @default(0)
+
+  status      SessionStatus @default(IN_PROGRESS)
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  totalQuestions Int   @default(0)
+  answered       Int   @default(0)
+  correct        Int   @default(0)
+  marksEarned    Float @default(0)
+  marksPossible  Float @default(0)
+  timeSpentMs    Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts QuestionAttempt[]
+
+  @@index([userId, status])
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("practice_sessions")
+}
+
+model ExamAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examPaperId String
+  examPaper   ExamPaper @relation(fields: [examPaperId], references: [id], onDelete: Restrict)
+
+  status ExamAttemptStatus @default(IN_PROGRESS)
+
+  /// The timer is server-authoritative. `deadlineAt` is computed once at
+  /// creation from the paper's duration and is the only thing that decides
+  /// whether an attempt is still live — the client's clock is advisory.
+  startedAt        DateTime          @default(now())
+  deadlineAt       DateTime
+  submittedAt      DateTime?
+  submissionReason SubmissionReason?
+  /// Last sign of life from the client, for the abandoned-attempt sweeper.
+  lastHeartbeatAt  DateTime?
+
+  objectiveScore    Float?
+  selfAssessedScore Float?
+  totalScore        Float?
+  totalMarks        Int
+
+  /// Makes duplicate attempt creation impossible rather than merely unlikely:
+  /// a double-tapped "Start exam" must not produce two attempts and two timers.
+  idempotencyKey String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  answers  ExamAnswer[]
+  attempts QuestionAttempt[]
+
+  @@index([userId, status])
+  /// The sweeper's query, run every 60 seconds forever:
+  /// WHERE status = 'IN_PROGRESS' AND deadlineAt < now()
+  @@index([status, deadlineAt])
+  @@index([examPaperId])
+  @@map("exam_attempts")
+}
+
+model ExamAnswer {
+  id        String      @id @default(cuid())
+  attemptId String
+  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  slotId    String
+  slot      ExamSlot    @relation(fields: [slotId], references: [id], onDelete: Restrict)
+
+  /// Which side of an internal choice the student answered. Null until they pick.
+  chosenSlotItemId String?
+  chosenSlotItem   ExamSlotItem? @relation(fields: [chosenSlotItemId], references: [id], onDelete: Restrict)
+
+  answerJson Json?
+  status     AnswerStatus @default(UNANSWERED)
+
+  /// Monotonic per answer. Autosaves can arrive out of order over a flaky
+  /// connection; a lower revision must never overwrite a higher one.
+  revision Int @default(0)
+
+  timeSpentMs Int @default(0)
+  visitCount  Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// One answer per slot, so concurrent autosaves upsert instead of duplicating.
+  @@unique([attemptId, slotId])
+  @@index([attemptId])
+  @@map("exam_answers")
+}
+
+/// The single source of truth for all analytics. Written for both practice and
+/// exam contexts; exactly one of the two session FKs is set, enforced by a CHECK
+/// constraint in the migration.
+model QuestionAttempt {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  /// What the student actually saw, and what was actually accepted as correct.
+  /// Without this, correcting a published question silently rewrites history:
+  /// every past attempt's score, mistake list and mastery figure becomes a lie.
+  questionVersion  Int
+  questionSnapshot Json
+
+  practiceSessionId String?
+  practiceSession   PracticeSession? @relation(fields: [practiceSessionId], references: [id], onDelete: Cascade)
+  examAttemptId     String?
+  examAttempt       ExamAttempt?     @relation(fields: [examAttemptId], references: [id], onDelete: Cascade)
+
+  answerJson    Json?
+  isCorrect     Boolean?
+  marksAwarded  Float    @default(0)
+  marksPossible Float
+
+  evaluationMode EvaluationMode @default(PENDING)
+  mistakeReason  MistakeReason?
+
+  timeSpentMs Int      @default(0)
+  usedAiHelp  Boolean  @default(false)
+  attemptedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, attemptedAt(sort: Desc)])
+  @@index([userId, questionId, attemptedAt])
+  @@index([userId, isCorrect, attemptedAt])
+  @@index([examAttemptId])
+  @@index([practiceSessionId])
+  @@index([questionId])
+  @@map("question_attempts")
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  note String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("bookmarks")
+}
+
+/// Derivable from attempts, materialised anyway: it makes "what have I got
+/// wrong and not yet fixed" a fast indexed lookup, and gives spaced repetition
+/// somewhere to live later.
+model MistakeRecord {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  firstMissedAt  DateTime       @default(now())
+  lastMissedAt   DateTime       @default(now())
+  /// Null means unrepaired. Indexed on that basis.
+  repairedAt     DateTime?
+  repairAttempts Int            @default(0)
+  nextReviewAt   DateTime?
+  lastReason     MistakeReason?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId, repairedAt])
+  @@index([userId, nextReviewAt])
+  @@map("mistake_records")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Progress rollups
+//
+//  Maintained incrementally inside the same transaction that writes an attempt.
+//  Computing these live would mean aggregating a student's entire attempt
+//  history on every dashboard load — see docs §2.5.
+// ═══════════════════════════════════════════════════════════════════════════
+
+model TopicMastery {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId String
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  attempted     Int   @default(0)
+  correct       Int   @default(0)
+  marksEarned   Float @default(0)
+  marksPossible Float @default(0)
+
+  /// Recency-weighted accuracy, 0–1, not lifetime accuracy. A student who was
+  /// 20% in June and 80% in August is not a 50% student, and telling them so is
+  /// both wrong and demoralising.
+  masteryScore Float @default(0)
+
+  unrepairedMistakes Int       @default(0)
+  lastAttemptedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, topicId])
+  @@index([userId, masteryScore])
+  @@map("topic_mastery")
+}
+
+model SubjectProgress {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  attempted     Int   @default(0)
+  correct       Int   @default(0)
+  marksEarned   Float @default(0)
+  marksPossible Float @default(0)
+  masteryScore  Float @default(0)
+
+  questionsBookmarked Int @default(0)
+  unrepairedMistakes  Int @default(0)
+  practiceSessions    Int @default(0)
+  examsCompleted      Int @default(0)
+
+  lastAttemptedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, subjectId])
+  @@index([userId, masteryScore])
+  @@map("subject_progress")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  AI tutor
+// ═══════════════════════════════════════════════════════════════════════════
+
+model AIConversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Conversations are grounded in a specific question wherever possible — an
+  /// ungrounded tutor is a general-purpose chatbot, which is not what this is.
+  questionId        String?
+  question          Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  questionAttemptId String?
+
+  context      AIContext
+  title        String
+  messageCount Int                @default(0)
+  status       ConversationStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages AIMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([questionId])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    AIRole
+  action  AIAction?
+  content String
+
+  promptTokens      Int?
+  completionTokens  Int?
+  model             String?
+  providerRequestId String?
+  latencyMs         Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+/// Per-user, per-day usage ledger. Quotas are enforced against this rather than
+/// against a counter, so that "how much did this student cost us" is answerable
+/// and a runaway loop is visible before the invoice arrives.
+model AIUsageLedger {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Date only, at UTC midnight.
+  date               DateTime
+  messageCount       Int      @default(0)
+  totalTokens        Int      @default(0)
+  /// Paise, not rupees — integer money avoids float drift on a running total.
+  estimatedCostPaise Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("ai_usage_ledger")
 }

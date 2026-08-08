@@ -223,20 +223,29 @@ These were checked against current sources during Phase 1 rather than assumed. T
 - **Competency-based questions rose to ~50% weightage** for 2026-27, up from 40%. So case-based / source-based / assertion–reason are not edge cases — they are half the paper, and must be first-class question types from day one.
 - **Papers differ structurally by subject**, including in ways that a naive schema would miss:
 
-|              | Class 10 Maths              | Class 10 Science                  | Class 12 Physics                  |
-| ------------ | --------------------------- | --------------------------------- | --------------------------------- |
-| Questions    | 38                          | 39                                | 33                                |
-| Theory marks | 80                          | 80 (+20 internal)                 | 70 (+30 practical)                |
-| Sections     | A–E                         | A–E                               | A–E                               |
-| Section A    | 20 × 1m                     | 16 MCQ + 4 A-R × 1m               | 12 MCQ + 4 A-R × 1m               |
-| Section E    | 3 × 4m, sub-parts **1+1+2** | 3 × 4m, sub-parts **1/2/3**       | 2 × 4m case-based **+ 1 × 6m LA** |
-| Notes        | Basic / Standard variants   | spans Physics, Chemistry, Biology | —                                 |
+|                    | Class 10 Maths            | Class 10 Science                  | Class 12 Physics      |
+| ------------------ | ------------------------- | --------------------------------- | --------------------- |
+| Questions          | 38                        | 39                                | 33                    |
+| Theory marks       | 80                        | 80 (+20 internal)                 | 70 (+30 practical)    |
+| Sections           | A–E                       | A–E                               | A–E                   |
+| Section A          | 18 MCQ + 2 A-R × 1m       | 16 MCQ + 4 A-R × 1m               | 12 MCQ + 4 A-R × 1m   |
+| Section B          | 5 × 2m                    | 6 × 2m                            | 5 × 2m                |
+| Section C          | 6 × 3m                    | 7 × 3m                            | 7 × 3m                |
+| Section D          | 4 × 5m                    | 3 × 5m                            | **2 × 4m case-based** |
+| Section E          | 3 × 4m case-based         | 3 × 4m case-based                 | 3 × 5m                |
+| Case-based sits in | Section E                 | Section E                         | **Section D**         |
+| Sub-part rule      | prescribed **1+1+2**      | any split from **{1, 2, 3}**      | sub-parts from {1, 2} |
+| Notes              | Basic / Standard variants | spans Physics, Chemistry, Biology | —                     |
 
 - **Internal choice** ("attempt either / or") exists in most sections of all three.
-- **Sub-part marks vary between subjects** (1+1+2 vs 1/2/3) — so sub-part structure is per-question data, never a constant.
-- **A section can contain groups with different marks per question** — Class 12 Physics Section E holds both 4-mark and 6-mark questions. Any schema assuming "one mark value per section" breaks on the first real paper.
+- **The case-based section is not always the last one.** It is Section E in both Class 10 papers and Section D in Class 12 Physics. Anything keying off "the final section holds the case studies" is wrong for one of them.
+- **Sub-part rules differ in _kind_, not just in value.** Maths prescribes exactly 1+1+2. Science prescribes a vocabulary — "sub-parts of the values of 1/2/3 marks" — under which 1+1+2, 1+3 and 2+2 are all legal in the same paper. A schema storing a single fixed split is wrong for Science; one storing only a vocabulary cannot express the Maths guarantee. The blueprint format models both (`subParts.mode: FIXED | CONSTRAINED`).
 - **Subject variants exist** — Maths Basic vs Standard at Class 10.
 - **Class 10 Science is internally divided into Physics / Chemistry / Biology**, which students navigate by.
+
+> **Correction, Phase 1.** An earlier draft of this table claimed Class 12 Physics Section E held "2 × 4m case-based + 1 × 6m LA", and §8 cited that as evidence that a section can mix marks per question. Both were wrong. The draft structure summed to 76 marks over 34 questions against a verified 70 and 33 — the case-based section had been placed in E instead of D and a 6-mark question invented. **No paper currently modelled here mixes marks within a section.**
+>
+> The blueprint format still supports it, because the cost is one nullable field and CBSE demonstrably changes patterns (R8), but it is now backed by an explicit synthetic fixture rather than a misremembered real paper — an untested capability is not a capability. The error was caught by the declared-totals cross-check in `packages/exam-blueprints`, which is the argument for making blueprints declare their totals redundantly.
 
 Three schema consequences follow directly, and they are the reason the naive `ExamQuestion` join table in the brief is insufficient:
 
