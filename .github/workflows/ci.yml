@@ -43,6 +43,24 @@ jobs:
       API_URL: "http://localhost:4000"
       NEXT_PUBLIC_API_URL: "http://localhost:4000"
 
+      # Placeholder Clerk credentials.
+      #
+      # Both apps validate their configuration at boot, and `next build`
+      # prerenders pages that mount ClerkProvider — so a build with no Clerk
+      # values fails, which is the config validation doing its job. These are
+      # structurally valid but belong to no real instance: the publishable key
+      # is `pk_test_` + base64("test.clerk.accounts.dev$"), which is all Clerk's
+      # parser needs to extract a frontend API host.
+      #
+      # No test reaches Clerk. Token verification is exercised against a locally
+      # generated RSA key pair, so CI proves the auth code without an account and
+      # without a secret in the repository. If a test ever *does* need to reach
+      # Clerk, it will fail here — loudly, which is correct.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dGVzdC5jbGVyay5hY2NvdW50cy5kZXYk"
+      CLERK_SECRET_KEY: "sk_test_ci_placeholder_not_a_real_key"
+      CLERK_ISSUER_URL: "https://test.clerk.samjho.invalid"
+      CLERK_WEBHOOK_SIGNING_SECRET: "whsec_c2FtamhvLXRlc3Qtc2lnbmluZy1rZXkh"
+
     steps:
       - uses: actions/checkout@v7
 

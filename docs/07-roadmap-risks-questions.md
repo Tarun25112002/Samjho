@@ -111,9 +111,13 @@ Consequences applied: admin tooling moved from Phase 5 to **Phase 4**, ahead of 
 **Q3 — Intent → commercial, serving real students.**
 Consequences applied: R2 (copyright) and R6 (DPDP/minors) both upgraded to must-resolve-before-content-entry rather than pre-launch; ad-based monetisation permanently foreclosed; R12 added for the Class 10 willingness-to-pay problem; Phase 9 launch-readiness work is non-negotiable.
 
-### Near-term
+**Q4 — Auth methods → Clerk with email + Google. Phone/OTP deferred.**
+Consequences applied: `User.email` stays required and unique, which the whole lazy-upsert path depends on — a phone-only Clerk user has no address to write. `lib/clerk-user.ts` therefore throws rather than inventing a placeholder, with a comment naming phone auth as the change that would trigger revisiting it. Adding phone/OTP later is a Clerk dashboard toggle **plus** a migration making `email` nullable and an audit of every place that assumes it, so the deferral is real work saved now and real work owed later, not a free option.
 
-**Q4 — Auth methods.** Clerk with email + Google is the proposal. Phone/OTP is what most Indian students expect and materially lifts conversion, but adds cost and setup. Include it in MVP?
+**Q7 — Parental consent → closed pilot, capturing the guardian's address at onboarding.**
+Consequences applied: onboarding requires a parent/guardian email and two explicitly ticked declarations (`z.literal(true)`, so an omitted consent block is a validation error rather than a stored `false`). Two columns were added in Phase 2 — `guardianDeclaredAt` and `termsAcceptedAt`/`termsAcceptedVersion` — specifically so the student's declaration is **not** written into `parentConsentAt`. That field means "a guardian verifiably acted" and stays NULL throughout the pilot; conflating the two would make the pilot indistinguishable from verified consent in the one table a regulator would read. `parentConsentToken` is minted at onboarding so switching the verification email on later is a mailer and a route, not a migration plus a backfill. The profile page states the position in plain words rather than showing a green tick nobody earned. **Still required: Indian legal advice before the pilot opens up**, and the build toward the parent-owns-the-account model (Q9/R12) is unchanged.
+
+### Near-term
 
 **Q5 — Hindi / bilingual support.** CBSE papers are published bilingually. Supporting it later means retrofitting translations onto every question — expensive. Supporting it now roughly doubles content entry. My recommendation: **English only for MVP, but add a nullable `bodyHindi` column now** so the door stays open for free. Agree?
 
@@ -122,8 +126,6 @@ Consequences applied: R2 (copyright) and R6 (DPDP/minors) both upgraded to must-
 (b) Verbatim PYQs with attribution — fastest, real legal exposure;
 (c) Licensed from a publisher — cleanest, costs money.
 The schema supports all three; the operational decision is yours and should be made before bulk entry.
-
-**Q7 — Parental consent (upgraded to near-term by Q3).** Every Class 10 user is a minor, and this is now a commercial product, so DPDP's verifiable-parental-consent requirement applies to essentially your entire user base. Three viable postures: (a) parent email verification at signup — light, common in Indian ed-tech, defensible; (b) full parent-account-owns-student-account model — heaviest, safest, and doubles as the R12 monetisation answer since the parent is the payer anyway; (c) closed pilot under explicit consent while you take legal advice. **My recommendation is (c) now, building toward (b)** — the parent-as-payer and parent-as-consenter problems have the same solution, so solving them together is cheaper than solving either alone. This needs an Indian lawyer, not this document, and it shapes Phase 2 signup.
 
 ### Later
 

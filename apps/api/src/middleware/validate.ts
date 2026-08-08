@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import type { ZodType } from "zod";
+import type { z, ZodType } from "zod";
 
 import { ValidationError } from "../lib/errors.js";
 
@@ -25,6 +25,26 @@ interface ValidationSchemas {
  * Unused in Phase 0 — no route takes input yet — but it belongs with the other
  * middleware so that the first route that *does* take input has no excuse.
  */
+/**
+ * Read a validated body with its real type.
+ *
+ * `req.body` is `any` in Express' types, so a handler needs *something* to turn
+ * it into a known shape. The two candidates are a cast and a re-parse.
+ *
+ * A cast is faster and wrong: `req.body as OnboardingInput` stays compiling
+ * after someone deletes the `validate()` call from the route, and the first
+ * indication is a service reading `undefined.toLowerCase()`. Re-parsing costs
+ * microseconds on objects this size and cannot come apart that way — if the
+ * middleware is missing, this throws a ZodError the error handler turns into a
+ * 400 rather than letting unvalidated input through.
+ *
+ * Keep `validate()` on the route as well: it is what produces `body.fieldName`
+ * error paths, which is what a form needs to highlight the offending input.
+ */
+export function parseBody<T extends ZodType>(req: Request, schema: T): z.infer<T> {
+  return schema.parse(req.body) as z.infer<T>;
+}
+
 export function validate(schemas: ValidationSchemas) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const issues: Array<{ path: string; message: string }> = [];

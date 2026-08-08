@@ -8,11 +8,27 @@ import { pinoHttp } from "pino-http";
 
 import { config } from "./lib/config.js";
 import { logger } from "./lib/logger.js";
+import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
+import { buildMeRouter } from "./modules/auth/auth.routes.js";
+import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { buildClerkWebhookRouter } from "./modules/webhooks/clerk.routes.js";
 
 export const API_PREFIX = "/api/v1";
+
+export interface CreateAppOptions {
+  /**
+   * Override token verification.
+   *
+   * Exists so tests can supply a verifier backed by a locally generated key
+   * pair and mint their own tokens — the whole auth chain then runs for real
+   * instead of against a mock. Production leaves this unset and gets the
+   * JWKS-backed verifier.
+   */
+  verifyToken?: TokenVerifier;
+}
 
 /**
  * Builds the Express app without starting a server.
@@ -26,12 +42,14 @@ export const API_PREFIX = "/api/v1";
  *   1. requestContext  — establishes the request id everything else logs with
  *   2. pinoHttp        — request logging (needs the id)
  *   3. helmet / cors   — reject hostile requests before parsing their body
- *   4. body parsers    — with a size cap
- *   5. routes
- *   6. notFound        — nothing matched
- *   7. errorHandler    — must be last; Express identifies it by arity (4 args)
+ *   4. webhooks        — BEFORE the JSON parser; they need the raw body
+ *   5. body parsers    — with a size cap
+ *   6. routes
+ *   7. notFound        — nothing matched
+ *   8. errorHandler    — must be last; Express identifies it by arity (4 args)
  */
-export function createApp(): Express {
+export function createApp(options: CreateAppOptions = {}): Express {
+  const verifyToken = options.verifyToken ?? getTokenVerifier();
   const app = express();
 
   // Trust the platform's proxy so req.ip is the client, not the load balancer.
@@ -68,6 +86,12 @@ export function createApp(): Express {
     }),
   );
 
+  // Webhooks must come before the JSON parser. Svix signs the *bytes* Clerk
+  // sent; once express.json() has consumed the stream, those bytes are gone and
+  // no amount of re-serialising reproduces them faithfully. Unversioned because
+  // the sender is Clerk's configuration, not our client.
+  app.use("/webhooks", buildClerkWebhookRouter());
+
   // 1MB default. Large payloads get an explicit, separately-limited route
   // (admin bulk import, Phase 4) rather than raising this ceiling globally.
   app.use(express.json({ limit: "1mb" }));
@@ -77,7 +101,7 @@ export function createApp(): Express {
   // product API's contract.
   app.use(healthRouter);
 
-  app.use(API_PREFIX, buildApiRouter());
+  app.use(API_PREFIX, buildApiRouter(verifyToken));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
@@ -87,15 +111,20 @@ export function createApp(): Express {
 
 /**
  * Versioned product API. Feature modules mount here as they land:
- *   router.use("/catalog", catalogRouter)
  *   router.use("/practice-sessions", practiceRouter)
+ *   router.use("/exam-attempts", examRouter)
  */
-function buildApiRouter(): express.Router {
+function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   const router = express.Router();
 
+  // Unauthenticated: the version banner is not sensitive, and something has to
+  // answer at the API root.
   router.get("/", (_req, res) => {
     res.json({ data: { service: config.service, version: config.version, api: "v1" } });
   });
+
+  router.use("/me", buildMeRouter(verifyToken));
+  router.use("/catalog", buildCatalogRouter(verifyToken));
 
   return router;
 }
