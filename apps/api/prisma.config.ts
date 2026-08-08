@@ -31,6 +31,11 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Run through tsx rather than compiling first: the seed imports the
+    // generated Prisma client and the workspace blueprint package directly, and
+    // a build step between "edit the seed" and "see the data" is friction that
+    // makes people stop re-seeding.
+    seed: "node --import tsx prisma/seed/index.ts",
   },
   datasource: {
     url: env("DATABASE_URL"),

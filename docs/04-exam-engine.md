@@ -65,29 +65,50 @@ Lives in `packages/exam-blueprints`, validated by a Zod schema, unit-tested. Cla
       ],
     },
     {
+      // Physics puts its case-based questions in Section D, not E. Both Class 10
+      // papers put them in E. Nothing may key off "the last section".
       "name": "Section D",
       "orderIndex": 3,
-      "marksPerQuestion": 5,
+      "marksPerQuestion": 4,
       "groups": [
-        { "count": 3, "types": ["LONG_ANSWER"], "internalChoice": true, "choiceCount": 1 },
+        {
+          "count": 2,
+          "types": ["CASE_BASED"],
+          "internalChoice": true,
+          "choiceCount": 2,
+          "subParts": { "mode": "CONSTRAINED", "allowedMarks": [1, 2], "minParts": 2 },
+        },
       ],
     },
     {
       "name": "Section E",
       "orderIndex": 4,
+      "marksPerQuestion": 5,
       "groups": [
-        { "count": 2, "marks": 4, "types": ["CASE_BASED"], "subPartMarks": [1, 1, 2] },
-        { "count": 1, "marks": 6, "types": ["LONG_ANSWER"], "internalChoice": true },
+        {
+          "count": 3,
+          "types": ["LONG_ANSWER", "NUMERICAL"],
+          "internalChoice": true,
+          "choiceCount": 3,
+        },
       ],
     },
   ],
-  "chapterWeightage": [{ "unit": "Electrostatics", "marks": 16 }, "..."],
 }
 ```
 
-Note that Section E carries two groups with **different marks per question** (4 and 6) — which is why `marksPerQuestion` is per-section _or_ per-group, and why assuming "a section has one mark value" would have broken on the first real paper. Class 10 Maths needs 38 questions / 80 marks / sub-parts of 1+1+2 in Section E, and it is expressed in the same schema without a code change. That is the test the format has to pass.
+**16 + 10 + 21 + 8 + 15 = 70 marks over 33 questions.** The live version is `packages/exam-blueprints/src/blueprints/cbse-12-physics.ts`; this is an excerpt of it.
 
-**Blueprint validator** (`validateBlueprint`) asserts that section marks sum to `totalMarks` and question counts are internally consistent. Run in CI over every blueprint file, and in the admin paper editor live. A paper whose parts don't add up to 70 must be impossible to publish.
+> **Correction, Phase 1.** The draft of this example had Section D as 3 × 5m and Section E as 2 × 4m case-based plus a 1 × 6m long answer, and the paragraph beneath it cited that 4m/6m mix as proof that a section can hold groups with different marks. The structure summed to **76 marks over 34 questions** against a verified 70 and 33. It read as entirely plausible and would not have been caught by inspection. `validateBlueprint` rejects it in under a millisecond, and there is a test named after it (`"rejects the draft Class 12 Physics structure from docs/04"`) so the case stays covered.
+
+Two things the format must express, and does:
+
+- **`marksPerQuestion` is per-section _or_ per-group.** No paper modelled here currently mixes marks within a section — that claim was part of the same error — but the capability is cheap and CBSE changes patterns (R8), so it stays, backed by an explicit synthetic fixture rather than a real paper that does not exist.
+- **Sub-part rules differ in kind between subjects.** Maths prescribes exactly 1+1+2 (`mode: "FIXED"`); Science permits any split drawn from {1, 2, 3} (`mode: "CONSTRAINED"`). Collapsing these into one array of marks would either reject valid Science papers or silently drop the Maths guarantee.
+
+**Blueprint validator** (`validateBlueprint`) checks that section marks sum to the declared `totalMarks`, that question counts reconcile, that every group's marks resolve, that sub-part splits are achievable, and that internal-choice counts are coherent. It runs in CI over every blueprint, and will run in the admin paper editor live. A paper whose parts don't add up must be impossible to publish.
+
+The declared totals are redundant with the section arithmetic **on purpose** — they are the cross-check, and they are the reason the error above was caught rather than shipped.
 
 ### Paper generation `[V1.1]`
 

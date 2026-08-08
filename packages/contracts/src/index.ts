@@ -16,3 +16,4 @@ export * from "./common/envelope.js";
 export * from "./common/pagination.js";
 export * from "./common/error-codes.js";
 export * from "./health/health.schema.js";
+export * from "./question/question-enums.js";

@@ -65,6 +65,13 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @samjho/api db:generate
 
+      # The database-constraint tests need a migrated schema. Applying the
+      # migrations here also verifies that they run cleanly from scratch — the
+      # one thing a developer's incrementally-migrated local database can never
+      # tell you, and the failure mode that only surfaces during a deploy.
+      - name: Apply migrations
+        run: pnpm --filter @samjho/api db:deploy
+
       # Identical to what `pnpm check` runs locally — format, then one turbo
       # invocation so tasks run in dependency order and in parallel where they
       # can (`^build` means packages/contracts compiles before its consumers).
