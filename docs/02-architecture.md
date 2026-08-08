@@ -224,6 +224,45 @@ PATCH /me/profile                     → partial edit; class level and board de
 GET   /catalog/subjects?board=&classLevel=
 ```
 
+**Catalog & question browsing** _(Phase 3, shipped)_
+
+```
+GET  /catalog/subjects/:idOrSlug          → subject + chapters + domains + counts
+GET  /catalog/subjects/:idOrSlug/chapters → chapters grouped by domain
+GET  /catalog/chapters/:idOrSlug          → chapter + topics + counts by type/difficulty
+GET  /questions?subjectId=&chapterId=&topicId=&type=&difficulty=&marks=&search=&cursor=
+GET  /questions/:id                       → the student view; no answer key exists on this shape
+```
+
+> `:idOrSlug` because students arrive from readable URLs while code holds ids.
+> Visibility (published, licence-cleared, active chapter and subject) lives in a
+> single `STUDENT_VISIBLE_QUESTION` clause every query spreads in — a predicate
+> you have to remember to add is not a control.
+
+**Admin taxonomy** _(Phase 3, shipped — `ADMIN` or `CONTENT_EDITOR`)_
+
+```
+GET   /admin/catalog/subjects?board=&classLevel=&includeInactive=
+POST  /admin/catalog/subjects                     · PATCH /admin/catalog/subjects/:id
+GET   /admin/catalog/subjects/:id/chapters        · POST  /admin/catalog/subjects/:id/chapters
+PUT   /admin/catalog/subjects/:id/chapters/order  → the whole order, in one transaction
+GET   /admin/catalog/chapters/:id                 · PATCH /admin/catalog/chapters/:id
+POST  /admin/catalog/chapters/:id/topics          · PUT   /admin/catalog/chapters/:id/topics/order
+PATCH /admin/catalog/topics/:id
+```
+
+> **No `DELETE`.** Taxonomy foreign keys are `onDelete: Restrict`, so nothing
+> anyone has used can be removed; `PATCH { isActive: false }` withdraws a subject
+> or chapter _and_ its questions, and can be undone.
+>
+> **Reordering takes the whole list.** Per-row `orderIndex` PATCHes leave the list
+> with duplicate indexes between requests, and a failure halfway leaves an order
+> that is neither the old one nor the new one, with nothing recording it.
+>
+> Mounted under its own prefix rather than as extra verbs on `/catalog`, so
+> opening the catalog to anonymous traffic for the Phase 9 SEO pages cannot
+> open the writes with it.
+
 **Webhooks**
 
 ```

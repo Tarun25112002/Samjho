@@ -7,9 +7,11 @@
     "./tsconfig/base.json": "./tsconfig/base.json",
     "./tsconfig/node.json": "./tsconfig/node.json",
     "./tsconfig/next.json": "./tsconfig/next.json",
+    "./tsconfig/react.json": "./tsconfig/react.json",
     "./eslint/base": "./eslint/base.js",
     "./eslint/node": "./eslint/node.js",
-    "./eslint/next": "./eslint/next.js"
+    "./eslint/next": "./eslint/next.js",
+    "./eslint/react": "./eslint/react.js"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",

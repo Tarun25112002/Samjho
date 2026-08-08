@@ -5,13 +5,19 @@ import { boardSchema, classLevelSchema } from "../question/question-enums.js";
 /**
  * Subject shapes shared by the catalog and the profile.
  *
- * The full catalog — chapters, topics, question counts — lands in Phase 3. This
- * file holds only what the onboarding wizard and the profile page need: enough
- * to render a subject chip and know which paper it corresponds to.
+ * The summary is what a subject chip needs: enough to render it and know which
+ * paper it corresponds to. Chapters, topics and question counts live in
+ * `chapter.schema.ts`, which extends this rather than redefining it.
  */
 
 export const subjectSummarySchema = z.object({
   id: z.string().min(1),
+  /**
+   * Part of a subject's identity, not decoration — the database's uniqueness
+   * key is (board, classLevel, code, variant). "Class 10 Science" means nothing
+   * without knowing whose Class 10.
+   */
+  board: boardSchema,
   /** Stable short code used by exam blueprints: "MATH", "SCI", "PHY". */
   code: z.string().min(2),
   name: z.string().min(1),

@@ -2,6 +2,7 @@ import type { Board } from "@samjho/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 import type { Prisma } from "../../generated/prisma/client.js";
+import { STUDENT_VISIBLE_TOP_LEVEL } from "../questions/question.visibility.js";
 
 /**
  * Catalog data access. Prisma lives here and nowhere else in this module.
@@ -13,6 +14,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
 
 export const enrollableSubjectSelect = {
   id: true,
+  board: true,
   code: true,
   name: true,
   slug: true,
@@ -76,4 +78,133 @@ export const catalogRepository = {
       orderBy: { orderIndex: "asc" },
     });
   },
+
+  /** By id or slug — students arrive from readable URLs, code arrives with ids. */
+  findSubject(idOrSlug: string): Promise<SubjectRow | null> {
+    return prisma.subject.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }], isActive: true },
+      select: subjectSelect,
+    });
+  },
+
+  listChapters(subjectId: string): Promise<ChapterRow[]> {
+    return prisma.chapter.findMany({
+      where: { subjectId, isActive: true },
+      select: chapterSelect,
+      // Domain first so Science's Physics/Chemistry/Biology sections come out
+      // contiguous; nulls sort last in Postgres ascending, which is harmless
+      // because a subject either has domains on every chapter or on none.
+      orderBy: [{ domain: "asc" }, { orderIndex: "asc" }],
+    });
+  },
+
+  findChapter(idOrSlug: string): Promise<ChapterDetailRow | null> {
+    return prisma.chapter.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }], isActive: true },
+      select: {
+        ...chapterSelect,
+        subject: { select: enrollableSubjectSelect },
+        topics: {
+          where: { isActive: true },
+          select: { id: true, name: true, slug: true, orderIndex: true },
+          orderBy: { orderIndex: "asc" },
+        },
+      },
+    });
+  },
+
+  /**
+   * Student-visible question counts, grouped.
+   *
+   * One `groupBy` per dimension rather than fetching rows and tallying in
+   * JavaScript. On a table heading for six figures of rows, the difference is
+   * an index-only aggregate versus shipping every matching row over the wire to
+   * count them — and the second one works fine right up until it does not.
+   */
+  countByChapter(subjectId: string): Promise<{ chapterId: string; count: number }[]> {
+    return prisma.question
+      .groupBy({
+        by: ["chapterId"],
+        where: { subjectId, ...STUDENT_VISIBLE_TOP_LEVEL },
+        _count: { _all: true },
+      })
+      .then((rows) => rows.map((row) => ({ chapterId: row.chapterId, count: row._count._all })));
+  },
+
+  countTopicsByChapter(subjectId: string): Promise<{ chapterId: string; count: number }[]> {
+    return prisma.topic
+      .groupBy({
+        by: ["chapterId"],
+        where: { isActive: true, chapter: { subjectId } },
+        _count: { _all: true },
+      })
+      .then((rows) => rows.map((row) => ({ chapterId: row.chapterId, count: row._count._all })));
+  },
+
+  countByType(where: Prisma.QuestionWhereInput): Promise<{ type: string; count: number }[]> {
+    return prisma.question
+      .groupBy({
+        by: ["type"],
+        where: { ...where, ...STUDENT_VISIBLE_TOP_LEVEL },
+        _count: { _all: true },
+      })
+      .then((rows) => rows.map((row) => ({ type: row.type, count: row._count._all })));
+  },
+
+  countByDifficulty(
+    where: Prisma.QuestionWhereInput,
+  ): Promise<{ difficulty: string; count: number }[]> {
+    return prisma.question
+      .groupBy({
+        by: ["difficulty"],
+        where: { ...where, ...STUDENT_VISIBLE_TOP_LEVEL },
+        _count: { _all: true },
+      })
+      .then((rows) => rows.map((row) => ({ difficulty: row.difficulty, count: row._count._all })));
+  },
+
+  /**
+   * Per-topic counts for one chapter.
+   *
+   * Counted through `QuestionTopic`, so a question tagged with three topics
+   * contributes to all three — which is what a student expects when they filter
+   * by topic. It also means the topic counts sum to more than the chapter count,
+   * and the UI must not present them as a partition.
+   */
+  countByTopic(chapterId: string): Promise<{ topicId: string; count: number }[]> {
+    return prisma.questionTopic
+      .groupBy({
+        by: ["topicId"],
+        where: { topic: { chapterId }, question: STUDENT_VISIBLE_TOP_LEVEL },
+        _count: { _all: true },
+      })
+      .then((rows) => rows.map((row) => ({ topicId: row.topicId, count: row._count._all })));
+  },
 };
+
+const subjectSelect = {
+  ...enrollableSubjectSelect,
+  syllabusYear: true,
+  hasPractical: true,
+  internalMarks: true,
+} satisfies Prisma.SubjectSelect;
+
+export type SubjectRow = Prisma.SubjectGetPayload<{ select: typeof subjectSelect }>;
+
+const chapterSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  orderIndex: true,
+  ncertChapterNo: true,
+  domain: true,
+} satisfies Prisma.ChapterSelect;
+
+export type ChapterRow = Prisma.ChapterGetPayload<{ select: typeof chapterSelect }>;
+
+export type ChapterDetailRow = Prisma.ChapterGetPayload<{
+  select: typeof chapterSelect & {
+    subject: { select: typeof enrollableSubjectSelect };
+    topics: { select: { id: true; name: true; slug: true; orderIndex: true } };
+  };
+}>;

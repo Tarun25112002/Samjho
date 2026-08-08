@@ -42,23 +42,25 @@ export default async function HomePage() {
 
         <ul className="grid gap-3 sm:grid-cols-2">
           {profile?.subjects.map((subject) => (
-            <li
-              key={subject.id}
-              className="border-ink-100 dark:border-ink-700 rounded-xl border p-4"
-            >
-              <p className="text-ink-900 dark:text-ink-50 font-medium">
-                {subject.name}
-                {subject.variant ? (
-                  <span className="text-ink-500 dark:text-ink-300 font-normal">
-                    {" "}
-                    ({subject.variant})
-                  </span>
-                ) : null}
-              </p>
-              {/* Never "out of 100": 80 for Class 10, 70 for Class 12 Physics. */}
-              <p className="text-ink-500 dark:text-ink-300 mt-1 text-sm">
-                Theory paper · {subject.theoryMarks} marks
-              </p>
+            <li key={subject.id}>
+              <Link
+                href={`/subjects/${subject.slug}`}
+                className="border-ink-100 dark:border-ink-700 hover:border-brand-600 block rounded-xl border p-4 transition-colors"
+              >
+                <p className="text-ink-900 dark:text-ink-50 font-medium">
+                  {subject.name}
+                  {subject.variant ? (
+                    <span className="text-ink-500 dark:text-ink-300 font-normal">
+                      {" "}
+                      ({subject.variant})
+                    </span>
+                  ) : null}
+                </p>
+                {/* Never "out of 100": 80 for Class 10, 70 for Class 12 Physics. */}
+                <p className="text-ink-500 dark:text-ink-300 mt-1 text-sm">
+                  Theory paper · {subject.theoryMarks} marks
+                </p>
+              </Link>
             </li>
           ))}
         </ul>
@@ -77,9 +79,8 @@ export default async function HomePage() {
       <section className="border-ink-100 dark:border-ink-700 rounded-xl border border-dashed p-5">
         <h2 className="text-ink-700 dark:text-ink-100 text-sm font-semibold">What&rsquo;s next</h2>
         <p className="text-ink-500 dark:text-ink-300 mt-2 text-sm text-pretty">
-          Chapter browsing and question rendering arrive in Phase 3, practice sessions in Phase 5,
-          and the full three-hour exam simulation in Phase 6. Your account, subjects and target exam
-          are already set up and waiting for them.
+          Pick a subject above to browse its chapters and read the questions. Filtered practice
+          sessions arrive in Phase 5, and the full three-hour exam simulation in Phase 6.
         </p>
       </section>
     </main>

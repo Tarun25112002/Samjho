@@ -1,5 +1,6 @@
 import { listSubjectsQuerySchema, type SubjectListResponse } from "@samjho/contracts";
 import { Router } from "express";
+import { z } from "zod";
 
 import { authenticated } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
@@ -28,5 +29,35 @@ export function buildCatalogRouter(verifyToken: TokenVerifier): Router {
     res.json({ data: { subjects } satisfies SubjectListResponse });
   });
 
+  // `:idOrSlug` rather than `:id` because students arrive from readable URLs
+  // (`/subjects/class-10-science`) while code holds ids. Accepting both here
+  // keeps every caller from having to resolve one into the other first.
+  router.get("/subjects/:idOrSlug", validate({ params: idOrSlugParams }), async (req, res) => {
+    const { idOrSlug } = idOrSlugParams.parse(req.params);
+    res.json({ data: await catalogService.getSubject(idOrSlug) });
+  });
+
+  router.get(
+    "/subjects/:idOrSlug/chapters",
+    validate({ params: idOrSlugParams }),
+    async (req, res) => {
+      const { idOrSlug } = idOrSlugParams.parse(req.params);
+      res.json({ data: await catalogService.listChapters(idOrSlug) });
+    },
+  );
+
+  router.get("/chapters/:idOrSlug", validate({ params: idOrSlugParams }), async (req, res) => {
+    const { idOrSlug } = idOrSlugParams.parse(req.params);
+    res.json({ data: await catalogService.getChapter(idOrSlug) });
+  });
+
   return router;
 }
+
+/**
+ * Chapter slugs are only unique within a subject, so a bare slug can in
+ * principle match two chapters in different subjects. `findFirst` takes the
+ * lowest-ordered match, which is why the web app links by id and this exists for
+ * hand-typed URLs and future SEO paths rather than as the primary route.
+ */
+const idOrSlugParams = z.object({ idOrSlug: z.string().min(1).max(120) });
