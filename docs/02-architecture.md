@@ -161,13 +161,20 @@ GET  /questions/:id                   → answer key omitted unless the student 
 **Practice**
 
 ```
-POST /practice-sessions               { filters, count } → creates session + materialised question list
-GET  /practice-sessions/:id           → session + current position + progress
-POST /practice-sessions/:id/attempts  { questionId, answer, timeSpentMs } → graded result
-POST /practice-sessions/:id/complete
-GET  /practice-sessions/:id/result
-GET  /practice-sessions               → history
+POST  /practice-sessions              { mode, filters, count } → session + materialised question list
+GET   /practice-sessions              → history
+GET   /practice-sessions/:id          → session + current position + progress
+PATCH /practice-sessions/:id          { currentIndex } → where the student had got to
+POST  /practice-sessions/:id/attempts { questionId, responses[], timeSpentMs } → graded result
+POST  /practice-sessions/:id/attempts/:attemptId/self-evaluation  { marksAwarded }
+POST  /practice-sessions/:id/attempts/:attemptId/mistake-reason   { reason }
+POST  /practice-sessions/:id/complete
+GET   /practice-sessions/:id/result
 ```
+
+> Two shapes changed from the sketch above once it was built, and both are about the case study. A submission carries `responses[]` rather than one `answer`, because the graded unit of a case study is its sub-part and a four-mark case study produces three attempt rows — while still counting as **one** question everywhere a student sees a count. And self-evaluation is its own endpoint rather than a field on the submission, because a subjective answer is submitted minutes before it is scored: `EvaluationMode.PENDING` is the gap between those two moments, and it is a real state rather than a default.
+>
+> Answering is **idempotent**. Submitting the same item twice returns the first attempt instead of writing a second — a double-tapped Submit on a slow connection is the normal case, and the alternative is mastery counted twice and a mistake record opened against an answer the student got right.
 
 **Exams**
 

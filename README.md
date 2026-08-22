@@ -4,13 +4,16 @@ CBSE Class 10 & 12 board-exam preparation platform.
 
 Practise questions, understand your mistakes, and rehearse the full 3-hour board exam before you sit it.
 
-> **Status: Phase 4 complete** — foundation, domain model and seeded database;
+> **Status: Phase 5 complete** — foundation, domain model and seeded database;
 > authentication (Clerk sign-in, server-side JWT verification, onboarding,
 > profile); the catalog, with a `QuestionRenderer` that handles all ten question
-> types with KaTeX maths; and content management: type-driven question authoring
-> with sub-parts and provenance, publish/withdraw with a revision log,
-> preview-as-student, and bulk import with a dry run. A student can sign up,
-> onboard and read the bank; an editor can write it.
+> types with KaTeX maths; content management (type-driven authoring with
+> sub-parts and provenance, publish/withdraw with a revision log,
+> preview-as-student, bulk import with a dry run); and **practice mode** —
+> filtered sets, auto-grading, self-evaluation against the marking scheme,
+> mistake capture, bookmarks, and progress rollups. A student can sign up,
+> onboard, practise, find out why they were wrong, and come back to it;
+> an editor can write the bank they are practising.
 > Specification and architecture live in [`docs/`](./docs/README.md).
 
 ---
@@ -93,10 +96,13 @@ apps/
   web/        Next.js 16 · App Router · React 19 · Tailwind 4
     src/proxy.ts   Next 16's middleware — signed-in/out redirects only, UX not security
     src/app/api/   BFF route handlers: attach the Clerk token server-side and forward
-    src/features/  feature-first: onboarding/, profile/ — logic in hooks, not components
+    src/features/  feature-first: onboarding/, profile/, admin/, practice/ —
+                   logic in hooks, not components
+    src/app/(focus)/  the practice runner's shell: no nav, nothing to click away to
   api/        Express 5 · Prisma 7 · Postgres
     src/middleware/auth.ts   requireAuth → loadUser → requireRole
     src/lib/token-verifier.ts  RS256 + JWKS verification; the security boundary
+    src/modules/practice/grading.ts  pure; no Prisma, no clock, no Express
 packages/
   contracts/       Zod schemas shared by both apps — the single source of truth
                    for everything crossing the network boundary
@@ -167,6 +173,29 @@ Decisions that were made deliberately and are easy to get wrong later:
   so nothing anyone has used can be removed; `isActive: false` hides a subject
   or chapter _and_ its questions, via the single `STUDENT_VISIBLE_QUESTION`
   clause, and can be undone.
+- **An answer key hangs off an attempt, never off a question.** `StudentQuestion`
+  has no `answer` property to fill in, so the key travels inside
+  `PracticeAttempt` — an object that cannot exist unless the student has already
+  answered. Two selects (`studentQuestionSelect`, `gradingSelect`) rather than
+  one with a flag, for the same reason Phase 3 chose two serializers.
+- **A practice session's totals are recomputed, not incremented.** Every write
+  recalculates from the attempt rows inside the same transaction. Incrementing is
+  faster and produces four bugs at once: a retried submit double-counts, a case
+  study is called correct before its last part is scored, a late self-score never
+  lands, and a partial score is claimed either way. Fifty items is a bounded
+  read; drift is not bounded.
+- **`isCorrect` is nullable, and that is load-bearing.** A subjective answer is
+  submitted long before it is scored. `PENDING` is that gap, and collapsing it to
+  `false` would file every unscored answer as a mistake and record a zero the
+  student was never given. Nothing rolls up until a score exists.
+- **Question selection counts, windows, then shuffles.** `ORDER BY RANDOM()` asks
+  Postgres to sort every matching row to return ten of them, which is the
+  degradation docs/07 R4 predicts on the endpoint a student hits first. Two
+  index-only queries and an in-memory shuffle instead.
+- **`lib/practice.ts` is server-only; `lib/practice-format.ts` is not.** Importing
+  a single formatter from the loader module pulls Clerk's `auth()` into the
+  browser bundle and the build fails. It did. The split is the fix, and the same
+  trap is waiting in every future `lib/<feature>.ts`.
 - **The question renderer promotes single-line `$…$` to display maths.**
   remark-math only treats `$` as display when the fences sit on their own lines,
   and content authors write it inline constantly. Fixing it in `MathText` rather
