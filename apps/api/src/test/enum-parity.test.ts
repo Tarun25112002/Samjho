@@ -2,18 +2,26 @@ import {
   bloomLevelSchema,
   boardSchema,
   difficultySchema,
+  evaluationModeSchema,
   examPhaseSchema,
   languageSchema,
+  mistakeReasonSchema,
+  practiceModeSchema,
   questionTypeSchema,
   roleSchema,
+  sessionStatusSchema,
   userStatusSchema,
   type BloomLevel,
   type Board,
   type Difficulty,
+  type EvaluationMode,
   type ExamPhase,
   type Language,
+  type MistakeReason,
+  type PracticeMode,
   type QuestionType,
   type Role,
+  type SessionStatus,
   type UserStatus,
 } from "@samjho/contracts";
 import { describe, expect, it } from "vitest";
@@ -22,10 +30,14 @@ import {
   BloomLevel as PrismaBloomLevel,
   Board as PrismaBoard,
   Difficulty as PrismaDifficulty,
+  EvaluationMode as PrismaEvaluationMode,
   ExamPhase as PrismaExamPhase,
   Language as PrismaLanguage,
+  MistakeReason as PrismaMistakeReason,
+  PracticeMode as PrismaPracticeMode,
   QuestionType as PrismaQuestionType,
   Role as PrismaRole,
+  SessionStatus as PrismaSessionStatus,
   UserStatus as PrismaUserStatus,
 } from "../generated/prisma/enums.js";
 
@@ -62,6 +74,10 @@ describe("Prisma ↔ contracts enum parity", () => {
     ["UserStatus", PrismaUserStatus, userStatusSchema.options],
     ["Language", PrismaLanguage, languageSchema.options],
     ["ExamPhase", PrismaExamPhase, examPhaseSchema.options],
+    ["PracticeMode", PrismaPracticeMode, practiceModeSchema.options],
+    ["SessionStatus", PrismaSessionStatus, sessionStatusSchema.options],
+    ["EvaluationMode", PrismaEvaluationMode, evaluationModeSchema.options],
+    ["MistakeReason", PrismaMistakeReason, mistakeReasonSchema.options],
   ])(
     "%s matches",
     (_name, prismaEnum: Record<string, string>, contractOptions: readonly string[]) => {
@@ -82,8 +98,25 @@ describe("Prisma ↔ contracts enum parity", () => {
     const status: UserStatus = PrismaUserStatus.SUSPENDED;
     const language: Language = PrismaLanguage.HINDI;
     const phase: ExamPhase = PrismaExamPhase.PHASE_2;
+    const mode: PracticeMode = PrismaPracticeMode.MISTAKE_REVIEW;
+    const session: SessionStatus = PrismaSessionStatus.COMPLETED;
+    const evaluation: EvaluationMode = PrismaEvaluationMode.PENDING;
+    const reason: MistakeReason = PrismaMistakeReason.CALCULATION_ERROR;
 
-    expect([type, difficulty, bloom, board, role, status, language, phase]).toEqual([
+    expect([
+      type,
+      difficulty,
+      bloom,
+      board,
+      role,
+      status,
+      language,
+      phase,
+      mode,
+      session,
+      evaluation,
+      reason,
+    ]).toEqual([
       "CASE_BASED",
       "HARD",
       "ANALYSE",
@@ -92,6 +125,10 @@ describe("Prisma ↔ contracts enum parity", () => {
       "SUSPENDED",
       "HINDI",
       "PHASE_2",
+      "MISTAKE_REVIEW",
+      "COMPLETED",
+      "PENDING",
+      "CALCULATION_ERROR",
     ]);
   });
 });

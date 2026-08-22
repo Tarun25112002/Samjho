@@ -1,6 +1,12 @@
 "use client";
 
-import type { QuestionAsset, StudentQuestion, StudentSubPart } from "@samjho/contracts";
+import {
+  EMPTY_ANSWER,
+  type QuestionAsset,
+  type StudentAnswer,
+  type StudentQuestion,
+  type StudentSubPart,
+} from "@samjho/contracts";
 import { useId } from "react";
 
 import { MathText } from "../primitives/math-text.js";
@@ -48,19 +54,19 @@ import {
 /**
  * A student's in-progress answer.
  *
- * One shape for all ten types rather than a discriminated union. The union is
- * the right long-term model and belongs in `packages/contracts` once the
- * grading service defines it in Phase 5 — inventing it here, before anything
- * grades an answer, would be guessing at a contract from the wrong end.
+ * Phase 3 defined this shape locally with a note saying it belonged in
+ * `packages/contracts` once something actually graded an answer. Phase 5 wrote
+ * the grader, so it moved: this is now an alias for `StudentAnswer`, and the
+ * reasoning for one shape rather than a discriminated union lives beside the
+ * schema in `practice/answer.schema.ts`.
+ *
+ * Kept as an exported name because four surfaces already spell it this way, and
+ * because "the thing this component is controlled by" is a genuinely different
+ * concept from "the thing the API stores" even when they are the same type.
  */
-export interface QuestionResponse {
-  /** For CHOICE types. An array so multi-select needs no shape change later. */
-  optionIds: string[];
-  /** For BOOLEAN ("TRUE"/"FALSE"), SHORT and EXTENDED types. */
-  text: string;
-}
+export type QuestionResponse = StudentAnswer;
 
-export const EMPTY_RESPONSE: QuestionResponse = { optionIds: [], text: "" };
+export const EMPTY_RESPONSE: QuestionResponse = EMPTY_ANSWER;
 
 export interface QuestionRendererProps {
   question: StudentQuestion;
