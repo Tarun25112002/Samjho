@@ -15,6 +15,8 @@ import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { buildBookmarkRouter } from "./modules/practice/bookmark.routes.js";
+import { buildPracticeRouter } from "./modules/practice/practice.routes.js";
 import { buildQuestionRouter } from "./modules/questions/question.routes.js";
 import { buildQuestionAdminRouter } from "./modules/questions/question.admin.routes.js";
 import { buildAdminDashboardRouter } from "./modules/questions/dashboard.routes.js";
@@ -115,7 +117,6 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
 /**
  * Versioned product API. Feature modules mount here as they land:
- *   router.use("/practice-sessions", practiceRouter)
  *   router.use("/exam-attempts", examRouter)
  */
 function buildApiRouter(verifyToken: TokenVerifier): express.Router {
@@ -130,6 +131,8 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/me", buildMeRouter(verifyToken));
   router.use("/catalog", buildCatalogRouter(verifyToken));
   router.use("/questions", buildQuestionRouter(verifyToken));
+  router.use("/practice-sessions", buildPracticeRouter(verifyToken));
+  router.use("/bookmarks", buildBookmarkRouter(verifyToken));
 
   // Mounted under its own prefix rather than as extra verbs on /catalog, so the
   // day the public SEO pages need an unauthenticated catalog (Phase 9) nobody
