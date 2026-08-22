@@ -65,7 +65,12 @@ export default async function PracticeResultPage({ params }: PageProps) {
           Your score
         </h2>
 
-        <dl className="grid grid-cols-3 gap-3">
+        {/*
+          Three tiles stay three tiles at 360px — a score a student wants to read
+          as one line should not become a column — so the padding and type
+          shrink instead of the grid reflowing.
+        */}
+        <dl className="grid grid-cols-3 gap-2 sm:gap-3">
           <Stat
             label="Marks"
             value={`${formatMarksValue(session.totals.marksEarned)} / ${formatMarksValue(session.totals.marksPossible)}`}
@@ -162,9 +167,11 @@ export default async function PracticeResultPage({ params }: PageProps) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-ink-100 dark:border-ink-700 rounded-xl border px-4 py-3">
+    <div className="border-ink-100 dark:border-ink-700 rounded-xl border px-3 py-3 sm:px-4">
       <dt className="text-ink-500 dark:text-ink-300 text-xs">{label}</dt>
-      <dd className="text-ink-900 dark:text-ink-50 text-lg font-semibold tabular-nums">{value}</dd>
+      <dd className="text-ink-900 dark:text-ink-50 text-base font-semibold tabular-nums sm:text-lg">
+        {value}
+      </dd>
     </div>
   );
 }

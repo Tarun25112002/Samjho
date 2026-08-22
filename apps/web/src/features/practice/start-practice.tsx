@@ -55,7 +55,7 @@ export function StartPractice({
           });
         }}
         className={[
-          "rounded-lg px-4 py-2 font-medium disabled:opacity-50",
+          "min-h-11 rounded-lg px-4 py-2 font-medium disabled:opacity-50",
           variant === "primary"
             ? "bg-brand-600 text-white"
             : "border-ink-100 dark:border-ink-700 border",

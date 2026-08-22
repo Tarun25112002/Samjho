@@ -217,7 +217,7 @@ function SelfEvaluation({
             onClick={() => {
               onSelfEvaluate(attempt.id, marks);
             }}
-            className="border-ink-100 dark:border-ink-700 hover:border-brand-600 rounded-lg border px-3 py-1.5 text-sm disabled:opacity-50"
+            className="border-ink-100 dark:border-ink-700 hover:border-brand-600 min-h-11 rounded-lg border px-3 py-1.5 text-sm disabled:opacity-50"
           >
             {marks === 0 ? "No marks" : formatMarks(marks)}
           </button>
@@ -286,7 +286,7 @@ function MistakeReasons({
                 onSetMistakeReason(attempt.id, selected ? null : reason);
               }}
               className={[
-                "rounded-full border px-3 py-1 text-sm",
+                "min-h-11 rounded-full border px-3 py-1 text-sm",
                 selected
                   ? "border-brand-600 text-brand-600"
                   : "border-ink-100 dark:border-ink-700 text-ink-500 hover:border-brand-600",

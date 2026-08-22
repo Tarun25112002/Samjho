@@ -107,7 +107,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
               type="button"
               disabled={busy}
               onClick={() => void runner.submit()}
-              className="bg-brand-600 rounded-lg px-4 py-2 font-medium text-white disabled:opacity-50"
+              className="bg-brand-600 min-h-11 rounded-lg px-4 py-2 font-medium text-white disabled:opacity-50"
             >
               {/*
                 The label changes rather than the button being disabled. A
@@ -125,7 +125,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
               onClick={() => {
                 runner.goTo(index - 1);
               }}
-              className="border-ink-100 dark:border-ink-700 rounded-lg border px-4 py-2 text-sm"
+              className="border-ink-100 dark:border-ink-700 min-h-11 rounded-lg border px-4 py-2 text-sm"
             >
               Previous
             </button>
@@ -136,7 +136,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
               type="button"
               disabled={busy}
               onClick={() => void runner.finish()}
-              className="border-brand-600 text-brand-600 rounded-lg border px-4 py-2 font-medium disabled:opacity-50"
+              className="border-brand-600 text-brand-600 min-h-11 rounded-lg border px-4 py-2 font-medium disabled:opacity-50"
             >
               Finish and see results
             </button>
@@ -146,7 +146,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
               onClick={() => {
                 runner.goTo(index + 1);
               }}
-              className="border-ink-100 dark:border-ink-700 rounded-lg border px-4 py-2 text-sm"
+              className="border-ink-100 dark:border-ink-700 min-h-11 rounded-lg border px-4 py-2 text-sm"
             >
               Next question
             </button>
@@ -181,12 +181,19 @@ function RunnerHeader({
 
   return (
     <header className="border-ink-100 dark:border-ink-700 border-b">
-      <div className="mx-auto flex max-w-3xl items-center gap-4 px-6 py-3 text-sm">
-        <div>
+      <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3 text-sm sm:gap-4 sm:px-6">
+        {/*
+          `min-w-0` and `truncate` together, because neither works alone: a flex
+          child will not shrink below its content without the first, and will not
+          ellipsize without the second. Without both, a chapter called "Chemical
+          Reactions and Equations" pushes Save and Exit off a 360px screen — and
+          Exit is the only way out of the focus shell.
+        */}
+        <div className="min-w-0">
           <p className="text-ink-900 dark:text-ink-50 font-medium">
             Question {index + 1} of {total}
           </p>
-          <p className="text-ink-500 dark:text-ink-300 text-xs">
+          <p className="text-ink-500 dark:text-ink-300 truncate text-xs">
             {session.focus ?? PRACTICE_MODE_LABELS[session.mode]} ·{" "}
             {formatMarksValue(session.totals.marksEarned)} /{" "}
             {formatMarksValue(session.totals.marksPossible)} marks
@@ -198,7 +205,7 @@ function RunnerHeader({
           aria-pressed={bookmarked}
           onClick={onToggleBookmark}
           className={[
-            "ml-auto rounded-lg border px-3 py-1.5",
+            "ml-auto min-h-11 shrink-0 rounded-lg border px-3 py-1.5",
             bookmarked
               ? "border-brand-600 text-brand-600"
               : "border-ink-100 dark:border-ink-700 text-ink-500",
@@ -209,7 +216,7 @@ function RunnerHeader({
 
         <Link
           href={`/practice/sessions/${session.id}/result`}
-          className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50"
+          className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50 flex min-h-11 shrink-0 items-center"
         >
           Exit
         </Link>

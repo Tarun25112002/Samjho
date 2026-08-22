@@ -92,7 +92,7 @@ export function PracticeSetup({
             // A chapter from the old subject would silently match nothing.
             setChapterId("");
           }}
-          className="border-ink-100 dark:border-ink-700 w-full rounded-lg border px-3 py-2"
+          className="border-ink-100 dark:border-ink-700 min-h-11 w-full rounded-lg border px-3 py-2"
         >
           <option value="">Any subject</option>
           {subjects.map((option) => (
@@ -110,7 +110,7 @@ export function PracticeSetup({
             onChange={(event) => {
               setChapterId(event.target.value);
             }}
-            className="border-ink-100 dark:border-ink-700 w-full rounded-lg border px-3 py-2"
+            className="border-ink-100 dark:border-ink-700 min-h-11 w-full rounded-lg border px-3 py-2"
           >
             <option value="">Any chapter</option>
             {chapters.map((chapter) => (
@@ -158,7 +158,7 @@ export function PracticeSetup({
                 setCount(option);
               }}
               className={[
-                "rounded-lg border px-4 py-2 text-sm",
+                "min-h-11 rounded-lg border px-4 py-2 text-sm",
                 count === option
                   ? "border-brand-600 text-brand-600"
                   : "border-ink-100 dark:border-ink-700",
@@ -191,7 +191,7 @@ export function PracticeSetup({
         <button
           type="submit"
           disabled={busy}
-          className="bg-brand-600 rounded-lg px-5 py-2.5 font-medium text-white disabled:opacity-50"
+          className="bg-brand-600 min-h-11 rounded-lg px-5 py-2.5 font-medium text-white disabled:opacity-50"
         >
           {busy ? "Building your set…" : "Start practising"}
         </button>
@@ -243,7 +243,7 @@ function ChipGroup<T extends string>({
               onToggle(option.value);
             }}
             className={[
-              "rounded-full border px-3 py-1 text-sm",
+              "min-h-11 rounded-full border px-3 py-1 text-sm",
               isSelected
                 ? "border-brand-600 text-brand-600"
                 : "border-ink-100 dark:border-ink-700 text-ink-500",
