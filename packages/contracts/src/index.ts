@@ -18,6 +18,8 @@ export * from "./common/error-codes.js";
 export * from "./health/health.schema.js";
 export * from "./question/question-enums.js";
 export * from "./question/question.schema.js";
+export * from "./question/admin.schema.js";
+export * from "./question/import.schema.js";
 export * from "./catalog/subject.schema.js";
 export * from "./catalog/chapter.schema.js";
 export * from "./catalog/admin.schema.js";

@@ -24,6 +24,8 @@ export {
   type QuestionResponse,
 } from "./question/question-renderer.js";
 
+export { toPreviewQuestion, type QuestionPreviewContext } from "./question/preview.js";
+
 export {
   QUESTION_TYPE_LABELS,
   DIFFICULTY_LABELS,

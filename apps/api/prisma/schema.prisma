@@ -683,8 +683,19 @@ model QuestionRevision {
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
+  /// A per-question **revision** counter, which is not the same number as
+  /// `Question.version`.
+  ///
+  /// `Question.version` identifies the *content* a student saw and only moves
+  /// when the content hash changes; this one increments on every recorded event,
+  /// including a publish or a withdrawal, which change no content at all. Making
+  /// them the same column would mean either a unique-constraint collision the
+  /// second time a question is archived, or bumping the version that attempts
+  /// are pinned to for an edit that changed nothing about the question.
+  /// The content version, when it moves, is recorded inside `diff`.
   version    Int
-  /// What changed, field by field.
+  /// What changed, field by field: `[{ field, from, to }]`, rendered as strings
+  /// because the only consumer is a person reading an audit trail.
   diff       Json
   reason     String?
   editedById String?

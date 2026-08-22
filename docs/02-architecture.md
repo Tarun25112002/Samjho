@@ -263,6 +263,49 @@ PATCH /admin/catalog/topics/:id
 > opening the catalog to anonymous traffic for the Phase 9 SEO pages cannot
 > open the writes with it.
 
+**Question authoring** _(Phase 4, shipped — `ADMIN` or `CONTENT_EDITOR`)_
+
+```
+GET  /admin/questions?subjectId=&chapterId=&topicId=&type=&difficulty=&status=&licenceStatus=&search=&cursor=
+POST /admin/questions                 → the whole question tree, one document, one transaction
+GET  /admin/questions/:id             · PUT /admin/questions/:id
+PUT  /admin/questions/:id/status      → DRAFT · IN_REVIEW · PUBLISHED · ARCHIVED
+GET  /admin/questions/:id/revisions   → the audit trail, field by field
+POST /admin/questions/import          → bulk, dry-run by default, all-or-nothing
+GET  /admin/dashboard/content         → counts by status and licence, plus the empty chapters
+```
+
+> **A question is written as one document, not six endpoints.** It is a tree —
+> stem, options, answer key, provenance, topic links, sub-parts with their own
+> children — and an MCQ with no options is not a valid intermediate state. Six
+> sequential saves also cannot reach the phase gate's 90-second median.
+>
+> **The per-type rules live in `packages/contracts`.** "An MCQ has exactly one
+> correct option", "a numerical question needs a tolerance", "a case study's
+> sub-parts must add up to its marks" are enforced from one table
+> (`QUESTION_TYPE_RULES`) that the admin form reads to decide what to render, the
+> API runs on every write, and bulk import gets for free. Three doors, one
+> validator.
+>
+> **Status is a separate endpoint from content.** "Save my edits" and "let
+> students see this" are different decisions; folding them together makes every
+> save a publish for anyone who leaves a dropdown alone.
+>
+> **Publication is gated on the licensing decision.** A source row defaults to
+> `NEEDS_REVIEW` and a question carrying it cannot be published — docs/07 R2's
+> mitigation made into a refusal, so the audit happens one question at a time by
+> the person holding the source paper.
+>
+> **The version bumps only when the content hash moves.** Retagging a question as
+> HARD or fixing an attribution leaves the version alone, because from Phase 5
+> every attempt records the version it saw. The revision log is numbered
+> separately and records everything, including status moves.
+>
+> **Import is dry-run by default and all-or-nothing.** It reports every bad row
+> at once with its file index and the author's own reference, rejects rows
+> duplicated within the file or already in the bank, and writes nothing unless
+> every row is valid.
+
 **Webhooks**
 
 ```

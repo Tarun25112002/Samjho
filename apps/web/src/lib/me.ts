@@ -1,5 +1,5 @@
 import { meResponseSchema, type MeResponse } from "@samjho/contracts";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";
@@ -39,5 +39,26 @@ export const loadMe = cache(async function loadMe(): Promise<MeResponse> {
 export async function requireOnboarded(): Promise<MeResponse> {
   const me = await loadMe();
   if (!me.onboarded) redirect("/welcome");
+  return me;
+}
+
+/** Roles allowed to author content. Mirrors the API's `requireRole` on those routes. */
+const CONTENT_ROLES = new Set(["ADMIN", "CONTENT_EDITOR"]);
+
+/**
+ * For the admin area. Not an authorization control — the API is.
+ *
+ * Worth being explicit about, because a role check in a React tree looks exactly
+ * like one. Every `/admin/*` request the browser makes goes through the BFF to
+ * Express, which checks the role again from our own database on every call. This
+ * check exists so a student who guesses the URL sees "not found" instead of an
+ * admin shell full of buttons that 403, and so the nav can be rendered honestly.
+ *
+ * `notFound()` rather than a redirect: the existence of the admin area is not
+ * something a student needs confirmed, and there is nowhere useful to send them.
+ */
+export async function requireContentRole(): Promise<MeResponse> {
+  const me = await requireOnboarded();
+  if (!CONTENT_ROLES.has(me.user.role)) notFound();
   return me;
 }

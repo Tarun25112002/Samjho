@@ -57,6 +57,34 @@ export const bloomLevelSchema = z.enum([
 ]);
 export type BloomLevel = z.infer<typeof bloomLevelSchema>;
 
+/**
+ * The editorial lifecycle of a question.
+ *
+ * Only `PUBLISHED` is ever served to a student — see `question.visibility.ts`.
+ * `IN_REVIEW` is not a decorative middle step: it is where an editor parks a
+ * question they believe is *wrong*, and it must therefore stop being served the
+ * moment it is set, which is why unpublishing is a status change rather than a
+ * separate boolean.
+ */
+export const questionStatusSchema = z.enum(["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]);
+export type QuestionStatus = z.infer<typeof questionStatusSchema>;
+
+/**
+ * Whether a question's content is legally safe to serve (docs/07 R2).
+ *
+ * `NEEDS_REVIEW` is the default in the database so that content entered without
+ * a deliberate licensing decision is conservative rather than silently served.
+ * Admin-side, it is also the value that blocks publication: see
+ * `assertPublishable` in the admin question schema.
+ */
+export const licenceStatusSchema = z.enum([
+  "CLEARED",
+  "FAIR_USE_CLAIMED",
+  "NEEDS_REVIEW",
+  "RESTRICTED",
+]);
+export type LicenceStatus = z.infer<typeof licenceStatusSchema>;
+
 export const boardSchema = z.enum(["CBSE"]);
 export type Board = z.infer<typeof boardSchema>;
 
