@@ -62,7 +62,9 @@ Session creation with the full filter set, question selection service, runner UI
 >
 > One thing was deliberately **not** built: there is no client-side grading, not even for an MCQ where it would be four lines. Two graders is one more than the number of things that can disagree, and the one that would be wrong is the one the student sees first.
 >
-> **Still owed:** a manual pass on a real phone, which is a browser task rather than a test one. The API paths are covered; what no test here can tell you is whether the feedback panel reads well at 360px with a five-mark marking scheme on it.
+> **Verified in the running app, not only in tests.** A live run through the browser on the seeded database produced what it should: MCQs auto-graded (1/1 for the right one, 0/1 for the wrong ones), mistake reasons captured from the feedback panel's chips, `TopicMastery` rows created per primary topic with `masteryScore` at 1.000 and 0.000 respectively, `unrepairedMistakes` at 1 on each missed topic and 0 on the correct one, and `MistakeRecord` rows opened and unrepaired. That is the "attempts and mastery update correctly" half of the gate observed against a real session rather than a fixture.
+>
+> **Still owed:** the same pass on a real phone. Nothing in the tests or the desktop run says whether the feedback panel reads well at 360px with a five-mark marking scheme on it, and docs/07 Q10 already notes this audience is more phone-first than Class 12 would have been.
 
 ### Phase 6 — Exam engine (~7–9 days) — the big one
 
