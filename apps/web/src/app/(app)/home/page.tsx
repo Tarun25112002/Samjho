@@ -35,6 +35,33 @@ export default async function HomePage() {
         ) : null}
       </header>
 
+      {/*
+        The single largest element on the page, and first (docs/01 §4). A
+        student opening the app wants to answer a question, not to read about
+        having answered questions — and the two-tap target in docs/00 §5 is
+        measured from here.
+      */}
+      <section
+        aria-labelledby="practice-heading"
+        className="border-brand-600 flex flex-wrap items-center gap-4 rounded-xl border p-5"
+      >
+        <div>
+          <h2 id="practice-heading" className="text-ink-900 dark:text-ink-50 font-medium">
+            Practise now
+          </h2>
+          <p className="text-ink-500 dark:text-ink-300 mt-1 text-sm">
+            Ten questions, immediate feedback, and your mistakes kept for next time.
+          </p>
+        </div>
+
+        <Link
+          href="/practice"
+          className="bg-brand-600 ml-auto rounded-lg px-4 py-2 font-medium text-white"
+        >
+          Start
+        </Link>
+      </section>
+
       <section aria-labelledby="subjects-heading" className="space-y-3">
         <h2 id="subjects-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
           Your subjects
@@ -79,8 +106,9 @@ export default async function HomePage() {
       <section className="border-ink-100 dark:border-ink-700 rounded-xl border border-dashed p-5">
         <h2 className="text-ink-700 dark:text-ink-100 text-sm font-semibold">What&rsquo;s next</h2>
         <p className="text-ink-500 dark:text-ink-300 mt-2 text-sm text-pretty">
-          Pick a subject above to browse its chapters and read the questions. Filtered practice
-          sessions arrive in Phase 5, and the full three-hour exam simulation in Phase 6.
+          Practice is live: pick a chapter, answer, and find out why. Your progress figures and the
+          full three-hour exam simulation are still being built, so this page is a shell rather than
+          a dashboard for now.
         </p>
       </section>
     </main>

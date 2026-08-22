@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ApiClientError } from "@/lib/api-client";
 import { loadChapter, loadQuestions } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
+import { practiceHref } from "@/lib/practice-format";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,23 @@ export default async function ChapterPage({ params }: PageProps) {
           {chapter.domain ? `${chapter.domain} · ` : ""}
           {chapter.counts.total} questions
         </p>
+
+        {/*
+          The primary action on a chapter page is to practise it, not to read it
+          (docs/01 §2). A plain link, because `/practice/new` is deep-linkable —
+          the filters travel in the query string and the student can adjust them
+          before starting.
+        */}
+        {chapter.counts.total > 0 ? (
+          <p className="pt-2">
+            <Link
+              href={practiceHref({ unseenOnly: false, chapterId: chapter.id })}
+              className="bg-brand-600 inline-block rounded-lg px-4 py-2 text-sm font-medium text-white"
+            >
+              Practise this chapter
+            </Link>
+          </p>
+        ) : null}
       </header>
 
       <section aria-labelledby="topics-heading" className="space-y-3">
@@ -148,7 +166,8 @@ export default async function ChapterPage({ params }: PageProps) {
                 >
                   {/*
                     No `onChange`, so every control renders disabled. Browsing is
-                    reading; answering is Phase 5.
+                    reading; answering happens in the practice runner, which
+                    passes the same component an `onChange` and gets inputs.
                   */}
                   <QuestionRenderer question={question} displayNumber={String(index + 1)} />
                 </li>
@@ -159,8 +178,11 @@ export default async function ChapterPage({ params }: PageProps) {
 
         {questions.pageInfo.hasMore ? (
           <p className="text-ink-500 dark:text-ink-300 text-sm">
-            Showing the first {questions.items.length}. Filtered practice sessions arrive in Phase
-            5.
+            Showing the first {questions.items.length}.{" "}
+            <Link href={practiceHref({ unseenOnly: false, chapterId: chapter.id })}>
+              Practise the chapter
+            </Link>{" "}
+            to work through the rest.
           </p>
         ) : null}
       </section>

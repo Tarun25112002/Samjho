@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ApiClientError } from "@/lib/api-client";
 import { groupChaptersByDomain, loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
+import { practiceHref } from "@/lib/practice-format";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,17 @@ export default async function SubjectPage({ params }: PageProps) {
           {subject.theoryMarks}-mark theory paper · {subject.chapters.length} chapters ·{" "}
           {subject.counts.total} questions available
         </p>
+
+        {subject.counts.total > 0 ? (
+          <p className="pt-2">
+            <Link
+              href={practiceHref({ unseenOnly: false, subjectId: subject.id })}
+              className="bg-brand-600 inline-block rounded-lg px-4 py-2 text-sm font-medium text-white"
+            >
+              Practise {subject.name}
+            </Link>
+          </p>
+        ) : null}
       </header>
 
       <DataState
