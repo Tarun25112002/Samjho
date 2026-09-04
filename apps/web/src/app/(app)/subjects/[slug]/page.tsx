@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ChevronRight } from "@/components/icons";
+import { ButtonLink } from "@/components/ui/button";
 import { ApiClientError } from "@/lib/api-client";
 import { groupChaptersByDomain, loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
@@ -33,6 +35,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * with none and renders as one flat list of fourteen chapters. Neither branch is
  * special-cased by subject code — that is the whole point of `Chapter.domain`
  * being nullable rather than there being three Science subjects.
+ *
+ * ## Why the counts are so prominent
+ *
+ * Samjho's bank is being written from zero (docs/07 R1), so most chapters are
+ * empty most of the time and will be for months. A chapter row that shows "0
+ * questions" is telling the truth; one that shows nothing lets a student tap in,
+ * find an empty page, and conclude the app is broken. The empty rows are also
+ * visibly quieter, so the eye lands on the chapters that have something in them.
  */
 export default async function SubjectPage({ params }: PageProps) {
   const { slug } = await params;
@@ -42,31 +52,28 @@ export default async function SubjectPage({ params }: PageProps) {
   const groups = groupChaptersByDomain(subject.chapters, subject.domains);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-10">
-      <header className="space-y-1">
-        <p className="text-brand-600 text-sm font-medium tracking-wide uppercase">
-          Class {subject.classLevel} · {subject.board}
+    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
+      <header>
+        <p className="text-text-soft text-sm font-medium">
+          Class {subject.classLevel} {subject.board}
         </p>
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
           {subject.name}
-          {subject.variant ? (
-            <span className="text-ink-500 font-normal"> ({subject.variant})</span>
-          ) : null}
         </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+
+        <p className="text-text-soft mt-2 text-sm">
+          {/* Never "out of 100": 80 for Class 10, 70 for Class 12 Physics. */}
           {subject.theoryMarks}-mark theory paper · {subject.chapters.length} chapters ·{" "}
           {subject.counts.total} questions available
         </p>
 
         {subject.counts.total > 0 ? (
-          <p className="pt-2">
-            <Link
-              href={practiceHref({ unseenOnly: false, subjectId: subject.id })}
-              className="bg-brand-600 inline-block rounded-lg px-4 py-2 text-sm font-medium text-white"
-            >
-              Practise {subject.name}
-            </Link>
-          </p>
+          <ButtonLink
+            href={practiceHref({ unseenOnly: false, subjectId: subject.id })}
+            className="mt-5"
+          >
+            Practise {subject.name}
+          </ButtonLink>
         ) : null}
       </header>
 
@@ -75,7 +82,7 @@ export default async function SubjectPage({ params }: PageProps) {
         emptyTitle="This subject has no chapters yet"
         emptyBody="Its syllabus has not been entered. Nothing is wrong with your account."
         emptyAction={
-          <Link href="/home" className="underline">
+          <Link href="/home" className="text-brand-700 font-medium underline">
             Back to your subjects
           </Link>
         }
@@ -83,56 +90,70 @@ export default async function SubjectPage({ params }: PageProps) {
         {(sections) => (
           <div className="flex flex-col gap-8">
             {sections.map((group) => (
-              <section key={group.domain ?? "all"} className="space-y-3">
+              <section key={group.domain ?? "all"} className="flex flex-col gap-3">
                 {group.domain ? (
-                  <h2 className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
-                    {group.domain}
-                  </h2>
+                  <h2 className="text-text text-lg font-semibold">{group.domain}</h2>
                 ) : null}
 
-                <ul className="divide-ink-100 dark:divide-ink-700 divide-y">
-                  {group.chapters.map((chapter) => (
-                    <li key={chapter.id}>
-                      <Link
-                        href={`/chapters/${chapter.id}`}
-                        className="hover:bg-ink-50 dark:hover:bg-ink-900 -mx-3 flex items-baseline justify-between gap-4 rounded-lg px-3 py-3"
-                      >
-                        <span>
-                          <span className="text-ink-900 dark:text-ink-50 font-medium">
-                            {chapter.ncertChapterNo === null
-                              ? chapter.name
-                              : `${chapter.ncertChapterNo}. ${chapter.name}`}
-                          </span>
-                          <span className="text-ink-500 dark:text-ink-300 block text-sm">
-                            {chapter.topicCount} topics
-                          </span>
-                        </span>
+                <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
+                  {group.chapters.map((chapter) => {
+                    const empty = chapter.questionCount === 0;
 
-                        {/*
-                    Zero is shown, not hidden. A platform building its bank from
-                    zero (docs/07 R1) will have empty chapters for months, and
-                    "0 questions" is information — an omitted count reads as a
-                    bug.
-                  */}
-                        <span
-                          className={
-                            chapter.questionCount === 0
-                              ? "text-ink-300 dark:text-ink-500 shrink-0 text-sm"
-                              : "text-ink-500 dark:text-ink-300 shrink-0 text-sm"
-                          }
+                    return (
+                      <li key={chapter.id}>
+                        <Link
+                          href={`/chapters/${chapter.id}`}
+                          className="hover:bg-raised flex items-center gap-4 px-5 py-4 transition-colors"
                         >
-                          {chapter.questionCount} questions
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
+                          {/* NCERT numbers chapters, and students refer to them
+                              by number constantly — "chapter 6, Life Processes".
+                              It is real sequence data, not a decorative
+                              counter. */}
+                          <span
+                            className={[
+                              "grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                              empty ? "bg-raised text-text-faint" : "bg-brand-50 text-brand-700",
+                            ].join(" ")}
+                          >
+                            {chapter.ncertChapterNo ?? "–"}
+                          </span>
+
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={[
+                                "block font-medium",
+                                empty ? "text-text-soft" : "text-text",
+                              ].join(" ")}
+                            >
+                              {chapter.name}
+                            </span>
+                            <span className="text-text-faint block text-sm">
+                              {chapter.topicCount} topics
+                            </span>
+                          </span>
+
+                          <span
+                            className={[
+                              "marks-margin shrink-0 text-sm",
+                              empty ? "text-text-faint" : "text-text-soft",
+                            ].join(" ")}
+                          >
+                            {chapter.questionCount}{" "}
+                            {chapter.questionCount === 1 ? "question" : "questions"}
+                          </span>
+
+                          <ChevronRight className="text-text-faint size-4 shrink-0" />
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             ))}
           </div>
         )}
       </DataState>
-    </main>
+    </div>
   );
 }
 

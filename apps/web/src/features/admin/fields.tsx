@@ -32,20 +32,20 @@ export function Field({ label, hint, error, children }: FieldProps) {
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="text-ink-700 dark:text-ink-100 block text-sm font-medium">
+      <label htmlFor={id} className="text-text block text-sm font-medium">
         {label}
       </label>
 
       {children({ id, describedBy: describedBy.length > 0 ? describedBy : undefined })}
 
       {hint ? (
-        <p id={hintId} className="text-ink-500 dark:text-ink-300 text-xs">
+        <p id={hintId} className="text-text-soft text-xs">
           {hint}
         </p>
       ) : null}
 
       {error ? (
-        <p id={errorId} role="alert" className="text-danger text-xs">
+        <p id={errorId} role="alert" className="text-marker-700 text-xs">
           {error}
         </p>
       ) : null}
@@ -54,7 +54,7 @@ export function Field({ label, hint, error, children }: FieldProps) {
 }
 
 export const inputClass =
-  "border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm";
+  "border-line-strong w-full rounded-lg border bg-transparent px-3 py-2 text-sm";
 
 export function Fieldset({
   legend,
@@ -66,11 +66,9 @@ export function Fieldset({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="border-ink-100 dark:border-ink-700 space-y-4 rounded-xl border p-4">
-      <legend className="text-ink-900 dark:text-ink-50 px-1 text-sm font-semibold">{legend}</legend>
-      {description ? (
-        <p className="text-ink-500 dark:text-ink-300 -mt-2 text-xs">{description}</p>
-      ) : null}
+    <fieldset className="border-line space-y-4 rounded-xl border p-4">
+      <legend className="text-text px-1 text-sm font-semibold">{legend}</legend>
+      {description ? <p className="text-text-soft -mt-2 text-xs">{description}</p> : null}
       {children}
     </fieldset>
   );

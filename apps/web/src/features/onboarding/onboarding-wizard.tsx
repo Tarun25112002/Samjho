@@ -3,6 +3,16 @@
 import { CURRENT_TERMS_VERSION, type SubjectSummary } from "@samjho/contracts";
 import { useMemo } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+  ChoiceCard,
+  FieldError as FieldErrorText,
+  Hint,
+  inputClass,
+  invalidInputClass,
+  Label,
+} from "@/components/ui/form";
+
 import { suggestBoardSessions } from "./board-sessions";
 import {
   ONBOARDING_STEPS,
@@ -20,8 +30,11 @@ import {
  * without a DOM, and it is why this file has no `if` statement about anything
  * other than which step to draw.
  *
- * Styling is intentionally restrained. `packages/ui` and the real design system
- * arrive in Phase 3; anything elaborate written here would be rewritten then.
+ * The four screens are the first thing a new student sees and the last barrier
+ * between signing up and practising, so they are deliberately plain: one
+ * decision per screen, a rail that shows how many are left, and no step that
+ * cannot be answered in a few seconds by someone who has just typed in an email
+ * address.
  */
 
 export interface OnboardingWizardProps {
@@ -45,32 +58,45 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
         }
       }}
     >
-      <ol className="flex flex-wrap gap-2" aria-label="Progress">
+      {/*
+        A rail rather than a row of pills. Four steps on a 360px screen wrap to
+        two lines as pills and stop reading as a sequence at all; as segments
+        they stay one line, and the filled part of the rail is the progress.
+      */}
+      <ol className="flex gap-1.5" aria-label="Progress">
         {ONBOARDING_STEPS.map((item, index) => (
           <li
             key={item.id}
             aria-current={index === wizard.stepIndex ? "step" : undefined}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              index === wizard.stepIndex
-                ? "bg-brand-600 text-white"
-                : index < wizard.stepIndex
-                  ? "bg-ink-100 text-ink-700 dark:bg-ink-700 dark:text-ink-100"
-                  : "text-ink-500 border-ink-100 dark:border-ink-700 border"
-            }`}
+            className="flex-1"
           >
-            {/* The number is spelled out for screen readers; sighted users get
-                position from the visual state. */}
-            <span className="sr-only">Step {index + 1}: </span>
-            {item.title}
+            <span className="sr-only">
+              Step {index + 1}, {item.title}
+              {index === wizard.stepIndex
+                ? " (current)"
+                : index < wizard.stepIndex
+                  ? " (done)"
+                  : ""}
+            </span>
+            <span
+              aria-hidden="true"
+              className={[
+                "block h-1.5 rounded-full transition-colors",
+                index <= wizard.stepIndex ? "bg-brand-500" : "bg-line",
+              ].join(" ")}
+            />
           </li>
         ))}
       </ol>
 
-      <header className="space-y-1">
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+      <header>
+        <p className="text-text-faint text-sm font-medium">
+          Step {wizard.stepIndex + 1} of {ONBOARDING_STEPS.length}
+        </p>
+        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-3xl">
           {stepMeta?.title}
         </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">{stepMeta?.blurb}</p>
+        <p className="text-text-soft mt-2 text-sm leading-relaxed">{stepMeta?.blurb}</p>
       </header>
 
       <div className="min-h-64">
@@ -83,29 +109,24 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
       </div>
 
       {wizard.formError ? (
-        <p role="alert" className="text-danger text-sm">
+        <p
+          role="alert"
+          className="rounded-control border-marker-200 bg-marker-50 text-marker-700 border px-4 py-3 text-sm"
+        >
           {wizard.formError}
         </p>
       ) : null}
 
       <div className="flex items-center gap-3">
         {wizard.stepIndex > 0 ? (
-          <button
-            type="button"
-            onClick={wizard.back}
-            className="border-ink-300 dark:border-ink-700 text-ink-700 dark:text-ink-100 rounded-lg border px-4 py-2 text-sm font-medium"
-          >
+          <Button type="button" variant="secondary" onClick={wizard.back}>
             Back
-          </button>
+          </Button>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={wizard.submitting}
-          className="bg-brand-600 hover:bg-brand-500 rounded-lg px-5 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60"
-        >
+        <Button type="submit" disabled={wizard.submitting} className="ml-auto">
           {wizard.isLastStep ? (wizard.submitting ? "Setting up…" : "Finish setup") : "Continue"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -117,16 +138,13 @@ function ClassStep({ wizard }: { wizard: Wizard }) {
   return (
     <fieldset className="space-y-6">
       <div className="space-y-2">
-        <legend className="text-ink-700 dark:text-ink-100 text-sm font-medium">Class</legend>
+        <legend className="text-text text-sm font-semibold">Class</legend>
         <div className="flex gap-3">
           {([10, 12] as const).map((level) => (
-            <label
+            <ChoiceCard
               key={level}
-              className={`flex-1 cursor-pointer rounded-xl border p-4 text-center ${
-                wizard.draft.classLevel === level
-                  ? "border-brand-600 bg-brand-600/5"
-                  : "border-ink-100 dark:border-ink-700"
-              }`}
+              selected={wizard.draft.classLevel === level}
+              className="flex-1 justify-center"
             >
               <input
                 type="radio"
@@ -140,8 +158,8 @@ function ClassStep({ wizard }: { wizard: Wizard }) {
                   wizard.update({ classLevel: level, subjectIds: [] });
                 }}
               />
-              <span className="text-ink-900 dark:text-ink-50 font-medium">Class {level}</span>
-            </label>
+              <span className="text-text text-lg font-semibold">Class {level}</span>
+            </ChoiceCard>
           ))}
         </div>
         <FieldError errors={wizard.errors} name="classLevel" />
@@ -158,12 +176,7 @@ function ClassStep({ wizard }: { wizard: Wizard }) {
       />
 
       <div className="space-y-2">
-        <label
-          htmlFor="preferredLanguage"
-          className="text-ink-700 dark:text-ink-100 block text-sm font-medium"
-        >
-          Preferred language
-        </label>
+        <Label htmlFor="preferredLanguage">Preferred language</Label>
         <select
           id="preferredLanguage"
           value={wizard.draft.preferredLanguage}
@@ -172,16 +185,16 @@ function ClassStep({ wizard }: { wizard: Wizard }) {
               preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
             });
           }}
-          className="border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
+          className={inputClass}
         >
           <option value="ENGLISH">English</option>
           <option value="HINDI">Hindi</option>
         </select>
         {/* Honest about scope: the column exists, the content does not yet. */}
-        <p className="text-ink-500 dark:text-ink-300 text-xs">
+        <Hint>
           Question content is English-only for now. Choosing Hindi records your preference for when
           bilingual content lands.
-        </p>
+        </Hint>
       </div>
     </fieldset>
   );
@@ -198,7 +211,7 @@ function SubjectsStep({
 
   if (options.length === 0) {
     return (
-      <p className="text-ink-500 dark:text-ink-300 text-sm text-pretty">
+      <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm leading-relaxed">
         No subjects are available for Class {wizard.draft.classLevel} yet. Samjho currently covers
         Class 10 Mathematics and Science — go back and choose Class 10, or check again once more
         subjects are added.
@@ -214,31 +227,22 @@ function SubjectsStep({
           const selected = wizard.draft.subjectIds.includes(subject.id);
           return (
             <li key={subject.id}>
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${
-                  selected
-                    ? "border-brand-600 bg-brand-600/5"
-                    : "border-ink-100 dark:border-ink-700"
-                }`}
-              >
+              <ChoiceCard selected={selected}>
                 <input
                   type="checkbox"
                   checked={selected}
                   onChange={() => {
                     wizard.toggleSubject(subject.id);
                   }}
-                  className="mt-1"
+                  className="accent-brand-500 mt-1 size-4"
                 />
                 <span>
-                  <span className="text-ink-900 dark:text-ink-50 block font-medium">
-                    {subject.name}
-                    {subject.variant ? ` (${subject.variant})` : ""}
-                  </span>
-                  <span className="text-ink-500 dark:text-ink-300 block text-sm">
+                  <span className="text-text block font-semibold">{subject.name}</span>
+                  <span className="text-text-soft block text-sm">
                     Theory paper · {subject.theoryMarks} marks
                   </span>
                 </span>
-              </label>
+              </ChoiceCard>
             </li>
           );
         })}
@@ -265,13 +269,7 @@ function TargetStep({ wizard }: { wizard: Wizard }) {
 
           return (
             <li key={`${option.session}-${option.phase}`}>
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${
-                  selected
-                    ? "border-brand-600 bg-brand-600/5"
-                    : "border-ink-100 dark:border-ink-700"
-                }`}
-              >
+              <ChoiceCard selected={selected}>
                 <input
                   type="radio"
                   name="targetExam"
@@ -281,17 +279,13 @@ function TargetStep({ wizard }: { wizard: Wizard }) {
                       targetExam: { session: option.session, phase: option.phase },
                     });
                   }}
-                  className="mt-1"
+                  className="accent-brand-500 mt-1 size-4"
                 />
                 <span>
-                  <span className="text-ink-900 dark:text-ink-50 block font-medium">
-                    {option.label}
-                  </span>
-                  <span className="text-ink-500 dark:text-ink-300 block text-sm">
-                    {option.hint}
-                  </span>
+                  <span className="text-text block font-semibold">{option.label}</span>
+                  <span className="text-text-soft block text-sm">{option.hint}</span>
                 </span>
-              </label>
+              </ChoiceCard>
             </li>
           );
         })}
@@ -320,7 +314,7 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
         hint="Use an adult's address, not your own. We use it to reach a guardian about this account."
       />
 
-      <div className="border-ink-100 dark:border-ink-700 space-y-4 rounded-xl border p-4">
+      <div className="border-line bg-card rounded-panel space-y-4 border p-5">
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -333,9 +327,9 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
                 },
               });
             }}
-            className="mt-1"
+            className="accent-brand-500 mt-0.5 size-4"
           />
-          <span className="text-ink-700 dark:text-ink-100 text-pretty">
+          <span className="text-text leading-relaxed">
             A parent or guardian knows about this account and permits me to use Samjho.
           </span>
         </label>
@@ -350,9 +344,9 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
                 consent: { ...wizard.draft.consent, termsAccepted: event.target.checked },
               });
             }}
-            className="mt-1"
+            className="accent-brand-500 mt-0.5 size-4"
           />
-          <span className="text-ink-700 dark:text-ink-100 text-pretty">
+          <span className="text-text leading-relaxed">
             I accept the terms of use and privacy policy (version {CURRENT_TERMS_VERSION}).
           </span>
         </label>
@@ -364,11 +358,11 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
         a student's tick is an assertion, not verified parental consent, and the
         product should not imply otherwise to the person making it.
       */}
-      <p className="text-ink-500 dark:text-ink-300 text-xs text-pretty">
+      <Hint>
         Samjho is in a closed pilot. We record that you have declared a guardian permits this
         account; we do not yet ask your guardian to confirm it directly. Samjho contains no
         advertising and no behavioural-tracking scripts.
-      </p>
+      </Hint>
     </fieldset>
   );
 }
@@ -398,9 +392,7 @@ function TextField({
 
   return (
     <div className="space-y-2">
-      <label htmlFor={name} className="text-ink-700 dark:text-ink-100 block text-sm font-medium">
-        {label}
-      </label>
+      <Label htmlFor={name}>{label}</Label>
       <input
         id={name}
         name={name}
@@ -416,27 +408,14 @@ function TextField({
           .filter(Boolean)
           .join(" ")
           .trim()}
-        className={`w-full rounded-lg border bg-transparent px-3 py-2 text-sm ${
-          hasError ? "border-danger" : "border-ink-300 dark:border-ink-700"
-        }`}
+        className={hasError ? invalidInputClass : inputClass}
       />
-      {hint ? (
-        <p id={hintId} className="text-ink-500 dark:text-ink-300 text-xs text-pretty">
-          {hint}
-        </p>
-      ) : null}
+      {hint ? <Hint id={hintId}>{hint}</Hint> : null}
       <FieldError errors={errors} name={name} id={errorId} />
     </div>
   );
 }
 
 function FieldError({ errors, name, id }: { errors: FieldErrors; name: string; id?: string }) {
-  const message = errors[name];
-  if (message === undefined) return null;
-
-  return (
-    <p id={id ?? `${name}-error`} role="alert" className="text-danger text-sm">
-      {message}
-    </p>
-  );
+  return <FieldErrorText id={id ?? `${name}-error`} message={errors[name]} />;
 }

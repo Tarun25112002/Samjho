@@ -48,17 +48,15 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
-            Questions
-          </h1>
-          <p className="text-ink-500 dark:text-ink-300 text-sm">
+          <h1 className="text-text text-2xl font-semibold tracking-tight">Questions</h1>
+          <p className="text-text-soft text-sm">
             Drafts included — this is the whole bank, not the student&rsquo;s view.
           </p>
         </div>
 
         <Link
           href={`/admin/questions/new${subjectId ? `?subjectId=${subjectId}` : ""}`}
-          className="bg-brand-600 flex min-h-11 items-center rounded-lg px-5 text-sm font-medium text-white"
+          className="bg-brand-500 flex min-h-11 items-center rounded-lg px-5 text-sm font-medium text-white"
         >
           New question
         </Link>
@@ -66,11 +64,11 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
 
       <form className="flex flex-wrap items-end gap-3" method="get">
         <label className="space-y-1.5 text-sm">
-          <span className="text-ink-700 dark:text-ink-100 block font-medium">Subject</span>
+          <span className="text-text block font-medium">Subject</span>
           <select
             name="subjectId"
             defaultValue={subjectId}
-            className="border-ink-300 dark:border-ink-700 rounded-lg border bg-transparent px-3 py-2 text-sm"
+            className="border-line-strong rounded-lg border bg-transparent px-3 py-2 text-sm"
           >
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
@@ -81,11 +79,11 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
         </label>
 
         <label className="space-y-1.5 text-sm">
-          <span className="text-ink-700 dark:text-ink-100 block font-medium">Status</span>
+          <span className="text-text block font-medium">Status</span>
           <select
             name="status"
             defaultValue={first("status") ?? ""}
-            className="border-ink-300 dark:border-ink-700 rounded-lg border bg-transparent px-3 py-2 text-sm"
+            className="border-line-strong rounded-lg border bg-transparent px-3 py-2 text-sm"
           >
             <option value="">Any</option>
             <option value="DRAFT">Draft</option>
@@ -96,18 +94,18 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
         </label>
 
         <label className="space-y-1.5 text-sm">
-          <span className="text-ink-700 dark:text-ink-100 block font-medium">Search</span>
+          <span className="text-text block font-medium">Search</span>
           <input
             name="search"
             defaultValue={first("search") ?? ""}
             placeholder="Text in the question"
-            className="border-ink-300 dark:border-ink-700 rounded-lg border bg-transparent px-3 py-2 text-sm"
+            className="border-line-strong rounded-lg border bg-transparent px-3 py-2 text-sm"
           />
         </label>
 
         <button
           type="submit"
-          className="border-ink-300 dark:border-ink-700 min-h-11 rounded-lg border px-4 text-sm"
+          className="border-line-strong min-h-11 rounded-lg border px-4 text-sm"
         >
           Filter
         </button>
@@ -120,18 +118,18 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
         emptyAction={
           <Link
             href={`/admin/questions/new${subjectId ? `?subjectId=${subjectId}` : ""}`}
-            className="text-ink-900 dark:text-ink-50 underline"
+            className="text-text underline"
           >
             Write the first one
           </Link>
         }
       >
         {(items) => (
-          <ul className="divide-ink-100 dark:divide-ink-700 divide-y">
+          <ul className="divide-line divide-y">
             {items.map((question) => (
               <li key={question.id} className="py-4">
                 <Link href={`/admin/questions/${question.id}`} className="group block space-y-1.5">
-                  <div className="text-ink-500 flex flex-wrap items-center gap-2 text-xs">
+                  <div className="text-text-soft flex flex-wrap items-center gap-2 text-xs">
                     <StatusChip status={question.status} />
                     <span>{QUESTION_TYPE_LABELS[question.type]}</span>
                     <span>·</span>
@@ -142,11 +140,11 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
                     <span>{question.chapter.name}</span>
                     {question.isContainer ? <span>· {question.subPartCount} parts</span> : null}
                     {question.licenceStatus === "NEEDS_REVIEW" ? (
-                      <span className="text-danger">· licensing undecided</span>
+                      <span className="text-marker-700">· licensing undecided</span>
                     ) : null}
                   </div>
 
-                  <div className="text-ink-900 dark:text-ink-50 line-clamp-2 text-sm group-hover:underline">
+                  <div className="text-text line-clamp-2 text-sm group-hover:underline">
                     <MathText>{question.body}</MathText>
                   </div>
                 </Link>
@@ -157,7 +155,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
       </DataState>
 
       {questions.pageInfo.hasMore ? (
-        <p className="text-ink-500 text-sm">
+        <p className="text-text-soft text-sm">
           More questions match than are shown. Narrow the filters to find a specific one.
         </p>
       ) : null}
@@ -167,7 +165,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
 
 function StatusChip({ status }: { status: string }) {
   return (
-    <span className="border-ink-100 dark:border-ink-700 rounded-full border px-2 py-0.5">
+    <span className="border-line rounded-full border px-2 py-0.5">
       {status.replace(/_/g, " ").toLowerCase()}
     </span>
   );

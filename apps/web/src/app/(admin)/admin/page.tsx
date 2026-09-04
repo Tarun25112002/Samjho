@@ -22,32 +22,27 @@ export default async function AdminDashboardPage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
       <header className="space-y-1">
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
-          Content
-        </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+        <h1 className="text-text text-2xl font-semibold tracking-tight">Content</h1>
+        <p className="text-text-soft text-sm">
           {stats.editedThisWeek} question{stats.editedThisWeek === 1 ? "" : "s"} touched in the last
           seven days.
         </p>
       </header>
 
       <section aria-labelledby="subjects-heading" className="space-y-4">
-        <h2 id="subjects-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+        <h2 id="subjects-heading" className="text-text text-sm font-semibold">
           By subject
         </h2>
 
         {stats.subjects.length === 0 ? (
-          <p className="text-ink-500 text-sm">No active subjects yet.</p>
+          <p className="text-text-soft text-sm">No active subjects yet.</p>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2">
             {stats.subjects.map((subject) => (
-              <li
-                key={subject.subjectId}
-                className="border-ink-100 dark:border-ink-700 space-y-3 rounded-xl border p-4"
-              >
+              <li key={subject.subjectId} className="border-line space-y-3 rounded-xl border p-4">
                 <div>
-                  <h3 className="text-ink-900 dark:text-ink-50 font-medium">{subject.name}</h3>
-                  <p className="text-ink-500 text-xs">Class {subject.classLevel}</p>
+                  <h3 className="text-text font-medium">{subject.name}</h3>
+                  <p className="text-text-soft text-xs">Class {subject.classLevel}</p>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -74,7 +69,7 @@ export default async function AdminDashboardPage() {
                 </dl>
 
                 {subject.chaptersWithNoQuestions > 0 ? (
-                  <p className="text-ink-500 text-xs">
+                  <p className="text-text-soft text-xs">
                     {/*
                       The number that a total hides. 400 questions spread evenly is
                       a usable product; the same 400 in six chapters is not, because
@@ -88,7 +83,7 @@ export default async function AdminDashboardPage() {
 
                 <Link
                   href={`/admin/questions?subjectId=${subject.subjectId}`}
-                  className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50 inline-block text-sm"
+                  className="text-text-soft hover:text-text inline-block text-sm"
                 >
                   Open {subject.total} question{subject.total === 1 ? "" : "s"} →
                 </Link>
@@ -99,14 +94,14 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section aria-labelledby="licence-heading" className="space-y-3">
-        <h2 id="licence-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+        <h2 id="licence-heading" className="text-text text-sm font-semibold">
           Licensing across the whole bank
         </h2>
         <dl className="flex flex-wrap gap-6 text-sm">
           {Object.entries(stats.byLicenceStatus).map(([status, count]) => (
             <div key={status}>
-              <dt className="text-ink-500 text-xs">{status.replace(/_/g, " ").toLowerCase()}</dt>
-              <dd className="text-ink-900 dark:text-ink-50 font-medium">{count}</dd>
+              <dt className="text-text-soft text-xs">{status.replace(/_/g, " ").toLowerCase()}</dt>
+              <dd className="text-text font-medium">{count}</dd>
             </div>
           ))}
         </dl>
@@ -118,9 +113,9 @@ export default async function AdminDashboardPage() {
 function Stat({ label, value, href }: { label: string; value: number; href: string }) {
   return (
     <>
-      <dt className="text-ink-500">{label}</dt>
+      <dt className="text-text-soft">{label}</dt>
       <dd className="text-right font-medium">
-        <Link href={href} className="text-ink-900 dark:text-ink-50 hover:underline">
+        <Link href={href} className="text-text hover:underline">
           {value}
         </Link>
       </dd>

@@ -37,9 +37,9 @@
  * Tailwind v4 compiles `bg-card` to `background-color: var(--color-card)`, so
  * overriding the custom property is enough — no class-level duplication.
  *
- * The old `ink-*` ramp is kept, aliased onto the new warm neutrals, because
- * pages migrate one branch at a time and a half-migrated app still has to
- * render correctly.
+ * The `ink-*` ramp that the Phase 2 pages were written against was kept as an
+ * alias while they migrated one branch at a time. Every surface is on the
+ * semantic layer now, so the aliases have gone with it.
  *
  * ## Contrast, and the one decision it forced
  *
@@ -71,18 +71,10 @@
   --color-sand-900: oklch(0.245 0.013 65);
   --color-sand-950: oklch(0.185 0.011 65);
 
-  /* Aliases for the pages still on the Phase 2 palette. Same values, old
-     names — nothing to update in a file until the branch that redesigns it. */
-  --color-ink-50: var(--color-sand-50);
-  --color-ink-100: var(--color-sand-100);
-  --color-ink-300: var(--color-sand-300);
-  --color-ink-500: var(--color-sand-500);
-  --color-ink-700: var(--color-sand-700);
-  --color-ink-900: var(--color-sand-900);
-  --color-ink-200: var(--color-sand-200);
-  --color-ink-950: var(--color-sand-950);
-  --color-success: var(--color-tick-600);
-  --color-danger: var(--color-marker-600);
+  /* The `ink-*`, `success` and `danger` aliases that carried the Phase 2 pages
+     through the migration are gone: every surface is on the semantic layer now,
+     and leaving the old names defined is how the next person writes
+     `text-ink-500` without noticing it is not the vocabulary any more. */
 
   /* ── Brand: saffron ─────────────────────────────────────────────────────
      `500` is the signature — the fill on every primary button, always with
