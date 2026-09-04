@@ -1,63 +1,99 @@
 /**
  * Structural styles for @samjho/ui.
  *
- * Deliberately minimal and token-driven. The real palette and type scale are
- * still placeholders in the web app's globals.css (docs/01 §9), so anything
- * opinionated written here would be rewritten the moment the design system
- * lands. What this file *does* commit to is the structure — spacing, the
- * relationship between an option and its label, and the two things that break
- * on a phone if nobody thinks about them: wide tables and long formulae.
+ * Token-driven, and every colour goes through `var(--color-…, fallback)`. The
+ * fallback is what lets the package render sensibly in a test, in a host that
+ * has not defined Samjho's tokens, and in the two seconds before the app's
+ * stylesheet lands. The values it falls back to are the light theme's.
  *
- * Every colour goes through a `var(--color-…, fallback)`. The fallback is what
- * lets the package render sensibly in a test, in Storybook, or in any host that
- * has not defined Samjho's tokens.
+ * ## What this file commits to
+ *
+ * The *shape* of a question, everywhere one is drawn: practice, the exam,
+ * review, and the admin preview. Four surfaces, one stylesheet, which is the
+ * whole reason `QuestionRenderer` exists (see its own file). Anything that is
+ * true of a question wherever it appears belongs here; anything true only of
+ * the practice runner belongs in the app.
+ *
+ * ## The two rules that drive most of it
+ *
+ * **Question text is set as text, not as UI.** It goes in the serif at 17px with
+ * a 1.7 line-height, because a student reads it for an hour rather than glancing
+ * at it — docs/01 §9. The interface around it stays in the sans. That contrast
+ * is also what stops a question and a button from looking like the same kind of
+ * object.
+ *
+ * **Marks go in the right margin.** On a printed CBSE paper the allocation sits
+ * out to the right of every question behind nothing but space. It is the most
+ * recognisable feature of the document, so the header row pushes `__marks` to
+ * the end with `order` and `margin-left` rather than letting it sit in DOM order
+ * — the markup stays a sensible reading order and the layout still reads like a
+ * paper.
  */
 
 .samjho-question {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+  color: var(--color-text, #251f1a);
 }
 
 .samjho-question__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
+  line-height: 1.2;
 }
 
 .samjho-question__number {
-  font-weight: 600;
-  color: var(--color-ink-900, #1a1a1a);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--color-text, #251f1a);
+  font-variant-numeric: tabular-nums;
 }
 
+/*
+ * The marks margin. `order` moves it past the chips without the markup having
+ * to know it is being moved, and `margin-left: auto` is what makes the gap a
+ * margin rather than a gutter.
+ */
 .samjho-question__marks {
-  font-weight: 500;
-  color: var(--color-ink-500, #666);
+  order: 9;
+  margin-left: auto;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--color-line, #e7e2dd);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-text-soft, #695e55);
 }
 
 .samjho-question__chip {
-  border: 1px solid var(--color-ink-100, #e5e5e5);
   border-radius: 999px;
-  padding: 0.0625rem 0.5rem;
-  color: var(--color-ink-500, #666);
+  padding: 0.1875rem 0.5rem;
+  background: var(--color-raised, #f6f3ef);
+  color: var(--color-text-soft, #695e55);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .samjho-question__provenance {
   font-size: 0.75rem;
-  color: var(--color-ink-500, #666);
+  color: var(--color-text-faint, #7c7268);
 }
 
 .samjho-question__warning {
-  color: var(--color-danger, #cc3333);
+  color: var(--color-marker-600, #cc003a);
   font-size: 0.875rem;
 }
 
 /* ── Prose ───────────────────────────────────────────────────────────────── */
 
 .samjho-prose {
-  line-height: 1.65;
+  font-family: var(--font-serif, ui-serif, Georgia, "Times New Roman", serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
 }
 
 .samjho-prose p + p {
@@ -68,14 +104,22 @@
   border-collapse: collapse;
   width: max-content;
   min-width: 100%;
+  font-size: 0.9375rem;
 }
 
 .samjho-prose th,
 .samjho-prose td {
-  border: 1px solid var(--color-ink-100, #e5e5e5);
-  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-line, #e7e2dd);
+  padding: 0.4375rem 0.6875rem;
   text-align: left;
   vertical-align: top;
+}
+
+.samjho-prose th {
+  background: var(--color-raised, #f6f3ef);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 /*
@@ -112,20 +156,36 @@
 .samjho-options {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
   border: 0;
   margin: 0;
   padding: 0;
 }
 
+/* True/false is two short choices. Side by side they are two thumb-sized
+   targets; stacked they are two full-width bars that look like a four-option
+   question with half of it missing. */
+.samjho-options--boolean {
+  flex-direction: row;
+}
+
+.samjho-options--boolean .samjho-option {
+  flex: 1;
+}
+
 .samjho-option {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--color-ink-100, #e5e5e5);
-  border-radius: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-line-strong, #d2cbc3);
+  border-radius: var(--radius-control, 0.75rem);
+  background: var(--color-card, #ffffff);
   cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
   /*
    * 44px is the minimum comfortable touch target. Options are the single most
    * tapped element in the product and the audience is phone-first (docs/07 Q10),
@@ -134,29 +194,115 @@
   min-height: 2.75rem;
 }
 
+@media (hover: hover) {
+  .samjho-option:hover {
+    border-color: var(--color-brand-400, #ff9a2e);
+    background: var(--color-raised, #f6f3ef);
+  }
+}
+
 .samjho-options:disabled .samjho-option {
   cursor: default;
 }
 
+@media (hover: hover) {
+  .samjho-options:disabled .samjho-option:hover {
+    border-color: var(--color-line-strong, #d2cbc3);
+    background: var(--color-card, #ffffff);
+  }
+}
+
 .samjho-option[data-selected] {
-  border-color: var(--color-brand-600, #b4530f);
-  background: color-mix(in oklab, var(--color-brand-600, #b4530f) 6%, transparent);
+  border-color: var(--color-brand-600, #d55c00);
+  background: color-mix(in oklab, var(--color-brand-600, #d55c00) 7%, transparent);
+  /* A second ring rather than a thicker border: a border that changes width on
+     selection shifts every other option by a pixel. */
+  box-shadow: inset 0 0 0 1px var(--color-brand-600, #d55c00);
+}
+
+/*
+ * The letter *is* the radio.
+ *
+ * CBSE options are labelled A–D and a student picks a letter, so the badge does
+ * the job a radio dot would, at twice the size and with the information already
+ * in it. The native input stays in the DOM, focusable and announced — it is
+ * moved out of sight, not removed, and the focus ring is drawn on the row it
+ * belongs to.
+ *
+ * The `@supports` block is not decoration either: without `:has()` there is no
+ * way to show focus, so those browsers get the native control back rather than
+ * a keyboard trap with no visible position.
+ */
+.samjho-option input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.samjho-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-brand-600, #d55c00);
+  outline-offset: 2px;
+}
+
+@supports not selector(:has(*)) {
+  .samjho-option input[type="radio"] {
+    position: static;
+    width: auto;
+    height: auto;
+    opacity: 1;
+    pointer-events: auto;
+    accent-color: var(--color-brand-600, #d55c00);
+  }
 }
 
 .samjho-option__label {
-  font-weight: 600;
-  color: var(--color-ink-500, #666);
-  min-width: 1.25rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line-strong, #d2cbc3);
+  background: var(--color-card, #ffffff);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-soft, #695e55);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.samjho-option[data-selected] .samjho-option__label {
+  border-color: var(--color-brand-600, #d55c00);
+  background: var(--color-brand-600, #d55c00);
+  color: var(--color-on-brand, #ffffff);
+}
+
+.samjho-option__body {
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-size: 1rem;
+  line-height: 1.55;
 }
 
 /* ── Free-text response ──────────────────────────────────────────────────── */
 
+.samjho-response {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
 .samjho-response__input {
   width: 100%;
-  border: 1px solid var(--color-ink-300, #b3b3b3);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
+  border: 1px solid var(--color-line-strong, #d2cbc3);
+  border-radius: var(--radius-control, 0.75rem);
+  padding: 0.625rem 0.875rem;
+  background: var(--color-card, #ffffff);
   color: inherit;
   /*
    * Never below 16px on an input: iOS Safari zooms the whole viewport when a
@@ -164,11 +310,26 @@
    */
   font-size: 1rem;
   font-family: inherit;
+  min-height: 2.75rem;
+  transition: border-color 120ms ease;
 }
 
+.samjho-response__input:focus {
+  border-color: var(--color-brand-600, #d55c00);
+}
+
+.samjho-response__input:disabled {
+  background: var(--color-raised, #f6f3ef);
+  cursor: default;
+}
+
+/* Working, not a tweet. A long answer is several steps of algebra and the field
+   should look like it expects them. */
 .samjho-response__input--extended {
   resize: vertical;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  min-height: 8rem;
 }
 
 /* ── Sub-parts ───────────────────────────────────────────────────────────── */
@@ -179,17 +340,29 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .samjho-subpart {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-  /* A visible spine, so it is obvious the parts belong to the case study
-     above them rather than being separate questions. */
-  border-left: 2px solid var(--color-ink-100, #e5e5e5);
-  padding-left: 0.875rem;
+  /* A visible spine, so it is obvious the parts belong to the case study above
+     them rather than being separate questions. Two pixels of brand rather than
+     a grey hairline: on a page of bordered cards a grey line reads as another
+     card edge. */
+  border-left: 2px solid color-mix(in oklab, var(--color-brand-600, #d55c00) 35%, transparent);
+  padding-left: 1rem;
+}
+
+.samjho-subpart__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-soft, #695e55);
 }
 
 /* ── Assets ──────────────────────────────────────────────────────────────── */
@@ -207,61 +380,74 @@
 .samjho-asset img {
   max-width: 100%;
   height: auto;
+  border-radius: var(--radius-control, 0.75rem);
+  border: 1px solid var(--color-line, #e7e2dd);
 }
 
 .samjho-asset figcaption {
   font-size: 0.8125rem;
-  color: var(--color-ink-500, #666);
-  margin-top: 0.25rem;
+  color: var(--color-text-faint, #7c7268);
+  margin-top: 0.375rem;
 }
 
 /* ── Data states ─────────────────────────────────────────────────────────── */
 
 .samjho-state {
-  padding: 1.25rem;
-  border: 1px solid var(--color-ink-100, #e5e5e5);
-  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-line, #e7e2dd);
+  border-radius: var(--radius-panel, 1.375rem);
+  background: var(--color-card, #ffffff);
   font-size: 0.875rem;
 }
 
 .samjho-state--error {
-  border-color: var(--color-danger, #cc3333);
+  border-color: var(--color-marker-200, #ffb9bb);
+  background: var(--color-marker-50, #ffefef);
 }
 
 .samjho-state__title {
-  font-weight: 500;
-  color: var(--color-ink-900, #1a1a1a);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text, #251f1a);
+}
+
+.samjho-state--error .samjho-state__title {
+  color: var(--color-marker-700, #a5092f);
 }
 
 .samjho-state__meta {
   margin-top: 0.375rem;
   font-size: 0.75rem;
-  color: var(--color-ink-500, #666);
+  color: var(--color-text-faint, #7c7268);
 }
 
 .samjho-state__body {
-  margin-top: 0.375rem;
-  color: var(--color-ink-500, #666);
+  margin-top: 0.5rem;
+  color: var(--color-text-soft, #695e55);
+  line-height: 1.6;
+  max-width: 46ch;
 }
 
 .samjho-state__actions {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .samjho-state__retry {
   /* 44px, the same minimum touch target the option rows use. */
   min-height: 2.75rem;
-  padding: 0 1rem;
-  border: 1px solid var(--color-ink-100, #e5e5e5);
-  border-radius: 0.5rem;
-  background: transparent;
+  padding: 0 1.125rem;
+  border: 1px solid var(--color-line-strong, #d2cbc3);
+  border-radius: var(--radius-control, 0.75rem);
+  background: var(--color-card, #ffffff);
   font: inherit;
-  color: var(--color-ink-900, #1a1a1a);
+  font-weight: 600;
+  color: var(--color-text, #251f1a);
   cursor: pointer;
+  transition: border-color 120ms ease;
 }
 
 .samjho-state__retry:hover {
-  border-color: var(--color-brand-600, #b45309);
+  border-color: var(--color-brand-600, #d55c00);
 }
 
 /* ── Skeletons ───────────────────────────────────────────────────────────── */
@@ -269,14 +455,14 @@
 .samjho-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
 }
 
 .samjho-skeleton__line {
   display: block;
   height: 0.875rem;
-  border-radius: 0.25rem;
-  background: var(--color-ink-100, #e5e5e5);
+  border-radius: 0.375rem;
+  background: var(--color-raised, #f6f3ef);
 }
 
 .samjho-skeleton__line--short {
