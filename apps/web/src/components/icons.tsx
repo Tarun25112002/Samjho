@@ -72,3 +72,64 @@ export function ChevronLeft({ className }: IconProps) {
 export function ChevronRight({ className }: IconProps) {
   return svg(<path d="m9 5 7 7-7 7" />, className, 2.2);
 }
+
+/** The dashboard. A roof over a door, not a house with windows — at 20px the
+    windows turn into noise. */
+export function HomeIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+      <path d="M9.5 20v-5.5h5V20" />
+    </>,
+    className,
+  );
+}
+
+/** Practice. A pen nib: the thing a student is holding when they use this. */
+export function PenIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M15.2 4.6a2.3 2.3 0 0 1 3.25 3.25L8.6 17.7l-4.1.85.85-4.1z" />
+      <path d="M13.4 6.4 16.7 9.7" />
+    </>,
+    className,
+  );
+}
+
+/** You. */
+export function UserIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <circle cx="12" cy="8.5" r="3.75" />
+      <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
+    </>,
+    className,
+  );
+}
+
+/** A streak. Deliberately a small flame — the number does the talking. */
+export function FlameIcon({ className }: IconProps) {
+  return svg(
+    <path d="M12 3s.9 3 2.9 4.7C16.6 9.2 18 11 18 13.5a6 6 0 0 1-12 0c0-2 1-3.6 2.2-4.7C9.6 7.5 10 6 10 6s1.4.8 2 2c.6-1.6 0-5 0-5z" />,
+    className,
+  );
+}
+
+/** Saved. Filled when the question is in the list, outlined when it is not. */
+export function BookmarkIcon({ className, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className ?? "size-4"}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4-6.5 4V5a1 1 0 0 1 1-1z" />
+    </svg>
+  );
+}
