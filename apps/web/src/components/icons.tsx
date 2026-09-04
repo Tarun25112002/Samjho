@@ -133,3 +133,49 @@ export function BookmarkIcon({ className, filled = false }: IconProps & { filled
     </svg>
   );
 }
+
+/** Quick practice — a stack of cards, which is what a set is. */
+export function StackIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <rect x="4" y="7.5" width="16" height="12" rx="2.5" />
+      <path d="M7 4.5h10" />
+    </>,
+    className,
+  );
+}
+
+/** Mistake review. A cross being turned back into a tick is the whole product. */
+export function RedoIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M20 5.5v5h-5" />
+      <path d="M19.4 10.5a7.5 7.5 0 1 0-.8 6" />
+    </>,
+    className,
+  );
+}
+
+/** Previous-year questions — a dated paper. */
+export function PaperIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M6 3.5h8.5L19 8v12.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z" />
+      <path d="M14 3.5V8h5" />
+      <path d="M8.5 13h7M8.5 16.5h4.5" />
+    </>,
+    className,
+  );
+}
+
+/** A filter, for the custom set builder. */
+export function SlidersIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M4 8h10M18 8h2M4 16h4M12 16h8" />
+      <circle cx="16" cy="8" r="2" />
+      <circle cx="10" cy="16" r="2" />
+    </>,
+    className,
+  );
+}
