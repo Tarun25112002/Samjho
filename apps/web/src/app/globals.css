@@ -406,3 +406,35 @@
     }
   }
 }
+
+@layer components {
+  /**
+   * Ruled lines without the margin rule.
+   *
+   * `.ruled-paper` is a page: it has a left margin and it is meant to sit in a
+   * column. A full-bleed section wants the ruling and nothing else — a red
+   * margin rule 56px from the viewport edge reads as a rendering error rather
+   * than as a notebook. Same texture, one layer fewer.
+   */
+  .ruled-lines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 2.75rem,
+      color-mix(in oklab, var(--color-brand-500) 9%, transparent) 2.75rem 2.8125rem
+    );
+  }
+
+  /**
+   * A line of display type that rises into place from behind its own baseline.
+   *
+   * The mask is the point: `overflow: hidden` on the wrapper means the line is
+   * revealed rather than faded, which is a typographic gesture rather than the
+   * fade-and-slide every generated page opens with. It is used once, on the one
+   * headline, and the wrapper is inert when the animation does not run.
+   */
+  .line-mask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+  }
+}

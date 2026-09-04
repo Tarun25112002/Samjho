@@ -61,13 +61,14 @@ export default async function StatusPage() {
   const result = await probeApi();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
+    // A `<div>`, not a `<main>`: the marketing layout now supplies the landmark,
+    // and two of them on one page means a screen reader offers a choice of "main
+    // content" — which is not a choice anyone can make. The rest of this page's
+    // styling is Phase 2's and is redesigned with the other utility surfaces.
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16">
       <header className="space-y-2">
-        <p className="text-brand-600 text-sm font-medium tracking-wide uppercase">System status</p>
-        <h1 className="text-ink-900 dark:text-ink-50 text-3xl font-semibold tracking-tight">
-          Samjho
-        </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-base">
+        <h1 className="text-text text-title">System status</h1>
+        <p className="text-text-soft text-base">
           Live health of the API and its database, checked on every page load.
         </p>
       </header>
@@ -76,11 +77,10 @@ export default async function StatusPage() {
         aria-labelledby="status-heading"
         className="border-ink-100 dark:border-ink-700 rounded-xl border p-5"
       >
-        <h2
-          id="status-heading"
-          className="text-ink-700 dark:text-ink-300 mb-4 text-sm font-semibold"
-        >
-          System status
+        {/* Was a second "System status" under the first. The heading now names
+            what is in the list rather than repeating the page. */}
+        <h2 id="status-heading" className="text-text mb-4 text-sm font-semibold">
+          Checks
         </h2>
 
         {result.ok ? (
@@ -126,7 +126,7 @@ export default async function StatusPage() {
         Specification and architecture live in{" "}
         <code className="text-ink-700 dark:text-ink-100 font-mono">docs/</code>.
       </footer>
-    </main>
+    </div>
   );
 }
 
