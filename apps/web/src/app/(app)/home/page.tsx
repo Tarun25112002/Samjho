@@ -1,11 +1,13 @@
 import { PRACTICE_MODE_LABELS, type SubjectDetail, type SubjectSummary } from "@samjho/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { FlameIcon } from "@/components/icons";
 import { StartPractice } from "@/features/practice/start-practice";
 import { ButtonLink } from "@/components/ui/button";
 import { loadSubject } from "@/lib/catalog";
+import { loadStudentClassrooms } from "@/lib/classrooms";
 import {
   activityStrip,
   examCountdown,
@@ -46,11 +48,19 @@ export const dynamic = "force-dynamic";
  */
 export default async function HomePage() {
   const me = await requireOnboarded();
+  if (me.user.role === "TEACHER") redirect("/teacher");
   const profile = me.profile;
 
-  const [inProgress, history] = await Promise.all([
+  const [inProgress, history, classrooms] = await Promise.all([
     loadSessions({ status: "IN_PROGRESS", limit: 1 }),
     loadSessions({ limit: 50 }),
+    // The same rule the subject cards below follow, for the same reason. The
+    // teacher strip is one optional band on this page; practice history is the
+    // page. A classroom endpoint that is failing — an unapplied migration is the
+    // way this actually happens — should cost a student that band, not their
+    // whole dashboard. `/classroom` is where a real failure gets reported,
+    // because there it is the subject of the page rather than a garnish.
+    loadStudentClassrooms().catch(() => []),
   ]);
 
   const resume = inProgress.items[0];
@@ -60,6 +70,21 @@ export default async function HomePage() {
   const countdown = examCountdown(profile?.targetExam ?? null);
   const subjects = await loadEnrolledSubjects(profile?.subjects ?? []);
   const recent = history.items.slice(0, 5);
+  const assignedNext = classrooms
+    .flatMap((classroom) =>
+      classroom.assignments.map((assignment) => ({
+        assignment,
+        classroomName: classroom.name,
+        subjectName: classroom.subject.name,
+      })),
+    )
+    .sort((left, right) => {
+      const priority = { IN_PROGRESS: 0, NOT_STARTED: 1, LATE: 2, COMPLETED: 3 } as const;
+      return priority[left.assignment.progress] - priority[right.assignment.progress];
+    })
+    .find(
+      ({ assignment }) => assignment.progress !== "COMPLETED" && assignment.progress !== "LATE",
+    );
 
   const firstName = me.user.name?.split(" ")[0];
 
@@ -104,6 +129,17 @@ export default async function HomePage() {
 
         <CountdownCard countdown={countdown} />
       </div>
+
+      {assignedNext ? (
+        <TeacherBrief
+          classroomName={assignedNext.classroomName}
+          subjectName={assignedNext.subjectName}
+          title={assignedNext.assignment.title}
+          questionCount={assignedNext.assignment.questionCount}
+          progress={assignedNext.assignment.progress}
+          dueAt={assignedNext.assignment.dueAt}
+        />
+      ) : null}
 
       <ThisWeek week={week} days={days} hasHistory={history.items.length > 0} />
 
@@ -292,6 +328,49 @@ function StartCard() {
       </div>
     </section>
   );
+}
+
+/** A task should show up where students already decide what to do next. */
+function TeacherBrief({
+  classroomName,
+  subjectName,
+  title,
+  questionCount,
+  progress,
+  dueAt,
+}: {
+  classroomName: string;
+  subjectName: string;
+  title: string;
+  questionCount: number;
+  progress: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "LATE";
+  dueAt: string | null;
+}) {
+  return (
+    <section className="rounded-panel border-brand-200 bg-card flex flex-col gap-4 border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div>
+        <p className="text-brand-700 text-sm font-semibold">From your teacher · {classroomName}</p>
+        <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">{title}</h2>
+        <p className="text-text-soft mt-1 text-sm">
+          {subjectName} · {questionCount} questions
+          {dueAt ? ` · due ${formatAssignmentDue(dueAt)}` : ""}
+          {progress === "IN_PROGRESS" ? " · you have started this" : ""}
+        </p>
+      </div>
+      <ButtonLink href="/classroom" variant={progress === "IN_PROGRESS" ? "secondary" : "primary"}>
+        {progress === "IN_PROGRESS" ? "Resume" : "Open assignment"}
+      </ButtonLink>
+    </section>
+  );
+}
+
+function formatAssignmentDue(value: string): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 /**

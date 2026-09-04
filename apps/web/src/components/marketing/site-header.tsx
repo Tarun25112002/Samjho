@@ -51,6 +51,11 @@ export async function SiteHeader() {
           ))}
         </nav>
 
+        <p className="border-line bg-card text-text-soft hidden items-center gap-2 rounded-pill border px-3 py-1.5 text-xs font-medium xl:flex">
+          <span className="bg-tick-600 size-1.5 rounded-full" aria-hidden="true" />
+          Question-first practice
+        </p>
+
         <div className="ml-auto flex items-center gap-3">
           <Show
             when="signed-out"

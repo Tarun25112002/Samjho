@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Wordmark } from "@/components/brand/logo";
 import { Check, Cross } from "@/components/icons";
 
@@ -17,15 +19,12 @@ import { Check, Cross } from "@/components/icons";
  * options are the genuine mistake and the genuine answer rather than a
  * decorative pair.
  *
- * ## Why the panel is white
+ * ## Why the panel feels like a desk
  *
- * The brief is white and orange, and a full-bleed saffron block spends the whole
- * budget in one place — it leaves the orange nowhere to go on the rest of the
- * page, and it makes the form beside it look like a different website. So the
- * ground stays paper and the orange does the talking: the headline, the mark,
- * the ruled margin. The two columns are told apart by the ruling and one
- * hairline, which is the same distinction a notebook page has from the desk it
- * sits on.
+ * The form should remain a quiet paper surface. The supporting panel takes the
+ * warmer, more immersive role: a small, focused revision moment against a dark
+ * saffron desk. It gives the card enough contrast and purpose without making
+ * the authentication surface feel crowded.
  *
  * ## Why it is desktop-only
  *
@@ -34,26 +33,48 @@ import { Check, Cross } from "@/components/icons";
  * below the fold. The mobile header carries the wordmark and one line, and that
  * is the whole story a phone needs to tell.
  */
-export function AuthAside({ headline, note }: { headline: string; note: string }) {
+export function AuthAside({
+  eyebrow,
+  headline,
+  note,
+}: {
+  eyebrow: string;
+  headline: string;
+  note: string;
+}) {
   return (
-    <aside className="bg-page ruled-paper border-line relative hidden flex-col justify-between gap-10 overflow-hidden border-r p-10 lg:flex xl:p-14">
-      <Wordmark size="lg" tone="brand" />
+    <aside className="auth-aside relative hidden h-full min-h-0 overflow-hidden px-10 py-9 text-sand-50 xl:flex xl:flex-col xl:px-14">
+      <div aria-hidden="true" className="auth-aside-orbit absolute" />
 
-      <div className="flex max-w-md flex-col gap-8">
-        {/*
-          Set entirely in saffron rather than in near-black with one word picked
-          out. At 40px it is large text, so `brand-600` clears the 3:1 the
-          guidelines ask of it — `brand-500` would not, which is why the headline
-          is a step deeper than the button beside it.
-        */}
-        <h2 className="text-brand-600 text-[2.125rem] leading-[1.12] font-semibold tracking-[-0.03em] xl:text-[2.5rem]">
+      <div className="relative z-10 flex items-center justify-between">
+        <Wordmark size="md" variant="inverse" tone="inherit" />
+        <span className="auth-aside-session rounded-pill border px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.1em] uppercase">
+          Revision mode
+        </span>
+      </div>
+
+      <div aria-hidden="true" className="auth-aside-character">
+        <span className="auth-aside-character-note">Your work, remembered.</span>
+        <Image
+          src="/illustrations/study-at-desk.svg"
+          alt=""
+          width={849}
+          height={842}
+          className="relative z-10 w-full"
+        />
+      </div>
+
+      <div className="auth-aside-copy relative z-10 my-auto max-w-[31rem]">
+        <p className="text-brand-200 mb-4 text-xs font-semibold tracking-[0.14em] uppercase">{eyebrow}</p>
+        <h2 className="max-w-[28rem] text-[2.45rem] leading-[1.06] font-semibold tracking-[-0.045em] xl:text-[3.25rem]">
           {headline}
         </h2>
+        <p className="auth-aside-note mt-5 max-w-md text-sm leading-relaxed text-sand-200">{note}</p>
 
         <MarkedQuestion />
       </div>
 
-      <p className="text-text-soft max-w-md text-sm leading-relaxed">{note}</p>
+      <p className="relative z-10 text-xs leading-relaxed text-sand-300">A small review now makes the next answer easier.</p>
     </aside>
   );
 }
@@ -71,26 +92,38 @@ export function AuthAside({ headline, note }: { headline: string; note: string }
  */
 function MarkedQuestion() {
   return (
-    <figure className="rounded-panel border-line bg-card shadow-lift m-0 overflow-hidden border">
-      <div className="border-line flex items-baseline justify-between border-b px-5 py-3">
-        <span className="text-text-soft text-sm font-semibold">Question 12</span>
-        <span className="marks-margin text-text-soft text-sm font-medium">3 marks</span>
+    <figure className="auth-aside-question relative mt-8 mb-0 overflow-hidden rounded-[1.25rem] border bg-card text-text shadow-pop">
+      <div className="auth-question-topline flex items-center justify-between px-5 pt-4 pb-3">
+        <span className="auth-question-subject rounded-pill px-2.5 py-1 text-[0.6875rem] font-bold tracking-[0.08em] uppercase">
+          Physics · Light
+        </span>
+        <span className="text-text-faint text-xs font-medium">3 marks</span>
       </div>
 
-      <div className="flex flex-col gap-4 px-5 py-4">
-        <p className="text-text font-serif text-[0.9375rem] leading-[1.65]">
+      <div className="flex flex-col gap-4 px-5 pt-1 pb-5">
+        <div className="flex items-center gap-2">
+          <span className="bg-brand-500 grid size-6 place-items-center rounded-full text-[0.6875rem] font-bold text-on-brand">
+            12
+          </span>
+          <span className="text-text-soft text-xs font-semibold">Mirror formula</span>
+        </div>
+
+        <p className="font-serif text-[0.9375rem] leading-[1.62]">
           A concave mirror produces a three times magnified real image of an object placed 10 cm in
           front of it. Where is the image located?
         </p>
 
         <ul className="flex flex-col gap-2">
-          <Option state="wrong" label="A" text="30 cm behind the mirror" verdict="You chose this" />
-          <Option state="right" label="B" text="30 cm in front of the mirror" verdict="Correct" />
+          <Option state="wrong" label="A" text="30 cm behind the mirror" verdict="Your answer" />
+          <Option state="right" label="B" text="30 cm in front of the mirror" verdict="Correct answer" />
         </ul>
 
-        <p className="border-line text-text-soft border-t pt-3 font-serif text-sm leading-[1.6]">
-          A real image forms on the same side as the object, so it cannot be behind the mirror.
-        </p>
+        <div className="auth-aside-question-explanation rounded-control bg-brand-50 px-3.5 py-3">
+          <p className="text-brand-800 text-xs font-bold tracking-[0.08em] uppercase">Why it works</p>
+          <p className="text-text-soft mt-1 font-serif text-sm leading-[1.5]">
+            A real image forms on the same side as the object, so it is in front of the mirror.
+          </p>
+        </div>
       </div>
     </figure>
   );
@@ -113,7 +146,7 @@ function Option({
     <li
       className={[
         "rounded-control flex items-center gap-3 border px-3 py-2.5 text-sm",
-        right ? "border-tick-500 bg-tick-50" : "border-marker-500 bg-marker-50",
+        right ? "border-tick-500 bg-tick-50" : "border-line bg-raised",
       ].join(" ")}
     >
       {/* Shape first, colour second. The tick and the cross are told apart with

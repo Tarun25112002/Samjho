@@ -4,7 +4,11 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { ClerkUserError } from "../lib/clerk-user.js";
 import { ForbiddenError, ServiceUnavailableError, UnauthenticatedError } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
-import { TokenVerificationError, type TokenVerifier } from "../lib/token-verifier.js";
+import {
+  KeyResolutionError,
+  TokenVerificationError,
+  type TokenVerifier,
+} from "../lib/token-verifier.js";
 import { authService, type AuthenticatedUser } from "../modules/auth/auth.service.js";
 import type { VerifiedToken } from "../lib/token-verifier.js";
 
@@ -58,6 +62,20 @@ export function requireAuth(verifyToken: TokenVerifier): RequestHandler {
       req.auth = claims;
       next();
     } catch (error) {
+      if (error instanceof KeyResolutionError) {
+        // Not a 401. We did not decide the token was bad — we could not decide
+        // at all, because Clerk's key set was unreachable. Answering 401 sends
+        // the web app to a sign-in page that also cannot work, which is an
+        // infinite bounce with no diagnosis in it.
+        //
+        // `error` level and the full cause, because unlike a rejected token this
+        // is never routine traffic: it is either Clerk being down or this host
+        // having lost outbound network, and both want someone to look.
+        logger.error({ err: error, reason: error.reason }, "Could not verify session token");
+        next(new ServiceUnavailableError("Sign-in is temporarily unavailable. Please try again."));
+        return;
+      }
+
       if (error instanceof TokenVerificationError) {
         // The reason is logged, never returned. It is exactly the information an
         // attacker would use to work out which part of their forgery to fix.

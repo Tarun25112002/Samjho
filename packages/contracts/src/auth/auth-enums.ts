@@ -20,7 +20,7 @@ import { z } from "zod";
  * `CONTENT_EDITOR` can draft and edit questions but cannot publish them or touch
  * users — that separation matters once content entry is outsourced (docs/07 R1).
  */
-export const roleSchema = z.enum(["STUDENT", "CONTENT_EDITOR", "ADMIN"]);
+export const roleSchema = z.enum(["STUDENT", "TEACHER", "CONTENT_EDITOR", "ADMIN"]);
 export type Role = z.infer<typeof roleSchema>;
 
 /**

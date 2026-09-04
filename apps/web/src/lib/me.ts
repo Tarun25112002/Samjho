@@ -2,7 +2,7 @@ import { meResponseSchema, type MeResponse } from "@samjho/contracts";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
-import { apiFetchAuthed } from "./api-client";
+import { ApiClientError, apiFetchAuthed } from "./api-client";
 
 /**
  * Load the signed-in user's record, or send them somewhere they can be.
@@ -27,7 +27,19 @@ import { apiFetchAuthed } from "./api-client";
  * its page would each make the call.
  */
 export const loadMe = cache(async function loadMe(): Promise<MeResponse> {
-  return apiFetchAuthed("/api/v1/me", meResponseSchema, { cache: "no-store" });
+  try {
+    return await apiFetchAuthed("/api/v1/me", meResponseSchema, { cache: "no-store" });
+  } catch (error) {
+    // A session that expires between the middleware's check and this fetch is
+    // ordinary — a tab left open overnight does it — and it deserves the sign-in
+    // page, not "That didn't load". Narrowly 401, though: a 503 means Clerk or
+    // the API is down, and sending someone to sign in again would be a lie about
+    // whose problem it is *and* a loop, since signing in needs the same Clerk.
+    if (error instanceof ApiClientError && error.status === 401) {
+      redirect("/sign-in");
+    }
+    throw error;
+  }
 });
 
 /**
@@ -60,5 +72,19 @@ const CONTENT_ROLES = new Set(["ADMIN", "CONTENT_EDITOR"]);
 export async function requireContentRole(): Promise<MeResponse> {
   const me = await requireOnboarded();
   if (!CONTENT_ROLES.has(me.user.role)) notFound();
+  return me;
+}
+
+/** Student-only surfaces keep teacher and student workflows unambiguous. */
+export async function requireStudent(): Promise<MeResponse> {
+  const me = await requireOnboarded();
+  if (me.user.role !== "STUDENT") notFound();
+  return me;
+}
+
+/** Teacher routes are a view gate; API routes repeat the authorization check. */
+export async function requireTeacher(): Promise<MeResponse> {
+  const me = await requireOnboarded();
+  if (me.user.role !== "TEACHER") notFound();
   return me;
 }

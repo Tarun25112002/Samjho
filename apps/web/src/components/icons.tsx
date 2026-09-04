@@ -107,6 +107,30 @@ export function UserIcon({ className }: IconProps) {
   );
 }
 
+/** A class — individual people gathered around one shared board. */
+export function ClassroomIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <circle cx="12" cy="8" r="3" />
+      <path d="M6.5 20a5.5 5.5 0 0 1 11 0" />
+      <path d="M5.5 10.5a2.5 2.5 0 0 0-2 2.45M18.5 10.5a2.5 2.5 0 0 1 2 2.45" />
+      <path d="M3.5 18.5a4 4 0 0 1 2.4-3.65M20.5 18.5a4 4 0 0 0-2.4-3.65" />
+    </>,
+    className,
+  );
+}
+
+/** A teacher's board: a destination distinct from content administration. */
+export function TeachingIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <rect x="4" y="4.5" width="16" height="11" rx="1.5" />
+      <path d="M8 20h8M12 15.5V20M7.5 8.5h9M7.5 11.5h5" />
+    </>,
+    className,
+  );
+}
+
 /** A streak. Deliberately a small flame — the number does the talking. */
 export function FlameIcon({ className }: IconProps) {
   return svg(

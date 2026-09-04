@@ -377,6 +377,143 @@
         color-mix(in oklab, var(--color-brand-500) 11%, transparent) 2.25rem 2.3125rem
       );
   }
+
+  /* The auth column shares a single answer-sheet rule with the desktop panel
+     without forcing its texture into the field area, where it would hurt
+     legibility. Clerk owns the form surface itself. */
+  .auth-form-margin {
+    width: 1px;
+    background: color-mix(in oklab, var(--color-brand-500) 34%, transparent);
+  }
+
+  /* The sign-in evidence panel is deliberately an evening revision desk rather
+     than a second white page. It gives the login form a calm, private setting
+     while the card remains a bright, readable piece of paper. */
+  .auth-aside {
+    background:
+      radial-gradient(circle at 83% 20%, oklch(0.69 0.17 55 / 0.55), transparent 19rem),
+      linear-gradient(145deg, oklch(0.29 0.065 43), oklch(0.48 0.15 48));
+  }
+
+  .auth-aside::before {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      115deg,
+      transparent 0 64%,
+      oklch(1 0 0 / 0.06) 64% 64.15%,
+      transparent 64.15%
+    );
+    content: "";
+  }
+
+  .auth-aside-orbit {
+    right: -18rem;
+    bottom: -16rem;
+    width: 31rem;
+    height: 31rem;
+    border: 1px solid oklch(1 0 0 / 0.15);
+    border-radius: 999px;
+    box-shadow: 0 0 0 3.5rem oklch(1 0 0 / 0.035), 0 0 0 7rem oklch(1 0 0 / 0.025);
+  }
+
+  /* The illustration gets its own quiet frame at wide desktop sizes. It is a
+     real part of the composition, rather than a barely-visible decoration
+     behind the question or a cropped figure at the edge of the screen. */
+  .auth-aside-character {
+    display: none;
+  }
+
+  @media (min-width: 96rem) {
+    .auth-aside-character {
+      position: absolute;
+      z-index: 2;
+      top: 8.5rem;
+      right: 3.5rem;
+      display: block;
+      width: min(20rem, 31%);
+      padding: 1rem 1rem 0.6rem;
+      border: 1px solid oklch(1 0 0 / 0.18);
+      border-radius: 1.5rem;
+      background: linear-gradient(145deg, oklch(1 0 0 / 0.17), oklch(1 0 0 / 0.055));
+      box-shadow: 0 1.5rem 3.5rem oklch(0.18 0.04 45 / 0.2);
+      transform: rotate(2deg);
+    }
+
+    .auth-aside-character::after {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: 999px;
+      background: var(--color-brand-500);
+      content: "";
+      opacity: 0.9;
+    }
+
+    .auth-aside-character-note {
+      position: absolute;
+      z-index: 20;
+      top: 1rem;
+      left: 1rem;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid oklch(1 0 0 / 0.16);
+      border-radius: 999px;
+      background: oklch(0.29 0.065 43 / 0.72);
+      color: oklch(0.98 0.006 65);
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .auth-aside-copy {
+      max-width: 32rem;
+    }
+  }
+
+  .auth-aside-session {
+    border-color: oklch(1 0 0 / 0.19);
+    background: oklch(1 0 0 / 0.09);
+    color: oklch(0.97 0.02 65);
+  }
+
+  .auth-aside-question {
+    border-color: oklch(1 0 0 / 0.45);
+  }
+
+  .auth-question-topline {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .auth-question-subject {
+    background: var(--color-brand-100);
+    color: var(--color-brand-800);
+  }
+
+  /* The left pane is supporting evidence, not the thing a student came to
+     operate. Short laptop viewports keep the brand and the marked answer, then
+     drop the explanatory small print before any part of the question is cut
+     off. The form column remains independently scrollable for longer Clerk
+     steps such as MFA and email verification. */
+  @media (min-width: 80rem) and (max-height: 53rem) {
+    .auth-aside-copy {
+      max-width: 28rem;
+    }
+
+    .auth-aside-copy h2 {
+      font-size: 2.3rem;
+    }
+
+    .auth-aside-question-explanation {
+      display: none;
+    }
+
+    .auth-aside-question {
+      margin-top: 1.25rem;
+    }
+  }
   /**
    * A page-load settle, used once per screen and nowhere else.
    *
@@ -416,6 +553,37 @@
     );
   }
 
+  /*
+   * The landing-page opening is an answer sheet resting on a desk: a slightly
+   * warmer pool behind the live question, then the familiar rules running all
+   * the way through the copy. It is intentionally quiet enough that a student
+   * can read the actual question without a decorative background competing for
+   * their attention.
+   */
+  .hero-paper {
+    background-image:
+      radial-gradient(
+        circle at 82% 36%,
+        color-mix(in oklab, var(--color-brand-100) 80%, transparent) 0,
+        transparent 25rem
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 2.75rem,
+        color-mix(in oklab, var(--color-brand-500) 8%, transparent) 2.75rem 2.8125rem
+      );
+  }
+
+  @media (max-width: 63.999rem) {
+    .hero-paper {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0 2.75rem,
+        color-mix(in oklab, var(--color-brand-500) 8%, transparent) 2.75rem 2.8125rem
+      );
+    }
+  }
+
   /**
    * A line of display type that rises into place from behind its own baseline.
    *
@@ -428,5 +596,49 @@
     display: block;
     overflow: hidden;
     padding-bottom: 0.08em;
+  }
+
+  /* A faint circular stamp in the trust section: a piece of school stationery,
+     not a decorative SaaS blob. Its low contrast keeps the promises readable. */
+  .parent-stamp {
+    display: grid;
+    width: 20rem;
+    height: 20rem;
+    place-content: center;
+    border: 1px solid color-mix(in oklab, var(--color-brand-300) 24%, transparent);
+    border-radius: 999px;
+    color: color-mix(in oklab, var(--color-brand-300) 21%, transparent);
+    transform: rotate(-18deg);
+    text-align: center;
+  }
+
+  .parent-stamp span {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.28;
+    letter-spacing: 0.17em;
+  }
+
+  /* The numeral is an answer number, blown up until it becomes a structural
+     mark. It gives the final call a recognisable silhouette without adding an
+     illustration unrelated to studying. */
+  .final-sheet {
+    background-image:
+      linear-gradient(
+        110deg,
+        transparent 0 58%,
+        color-mix(in oklab, white 15%, transparent) 58% 58.15%,
+        transparent 58.15%
+      ),
+      radial-gradient(
+        circle at 97% 7%,
+        color-mix(in oklab, white 23%, transparent),
+        transparent 19rem
+      );
+  }
+
+  .final-sheet-number {
+    font-size: clamp(12rem, 28vw, 25rem);
+    opacity: 0.09;
   }
 }
