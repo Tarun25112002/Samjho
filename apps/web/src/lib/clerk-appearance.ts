@@ -89,15 +89,24 @@ export const clerkAppearance: ClerkAppearance = {
 
   elements: {
     rootBox: "w-full!",
-    card: "gap-5!",
+    cardBox: "w-full! bg-transparent! shadow-none!",
+    card: "border-line! bg-card! w-full! gap-4! rounded-[1.5rem]! border! p-5! shadow-lift! sm:p-6!",
 
     header: "text-left! items-start!",
-    headerTitle: "text-2xl! font-semibold! tracking-[-0.02em]!",
+    headerTitle: "text-[1.7rem]! leading-tight! font-semibold! tracking-[-0.03em]!",
+    headerSubtitle: "text-text-soft! mt-1.5! text-sm! leading-relaxed!",
 
     // 44px is the minimum comfortable touch target, and it is the one rule
     // applied to every control in this product without exception.
-    socialButtonsBlockButton: "min-h-11!",
-    formFieldInput: "min-h-11! text-base!",
+    socialButtons: "gap-3!",
+    socialButtonsBlockButton:
+      "border! border-line-strong! bg-card! hover:bg-raised! min-h-11! rounded-control! shadow-none! transition-colors!",
+    socialButtonsBlockButtonText: "text-text! font-semibold!",
+    dividerLine: "bg-line!",
+    dividerText: "text-text-faint! text-xs! font-medium!",
+    formFieldLabel: "text-text! text-sm! font-semibold!",
+    formFieldInput:
+      "border! border-line-strong! bg-raised! text-text! hover:border-brand-300! focus:border-brand-500! min-h-11! rounded-control! text-base! shadow-none!",
     otpCodeFieldInput: "size-11! text-lg!",
 
     // The one place the page asks for a shadow: the thing it wants pressed.
@@ -106,7 +115,13 @@ export const clerkAppearance: ClerkAppearance = {
     // want to inherit. A descendant selector, not a child one — Clerk nests the
     // icon inside the label span, so `[&>svg]` matches nothing.
     formButtonPrimary:
-      "min-h-11! font-semibold! normal-case! tracking-normal! shadow-brand! [&_svg]:hidden!",
+      "min-h-11! rounded-pill! font-semibold! normal-case! tracking-normal! shadow-brand! [&_svg]:hidden!",
+
+    footer: "bg-raised! mt-2! rounded-control! px-4! py-2.5!",
+    footerActionText: "text-text-soft! text-sm!",
+    footerActionLink: "text-brand-700! font-semibold! hover:underline!",
+    identityPreview: "border-line! bg-raised! rounded-control!",
+    identityPreviewText: "text-text!",
 
     // Belt and braces with `options.logoPlacement`. A second wordmark inside the
     // card is the commonest way a themed Clerk form ends up with two logos.

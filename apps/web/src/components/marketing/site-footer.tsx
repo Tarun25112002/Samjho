@@ -1,42 +1,53 @@
 import Link from "next/link";
 
+import { Check } from "@/components/icons";
 import { Wordmark } from "@/components/brand/logo";
 
-/**
- * The footer.
- *
- * Four links and a sentence. A closed pilot with two subjects does not have a
- * company, a careers page or six columns of navigation, and inventing them is
- * the fastest way to look like a template.
- */
+/** A short, confident closing page—not a generic mega-footer. */
 export function SiteFooter() {
   return (
-    <footer className="border-line border-t">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 sm:px-8 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-sm">
-          <Wordmark size="sm" />
-          <p className="text-text-soft mt-4 text-sm leading-relaxed">
-            CBSE board-exam practice for Class 10. Built question by question, with the marking
-            scheme attached to every one of them.
+    <footer className="bg-sand-950 text-white">
+      <div className="mx-auto grid max-w-6xl gap-12 px-5 py-14 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:py-16">
+        <div className="lg:col-span-6">
+          <Wordmark size="lg" variant="inverse" tone="inherit" />
+          <p className="mt-6 max-w-[38ch] text-sm leading-relaxed text-white/65">
+            CBSE board-exam practice for Class 10. Built one question at a time, with the marking
+            scheme attached to every one.
+          </p>
+          <p className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white">
+            <Check className="text-brand-300 size-4" /> No ads. No tracking. No card.
           </p>
         </div>
 
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-10 gap-y-3 text-sm">
-          <Link href="/sign-up" className="text-text hover:text-brand-700 font-medium">
-            Create an account
-          </Link>
-          <Link href="/sign-in" className="text-text hover:text-brand-700 font-medium">
-            Sign in
-          </Link>
-          <Link href="/status" className="text-text-soft hover:text-text">
-            System status
-          </Link>
-        </nav>
+        <div className="grid grid-cols-2 gap-8 lg:col-span-5 lg:col-start-8">
+          <div>
+            <p className="text-brand-300 text-xs font-semibold tracking-[0.12em] uppercase">Start here</p>
+            <nav aria-label="Footer account links" className="mt-4 flex flex-col gap-3 text-sm">
+              <Link href="/sign-up" className="w-fit text-white/75 transition-colors hover:text-white">
+                Create an account
+              </Link>
+              <Link href="/sign-in" className="w-fit text-white/75 transition-colors hover:text-white">
+                Sign in
+              </Link>
+            </nav>
+          </div>
+          <div>
+            <p className="text-brand-300 text-xs font-semibold tracking-[0.12em] uppercase">Pilot status</p>
+            <nav aria-label="Footer service links" className="mt-4 flex flex-col gap-3 text-sm">
+              <Link href="/status" className="w-fit text-white/75 transition-colors hover:text-white">
+                System status
+              </Link>
+              <a href="#parents" className="w-fit text-white/75 transition-colors hover:text-white">
+                For parents
+              </a>
+            </nav>
+          </div>
+        </div>
       </div>
 
-      <div className="border-line border-t">
-        <p className="text-text-faint mx-auto max-w-6xl px-5 py-6 text-xs sm:px-8">
-          Samjho is in a closed pilot. Not affiliated with or endorsed by CBSE.
+      <div className="border-t border-white/10">
+        <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-white/45 sm:px-8">
+          Samjho is a closed pilot. Not affiliated with or endorsed by CBSE.
         </p>
       </div>
     </footer>

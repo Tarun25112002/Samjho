@@ -34,6 +34,7 @@ datasource db {
 
 enum Role {
   STUDENT
+  TEACHER
   CONTENT_EDITOR
   ADMIN
 }
@@ -264,6 +265,9 @@ model User {
   subjectProgress   SubjectProgress[]
   aiConversations   AIConversation[]
   aiUsage           AIUsageLedger[]
+  taughtClassrooms  Classroom[]           @relation("ClassroomTeacher")
+  classMemberships  ClassroomMembership[] @relation("ClassroomStudent")
+  assignmentSubmissions AssignmentSubmission[] @relation("AssignmentStudent")
   authoredQuestions Question[]         @relation("QuestionAuthor")
   questionRevisions QuestionRevision[]
 
@@ -359,6 +363,94 @@ model SubjectEnrolment {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  Classrooms and assigned practice
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// A teacher-owned learning space for one subject. Membership is deliberately
+/// separate from a student's profile: joining a class does not grant a teacher
+/// access to the student's account, answers, or private practice history.
+model Classroom {
+  id        String @id @default(cuid())
+  teacherId String
+  teacher   User   @relation("ClassroomTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  name     String
+  /// Short, human-shareable, and unique. It is an invitation identifier, not
+  /// an authentication credential; joining still requires a signed-in student.
+  joinCode String @unique
+  isArchived Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     ClassroomMembership[]
+  assignments ClassroomAssignment[]
+
+  @@index([teacherId, isArchived])
+  @@index([subjectId])
+  @@map("classrooms")
+}
+
+/// The many-to-many edge between a student and a classroom. A unique edge is
+/// what makes entering the same join code twice an idempotent action.
+model ClassroomMembership {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User      @relation("ClassroomStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+
+  @@unique([classroomId, studentId])
+  @@index([studentId, joinedAt(sort: Desc)])
+  @@map("classroom_memberships")
+}
+
+/// A teacher's named, bounded practice set. The assignment stores a chapter
+/// scope rather than question ids; the student's set is materialised on first
+/// start by the practice engine, retaining its existing anti-leak safeguards.
+model ClassroomAssignment {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  chapterId   String?
+  chapter     Chapter?  @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  title         String
+  instructions  String?
+  questionCount Int
+  dueAt         DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  submissions AssignmentSubmission[]
+
+  @@index([classroomId, dueAt])
+  @@index([chapterId])
+  @@map("classroom_assignments")
+}
+
+/// One materialised session per student per assignment. The session is the
+/// source of truth for marks and completion; this row only connects it to the
+/// teacher's brief, preventing any duplicate submission ledger.
+model AssignmentSubmission {
+  id           String              @id @default(cuid())
+  assignmentId String
+  assignment   ClassroomAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User                @relation("AssignmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  sessionId    String              @unique
+  session      PracticeSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  startedAt    DateTime            @default(now())
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId, startedAt(sort: Desc)])
+  @@map("assignment_submissions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  Curriculum
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -394,8 +486,10 @@ model Subject {
   questions        Question[]
   blueprints       ExamBlueprint[]
   examPapers       ExamPaper[]
+  pastPapers       PastPaper[]
   enrolments       SubjectEnrolment[]
   progress         SubjectProgress[]
+  classrooms       Classroom[]
 
   /// Does NOT constrain rows where `variant` is NULL — Postgres treats NULL as
   /// distinct from NULL, and NULL is the normal case here (only Maths has a
@@ -451,6 +545,7 @@ model Chapter {
 
   topics    Topic[]
   questions Question[]
+  classroomAssignments ClassroomAssignment[]
 
   @@unique([subjectId, slug])
   @@index([subjectId, domain, orderIndex])
@@ -639,6 +734,17 @@ model QuestionSource {
   originalQuestionNumber String?
   sourceUrl              String?
 
+  /// The registered paper this question was taken from, when there is one.
+  ///
+  /// Nullable, and it stays nullable: an ORIGINAL question has no paper, an
+  /// NCERT exercise has no paper, and a question typed in from a photocopy
+  /// nobody has registered yet still has to be storable. The five loose fields
+  /// above therefore remain the record of record for provenance — `pastPaper`
+  /// adds *identity* on top of them, which is what makes "how much of 2024
+  /// Set 1 do we hold" a query rather than a string comparison over free text.
+  pastPaperId String?
+  pastPaper   PastPaper? @relation(fields: [pastPaperId], references: [id], onDelete: SetNull)
+
   /// The field this whole table exists for. Defaults to NEEDS_REVIEW so that
   /// content entered without a deliberate licensing decision is conservative
   /// rather than silently served.
@@ -652,7 +758,84 @@ model QuestionSource {
 
   @@index([sourceType, year])
   @@index([licenceStatus])
+  @@index([pastPaperId])
   @@map("question_sources")
+}
+
+/// One real CBSE paper, as a thing the platform knows about independently of
+/// whether any of its questions have been entered yet.
+///
+/// ## Why this is not `ExamPaper`
+///
+/// `ExamPaper` is a paper a student can *sit*: sections, numbered slots,
+/// internal choice, a duration and a mark total that must add up. It cannot
+/// exist half-built, and it has no meaning until every position is filled.
+///
+/// A registry row is the opposite. It exists precisely when we hold **none** of
+/// the paper, because its first job is to name the backlog: 25 years × two
+/// sittings × every subject is a content project, and a project needs a list of
+/// what has not been done. Rows are created empty, fill up question by question
+/// as papers are sourced, and only once `importedQuestions` reaches the printed
+/// total is there a candidate for materialising into a sittable `ExamPaper`.
+///
+/// Collapsing the two would mean either inventing empty sections for a paper
+/// nobody has read, or having no way to record that a paper exists and is
+/// missing — and "which papers are missing" is the entire question this table
+/// answers.
+///
+/// ## Why `wasHeld` is a column
+///
+/// Two of the years in range have no paper to find. CBSE cancelled the 2021
+/// board exams outright, and the March 2020 sitting was suspended part-way
+/// through with the remaining papers never held. Without somewhere to say so,
+/// every coverage report shows a permanent hole that someone re-investigates
+/// once a quarter, and the answer is not in the database.
+model PastPaper {
+  id        String  @id @default(cuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  year Int
+  /// The sitting, as CBSE names it: "March", "February", "May", "Compartment".
+  /// Not an enum — the sitting calendar has changed twice in the range this
+  /// table covers, and it will change again.
+  examSession String
+  /// CBSE's own code for the paper, e.g. "30/1/1". Null until someone holds it.
+  paperCode   String?
+  /// "1", "2", "3" — the set within a code. Null where the paper had one set.
+  setCode     String?
+  /// "Delhi", "Outside Delhi", "Foreign". Historically a real split.
+  region      String?
+
+  /// Questions on the printed paper, so coverage has a denominator. Null means
+  /// "nobody has counted yet", which reads differently from zero and must.
+  printedQuestionCount Int?
+  totalMarks           Int?
+
+  /// False for a sitting that never happened. See the note above.
+  wasHeld Boolean @default(true)
+
+  sourceUrl String?
+  /// The licensing decision for the paper as a whole. Per-question status still
+  /// governs what is served — this is the record of the decision that was made
+  /// once, for the paper, rather than re-litigated per question.
+  licenceStatus LicenceStatus @default(NEEDS_REVIEW)
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questionSources QuestionSource[]
+
+  /// Identity of a paper. `paperCode` and `setCode` are nullable and Postgres
+  /// treats NULL as distinct from NULL, so this does not constrain rows where
+  /// both are absent — which is every backlog row. The migration adds a partial
+  /// unique index for exactly that case, the same shape as the one on
+  /// `subjects`.
+  @@unique([subjectId, year, examSession, paperCode, setCode])
+  @@index([subjectId, year])
+  @@index([year, examSession])
+  @@map("past_papers")
 }
 
 model QuestionAsset {
@@ -884,6 +1067,7 @@ model PracticeSession {
   updatedAt DateTime @updatedAt
 
   attempts QuestionAttempt[]
+  assignmentSubmission AssignmentSubmission?
 
   @@index([userId, status])
   @@index([userId, startedAt(sort: Desc)])

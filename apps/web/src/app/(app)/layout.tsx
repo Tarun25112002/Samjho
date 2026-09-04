@@ -50,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </Link>
 
         <div className="mt-8 flex-1">
-          <SideNav />
+          <SideNav role={me.user.role} />
         </div>
 
         <div className="border-line flex items-center gap-3 border-t pt-4">
@@ -77,7 +77,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
 
-      <BottomNav />
+      <BottomNav role={me.user.role} />
     </div>
   );
 }

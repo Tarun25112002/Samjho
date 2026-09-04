@@ -4,55 +4,37 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef } from "react";
 
+import { Check, Cross } from "@/components/icons";
 import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
-
-/**
- * How the loop works, drawn as a marked script.
- *
- * ## The one scroll effect on the page
- *
- * A saffron rule draws itself down the left margin as you scroll, and each step
- * lights up as the rule reaches it. It is the margin of a script being marked,
- * which is what the section is describing — the effect and the content are the
- * same idea, rather than a reveal animation applied to whatever happened to be
- * there.
- *
- * That is also why there is exactly one of them. Scattering the same
- * fade-and-rise across every section is the tell of a page assembled rather than
- * designed; spending the whole motion budget on the one place it means something
- * is the alternative.
- *
- * ## Numbered, because it genuinely is a sequence
- *
- * Numbered markers are the most over-used device in this kind of layout and are
- * usually pasted onto three unordered features. These three are ordered: you
- * cannot find out why you were wrong before you have answered, and the third
- * step only exists because of the second.
- */
 
 const STEPS = [
   {
-    title: "Pick what to practise",
-    body: "A chapter, a topic, or ten questions you have not seen before. Two taps from opening the app to answering something — everything else on the practice screen exists to be ignored.",
+    number: "01",
+    title: "Choose the work in front of you",
+    body: "Start with a chapter, a topic, or the questions you have not met yet. The product opens on the next useful thing, not a catalogue you have to think your way through.",
+    detail: "Two taps from opening the app to a question.",
   },
   {
-    title: "Answer, then find out",
-    body: "Objective questions are marked the moment you commit. Written answers come back with the CBSE marking scheme beside them, step by step, and you award yourself the marks — which is the skill the exam is actually testing.",
+    number: "02",
+    title: "Make the mistake visible",
+    body: "Objective questions are marked as you commit. Written answers sit beside the CBSE marking scheme, so a lost mark has a reason, not just a red cross.",
+    detail: "The mark is the start of the feedback.",
   },
   {
-    title: "Meet it again",
-    body: "Every question you got wrong is kept, along with what went wrong. One tap builds a set out of exactly those, and a question leaves the pile only once you have got it right.",
+    number: "03",
+    title: "Return with a better answer",
+    body: "Samjho keeps the question and the kind of mistake together. Your next revision set is built from exactly that evidence, until the question stops being a weak spot.",
+    detail: "Wrong once is data. Wrong twice is a pattern.",
   },
-];
+] as const;
 
+/** The learning loop is a marked script, not a three-card feature grid. */
 export function HowItWorks() {
   const root = useRef<HTMLElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     const context = gsap.context(() => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        // The finished state is a drawn rule and three live steps. Without
-        // motion that is simply how the section renders.
         gsap.set("[data-rule]", { scaleY: 1 });
         for (const step of gsap.utils.toArray<HTMLElement>("[data-step]")) {
           step.dataset["reached"] = "true";
@@ -61,7 +43,6 @@ export function HowItWorks() {
       }
 
       gsap.registerPlugin(ScrollTrigger);
-
       gsap.fromTo(
         "[data-rule]",
         { scaleY: 0 },
@@ -70,10 +51,8 @@ export function HowItWorks() {
           ease: "none",
           scrollTrigger: {
             trigger: "[data-steps]",
-            // The rule tracks the reader rather than playing on entry, which is
-            // what makes it feel like a pen moving down the page.
-            start: "top 70%",
-            end: "bottom 75%",
+            start: "top 72%",
+            end: "bottom 72%",
             scrub: 0.4,
           },
         },
@@ -82,7 +61,7 @@ export function HowItWorks() {
       for (const step of gsap.utils.toArray<HTMLElement>("[data-step]")) {
         ScrollTrigger.create({
           trigger: step,
-          start: "top 72%",
+          start: "top 74%",
           once: true,
           onEnter: () => {
             step.dataset["reached"] = "true";
@@ -97,47 +76,93 @@ export function HowItWorks() {
   }, []);
 
   return (
-    <section ref={root} id="how" className="scroll-mt-24 py-20 lg:py-28">
-      <div className="mx-auto max-w-4xl px-5 sm:px-8">
-        <h2 className="max-w-2xl text-[2rem] leading-[1.1] font-semibold tracking-[-0.03em] sm:text-5xl">
-          Three steps, and the third one is the point
-        </h2>
-        <p className="text-text-soft mt-5 max-w-[52ch] text-base leading-relaxed sm:text-lg">
-          Most apps stop after marking your answer. A mark tells you that something went wrong. It
-          does not tell you what.
-        </p>
+    <section ref={root} id="how" className="scroll-mt-24 py-24 lg:py-36">
+      <div className="mx-auto grid max-w-6xl gap-14 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start">
+          <p className="text-brand-700 text-xs font-semibold tracking-[0.13em] uppercase">
+            The revision loop
+          </p>
+          <h2 className="mt-4 max-w-[10ch] text-[2.35rem] leading-[1.03] font-semibold tracking-[-0.045em] sm:text-5xl">
+            A wrong answer is raw material.
+          </h2>
+          <p className="text-text-soft mt-6 max-w-[43ch] text-base leading-relaxed sm:text-lg">
+            Most practice tools announce a score and move on. Samjho makes the answer, the mark,
+            and the next attempt into one quiet loop.
+          </p>
 
-        <ol data-steps className="relative mt-14 flex flex-col gap-14 pl-14 sm:pl-20">
-          {/* The margin rule. Two elements: a permanent faint track so the layout
-              never depends on JavaScript, and the saffron line that draws over
-              it. */}
+          <div className="border-line bg-raised mt-9 max-w-md overflow-hidden rounded-panel border">
+            <div className="border-line flex items-center justify-between border-b px-5 py-3.5">
+              <p className="text-text text-sm font-semibold">What stays with a question</p>
+              <span className="text-text-faint text-xs font-medium">Your revision record</span>
+            </div>
+            <ul className="divide-line divide-y px-5 py-1">
+              <Evidence icon="answer" label="The answer you gave" value="30 cm behind" />
+              <Evidence icon="reason" label="Why it lost marks" value="Real image rule" />
+              <Evidence icon="return" label="What returns next" value="Mirror numericals" />
+            </ul>
+          </div>
+        </div>
+
+        <ol data-steps className="relative flex flex-col gap-3 pl-12 sm:pl-16 lg:col-span-7 lg:pt-4">
           <span
             aria-hidden="true"
-            className="bg-line absolute top-2 bottom-2 left-[1.375rem] w-px sm:left-[2.125rem]"
+            className="bg-line absolute top-7 bottom-7 left-[1.375rem] w-px sm:left-[1.875rem]"
           />
           <span
             data-rule
             aria-hidden="true"
-            className="bg-brand-500 absolute top-2 bottom-2 left-[1.375rem] w-[2px] origin-top sm:left-[2.125rem]"
+            className="bg-brand-500 absolute top-7 bottom-7 left-[1.375rem] w-[2px] origin-top sm:left-[1.875rem]"
           />
 
-          {STEPS.map((step, index) => (
-            <li key={step.title} data-step className="group relative">
+          {STEPS.map((step) => (
+            <li key={step.number} data-step className="group relative">
               <span
                 aria-hidden="true"
-                className="border-line bg-page text-text-faint absolute top-0 -left-14 grid size-11 place-items-center rounded-full border text-base font-semibold transition-colors duration-300 group-data-[reached]:border-transparent group-data-[reached]:bg-brand-500 group-data-[reached]:text-on-brand sm:-left-20 sm:size-[3.25rem]"
+                className="border-line bg-page text-text-faint absolute top-7 -left-12 grid size-11 place-items-center rounded-full border text-sm font-semibold tabular-nums transition-all duration-300 group-data-[reached]:border-brand-500 group-data-[reached]:bg-brand-500 group-data-[reached]:text-on-brand group-data-[reached]:shadow-brand sm:-left-16 sm:size-[3.75rem]"
               >
-                {index + 1}
+                {step.number}
               </span>
 
-              <h3 className="text-text text-xl font-semibold tracking-[-0.02em] sm:text-2xl">
-                {step.title}
-              </h3>
-              <p className="text-text-soft mt-3 max-w-[56ch] leading-relaxed">{step.body}</p>
+              <article className="border-line bg-card rounded-panel border px-5 py-6 transition-[border-color,transform,box-shadow] duration-300 group-data-[reached]:border-brand-200 group-data-[reached]:shadow-lift sm:px-7 sm:py-7">
+                <p className="text-brand-700 text-xs font-semibold tracking-[0.11em] uppercase">
+                  {step.detail}
+                </p>
+                <h3 className="text-text mt-3 max-w-[23ch] text-2xl leading-tight font-semibold tracking-[-0.025em] sm:text-[1.75rem]">
+                  {step.title}
+                </h3>
+                <p className="text-text-soft mt-4 max-w-[58ch] leading-relaxed">{step.body}</p>
+              </article>
             </li>
           ))}
         </ol>
       </div>
     </section>
+  );
+}
+
+function Evidence({
+  icon,
+  label,
+  value,
+}: {
+  icon: "answer" | "reason" | "return";
+  label: string;
+  value: string;
+}) {
+  return (
+    <li className="flex items-center gap-3 py-3.5">
+      <span
+        className={[
+          "grid size-7 shrink-0 place-items-center rounded-full",
+          icon === "answer" ? "bg-marker-100 text-marker-700" : "bg-tick-100 text-tick-700",
+        ].join(" ")}
+      >
+        {icon === "answer" ? <Cross className="size-3.5" /> : <Check className="size-3.5" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="text-text-soft block text-xs">{label}</span>
+        <span className="text-text block truncate text-sm font-semibold">{value}</span>
+      </span>
+    </li>
   );
 }

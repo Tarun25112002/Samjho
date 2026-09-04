@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 
 import { HomeIcon, PenIcon, UserIcon } from "@/components/icons";
+import { ClassroomIcon, TeachingIcon } from "@/components/icons";
 
 /**
  * The signed-in navigation, in its two forms.
@@ -38,8 +39,17 @@ interface Destination {
 const DESTINATIONS: Destination[] = [
   { href: "/home", label: "Home", icon: HomeIcon, exact: true },
   { href: "/practice", label: "Practice", icon: PenIcon },
+  { href: "/classroom", label: "Class", icon: ClassroomIcon },
   { href: "/profile", label: "You", icon: UserIcon },
 ];
+
+const TEACHER_DESTINATIONS: Destination[] = [
+  { href: "/teacher", label: "Teaching", icon: TeachingIcon },
+];
+
+function destinationsFor(role: "STUDENT" | "TEACHER" | "CONTENT_EDITOR" | "ADMIN") {
+  return role === "TEACHER" ? TEACHER_DESTINATIONS : DESTINATIONS;
+}
 
 function useActive(): (destination: Destination) => boolean {
   const pathname = usePathname();
@@ -51,12 +61,13 @@ function useActive(): (destination: Destination) => boolean {
 }
 
 /** The desktop rail. */
-export function SideNav() {
+export function SideNav({ role }: { role: "STUDENT" | "TEACHER" | "CONTENT_EDITOR" | "ADMIN" }) {
   const isActive = useActive();
+  const destinations = destinationsFor(role);
 
   return (
     <nav aria-label="Main" className="flex flex-col gap-1">
-      {DESTINATIONS.map((destination) => {
+      {destinations.map((destination) => {
         const Icon = destination.icon;
         const active = isActive(destination);
 
@@ -88,8 +99,9 @@ export function SideNav() {
  * under the home indicator on every iPhone since the X, and the third tab is the
  * one that becomes unhittable.
  */
-export function BottomNav() {
+export function BottomNav({ role }: { role: "STUDENT" | "TEACHER" | "CONTENT_EDITOR" | "ADMIN" }) {
   const isActive = useActive();
+  const destinations = destinationsFor(role);
 
   return (
     <nav
@@ -97,7 +109,7 @@ export function BottomNav() {
       className="border-line bg-card/95 fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
       <ul className="mx-auto flex max-w-md">
-        {DESTINATIONS.map((destination) => {
+        {destinations.map((destination) => {
           const Icon = destination.icon;
           const active = isActive(destination);
 

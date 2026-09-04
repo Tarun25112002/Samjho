@@ -1,6 +1,7 @@
 "use client";
 
 import gsap from "gsap";
+import Image from "next/image";
 import { useRef } from "react";
 
 import { TryQuestion } from "@/components/marketing/try-question";
@@ -8,30 +9,12 @@ import { ButtonLink } from "@/components/ui/button";
 import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
 
 /**
- * The hero.
- *
- * ## One orchestrated moment, and then nothing
- *
- * docs/01 §9 asks for minimal, fast motion. So the page has a single opening
- * sequence — the headline rises a line at a time, the question card settles, the
- * four figures count up — and after that nothing moves unless the reader moves
- * it. A fade-and-rise on every card down the page is the thing that makes a site
- * feel machine-made, and it is the effect this deliberately does not have.
- *
- * The whole timeline is skipped under `prefers-reduced-motion`, where the final
- * state is simply the state.
- *
- * ## The figures are the paper, not the company
- *
- * Every landing page in this category opens with student counts. Samjho is in a
- * closed pilot and does not have any, and inventing them is not on the table. So
- * the numbers here describe the thing the reader is afraid of instead: 80 marks,
- * five sections, three hours. They are taken from the CBSE Class 10 blueprint in
- * `packages/exam-blueprints` — the same file the exam engine builds papers from,
- * so marketing and the product cannot disagree about what the exam is.
+ * The first screen deliberately leads with the work, not a promise about the
+ * work. A student can answer a real question before deciding to create an
+ * account; the surrounding facts are about the paper they are preparing for,
+ * not invented product metrics.
  */
-
-const FIGURES = [
+const PAPER_FACTS = [
   { value: 80, suffix: "", label: "marks in the theory paper" },
   { value: 5, suffix: "", label: "sections, A through E" },
   { value: 3, suffix: "h", label: "on the day, start to finish" },
@@ -48,18 +31,13 @@ export function Hero() {
       const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       timeline
-        .from("[data-anim='pill']", { opacity: 0, y: 10, duration: 0.45 })
-        // The lines are revealed from behind their own baseline rather than
-        // faded in. `.line-mask` is the overflow box that makes it a
-        // typographic gesture instead of the usual opacity ramp.
-        .from("[data-anim='line']", { yPercent: 115, duration: 0.8, stagger: 0.075 }, "-=0.2")
-        .from("[data-anim='sub']", { opacity: 0, y: 14, duration: 0.55 }, "-=0.45")
-        .from("[data-anim='cta']", { opacity: 0, y: 14, duration: 0.5 }, "-=0.35")
-        .from("[data-anim='card']", { opacity: 0, y: 26, duration: 0.7 }, "-=0.3")
-        .from("[data-anim='figure']", { opacity: 0, y: 12, duration: 0.5, stagger: 0.07 }, "-=0.4");
+        .from("[data-hero='eyebrow']", { opacity: 0, y: 10, duration: 0.42 })
+        .from("[data-hero='line']", { yPercent: 115, duration: 0.76, stagger: 0.075 }, "-=0.2")
+        .from("[data-hero='copy']", { opacity: 0, y: 14, duration: 0.5 }, "-=0.42")
+        .from("[data-hero='action']", { opacity: 0, y: 12, duration: 0.46 }, "-=0.28")
+        .from("[data-hero='preview']", { opacity: 0, y: 24, duration: 0.7 }, "-=0.42")
+        .from("[data-hero='fact']", { opacity: 0, y: 10, duration: 0.4, stagger: 0.055 }, "-=0.38");
 
-      // The count-up runs on the same timeline so the numbers land with the
-      // card rather than starting their own little show a beat later.
       for (const node of gsap.utils.toArray<HTMLElement>("[data-count]")) {
         const target = Number(node.dataset["count"]);
         const counter = { value: 0 };
@@ -68,13 +46,13 @@ export function Hero() {
           counter,
           {
             value: target,
-            duration: 0.9,
+            duration: 0.85,
             ease: "power2.out",
             onUpdate: () => {
               node.textContent = String(Math.round(counter.value));
             },
           },
-          "-=0.85",
+          "-=0.65",
         );
       }
     }, root);
@@ -85,122 +63,104 @@ export function Hero() {
   }, []);
 
   return (
-    <section ref={root} className="ruled-lines relative overflow-hidden">
-      {/* The ruling fades out before the content ends, so the texture supports
-          the headline and then gets out of the way. */}
-      <div
-        aria-hidden="true"
-        className="from-page pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t to-transparent"
-      />
+    <section ref={root} className="hero-paper relative overflow-hidden">
+      <div className="relative mx-auto max-w-6xl px-5 pt-12 pb-10 sm:px-8 lg:pt-20 lg:pb-12">
+        <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
+          <div className="lg:col-span-7">
+            <p
+              data-hero="eyebrow"
+              className="border-line bg-card text-text-soft rounded-pill inline-flex items-center gap-2 border px-3.5 py-1.5 text-sm font-medium shadow-[0_8px_20px_-18px_oklch(0.3_0.03_60_/_0.55)]"
+            >
+              <span className="bg-brand-500 size-2 rounded-full" aria-hidden="true" />
+              CBSE Class 10 · Maths and Science
+            </p>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-5 pt-12 pb-10 text-center sm:px-8 lg:pt-16 lg:pb-14">
-        <p
-          data-anim="pill"
-          className="border-line bg-card text-text-soft rounded-pill inline-flex items-center gap-2 border px-3.5 py-1.5 text-sm font-medium"
-        >
-          <span className="bg-brand-500 size-2 rounded-full" aria-hidden="true" />
-          CBSE Class 10 — Maths and Science
-        </p>
+            <h1 className="mt-7 max-w-[10ch] text-[2.9rem] leading-[1.01] font-semibold tracking-[-0.052em] sm:text-6xl lg:text-7xl">
+              <span className="line-mask">
+                <span data-hero="line" className="block">
+                  Practise.
+                </span>
+              </span>
+              <span className="line-mask">
+                <span data-hero="line" className="block">
+                  Get it wrong.
+                </span>
+              </span>
+              <span className="line-mask">
+                <span data-hero="line" className="text-brand-600 block">
+                  Understand why.
+                </span>
+              </span>
+            </h1>
 
-        <h1 className="mt-7 max-w-4xl text-[2.5rem] leading-[1.04] font-semibold tracking-[-0.035em] sm:text-6xl lg:text-7xl">
-          <span className="line-mask">
-            <span data-anim="line" className="block">
-              Practise.
-            </span>
-          </span>
-          <span className="line-mask">
-            <span data-anim="line" className="block">
-              Get it wrong.
-            </span>
-          </span>
-          <span className="line-mask">
-            {/* Saffron on the third beat, because the third beat is the product.
-                "Samjho" is Hindi for "understand". */}
-            <span data-anim="line" className="text-brand-600 block">
-              Understand why.
-            </span>
-          </span>
-        </h1>
+            <p
+              data-hero="copy"
+              className="text-text-soft mt-6 max-w-[46ch] text-base leading-relaxed sm:text-lg"
+            >
+              Work through board-style questions with the marking scheme beside you. Know where a
+              mark went, what the mistake was, and what to revisit next.
+            </p>
 
-        <p
-          data-anim="sub"
-          className="text-text-soft mt-6 max-w-[46ch] text-base leading-relaxed sm:text-lg"
-        >
-          Every question comes with its marking scheme, so you find out where the marks actually
-          went — not just whether you were right.
-        </p>
+            <div data-hero="action" className="mt-8 flex flex-wrap items-center gap-3">
+              <ButtonLink href="/sign-up" size="lg">
+                Start practising free
+              </ButtonLink>
+              <ButtonLink href="/sign-in" size="lg" variant="secondary">
+                I already have an account
+              </ButtonLink>
+            </div>
 
-        <div data-anim="cta" className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <ButtonLink href="/sign-up" size="lg">
-            Start practising free
-          </ButtonLink>
-          <ButtonLink href="/sign-in" size="lg" variant="secondary">
-            I already have an account
-          </ButtonLink>
-        </div>
-
-        {/*
-          Three columns on a wide screen with the question in the middle, so the
-          first thing in the reader's eyeline below the fold is a thing they can
-          answer. On a phone the card comes first and the figures follow — the
-          order that matters, rather than the arrangement.
-        */}
-        <div className="mt-14 grid w-full gap-8 lg:mt-16 lg:grid-cols-[1fr_minmax(0,30rem)_1fr] lg:items-center lg:gap-10">
-          <dl className="order-2 grid grid-cols-2 gap-6 text-left lg:order-1 lg:grid-cols-1 lg:gap-10">
-            {FIGURES.slice(0, 2).map((figure) => (
-              <Figure key={figure.label} {...figure} />
-            ))}
-          </dl>
-
-          <div data-anim="card" className="order-1 lg:order-2">
-            <TryQuestion />
+            <p data-hero="action" className="text-text-faint mt-5 text-sm">
+              Free pilot · No card · Built around the CBSE paper
+            </p>
           </div>
 
-          <dl className="order-3 grid grid-cols-2 gap-6 text-left lg:grid-cols-1 lg:gap-10 lg:text-right">
-            {FIGURES.slice(2).map((figure) => (
-              <Figure key={figure.label} {...figure} align="right" />
-            ))}
-          </dl>
+          <div data-hero="preview" className="relative lg:col-span-5">
+            <Image
+              src="/illustrations/study-at-desk.svg"
+              alt=""
+              width={849}
+              height={842}
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-24 -right-16 z-0 hidden w-56 opacity-30 lg:block"
+            />
+            <div
+              aria-hidden="true"
+              className="border-brand-200 bg-brand-50 absolute z-0 -top-3 -right-3 -bottom-3 -left-3 rounded-[1.75rem] border sm:-top-4 sm:-right-4 sm:-bottom-4 sm:-left-4"
+            />
+            <div className="relative z-10">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <p className="text-text text-sm font-semibold">A question you can answer now</p>
+                <span className="text-brand-700 text-xs font-semibold tracking-[0.08em] uppercase">
+                  Live preview
+                </span>
+              </div>
+              <TryQuestion />
+            </div>
+          </div>
         </div>
+
+        <dl className="border-line mt-14 grid grid-cols-2 border-y sm:grid-cols-4 lg:mt-20">
+          {PAPER_FACTS.map((fact, index) => (
+            <div
+              key={fact.label}
+              data-hero="fact"
+              className={[
+                "py-5 lg:py-6",
+                index % 2 === 0 ? "pr-5 sm:px-5" : "border-line border-l pl-5 sm:px-5",
+                index > 1 ? "border-line border-t sm:border-t-0" : "",
+                index > 0 ? "sm:border-line sm:border-l" : "",
+              ].join(" ")}
+            >
+              <dd className="text-text text-3xl leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[2.5rem]">
+                <span data-count={fact.value}>{fact.value}</span>
+                {fact.suffix}
+              </dd>
+              <dt className="text-text-soft mt-2 max-w-[15ch] text-sm leading-snug">{fact.label}</dt>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
-  );
-}
-
-function Figure({
-  value,
-  suffix,
-  label,
-  align = "left",
-}: {
-  value: number;
-  suffix: string;
-  label: string;
-  align?: "left" | "right";
-}) {
-  return (
-    <div data-anim="figure">
-      <dd
-        className={[
-          "text-text text-[2.75rem] leading-none font-semibold tracking-[-0.04em] tabular-nums",
-          align === "right" ? "lg:text-right" : "",
-        ].join(" ")}
-      >
-        {/*
-          The server renders the final number, so the page is correct before any
-          JavaScript arrives and stays correct if none does. The count-up
-          overwrites `textContent` from zero only once GSAP is running.
-        */}
-        <span data-count={value}>{value}</span>
-        {suffix}
-      </dd>
-      <dt
-        className={["text-text-soft mt-1.5 text-sm", align === "right" ? "lg:text-right" : ""].join(
-          " ",
-        )}
-      >
-        {label}
-      </dt>
-    </div>
   );
 }

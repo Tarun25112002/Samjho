@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   reactStrictMode: true,
 
+  // A separate output directory makes it possible for CI (or a local release
+  // check) to build while `next dev` is serving from `.next`. The default keeps
+  // every existing dev and deployment command unchanged.
+  distDir: process.env.SAMJHO_NEXT_DIST_DIR ?? ".next",
+
   // Fail the production build on type errors rather than shipping them. Next's
   // default already does this; making it explicit documents the intent.
   //

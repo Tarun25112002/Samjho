@@ -23,6 +23,7 @@ import { buildQuestionRouter } from "./modules/questions/question.routes.js";
 import { buildQuestionAdminRouter } from "./modules/questions/question.admin.routes.js";
 import { buildAdminDashboardRouter } from "./modules/questions/dashboard.routes.js";
 import { buildClerkWebhookRouter } from "./modules/webhooks/clerk.routes.js";
+import { buildClassroomRouter } from "./modules/classrooms/classroom.routes.js";
 
 export const API_PREFIX = "/api/v1";
 
@@ -135,6 +136,7 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/questions", buildQuestionRouter(verifyToken));
   router.use("/practice-sessions", buildPracticeRouter(verifyToken));
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
+  router.use("/classrooms", buildClassroomRouter(verifyToken));
   router.use("/exam-papers", buildExamPaperRouter(verifyToken));
 
   // Mounted under its own prefix rather than as extra verbs on /catalog, so the

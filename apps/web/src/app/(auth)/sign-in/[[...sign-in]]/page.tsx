@@ -16,12 +16,16 @@ export default function SignInPage() {
   return (
     <>
       <AuthAside
+        eyebrow="Your revision desk"
         headline="Getting it wrong is the part that teaches."
         note="Everything you have practised is where you left it — including the questions you got wrong and haven't beaten yet."
       />
 
-      <AuthFormColumn mobileHeadline="Pick up where you left off">
-        <SignIn />
+      <AuthFormColumn
+        mobileHeadline="Pick up where you left off"
+        context="Your saved practice, mistakes and progress are right where you left them."
+      >
+        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
       </AuthFormColumn>
     </>
   );
