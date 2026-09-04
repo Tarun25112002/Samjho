@@ -215,6 +215,76 @@ export function multiValue<T extends z.ZodType<unknown, string>>(item: T) {
     .pipe(z.array(item).min(1));
 }
 
+/**
+ * A CBSE exam year.
+ *
+ * Lives here, beside `multiValue`, rather than in the past-paper module that
+ * owns the rest of the registry: browsing, practice and the registry all have to
+ * agree on what a year is, and this is the lowest module of the three. Putting
+ * it in the highest and importing downwards would make the module graph a cycle
+ * that only fails once someone imports the barrel in the wrong order.
+ *
+ * The floor is 1990 rather than 2001 so a paper older than the current project's
+ * ambition is storable without a migration; the ceiling is far enough out that
+ * nobody has to think about it again.
+ */
+export const pastPaperYearSchema = z.int().min(1990).max(2100);
+
+/**
+ * The source types that make a question a "previous year" question.
+ *
+ * A previous-year question is a question with a source, not a separate content
+ * universe (docs/01 §2) — so this is the definition of the category, and it is
+ * one constant rather than a list repeated in the browse filter, the practice
+ * selector and the coverage query. `ADAPTED` is deliberately out: a question
+ * rewritten from a paper is not the paper's question, and a student filtering
+ * for board questions is asking for what was actually set.
+ */
+export const PREVIOUS_YEAR_SOURCE_TYPES = ["CBSE_BOARD_PAPER", "CBSE_SAMPLE_PAPER"] as const;
+
+/**
+ * A boolean that arrives as the four characters `true`.
+ *
+ * The union rather than a bare `z.enum(["true","false"]).transform(…)` is
+ * load-bearing, and the reason is the request pipeline: `validate()` replaces
+ * `req.query` with the *parsed* output, and every handler then re-parses it to
+ * get a typed value without a cast. A schema that only accepts the string form
+ * therefore fails on its own output — the first parse turns `"true"` into
+ * `true`, and the second rejects it with a 400 that names a parameter the caller
+ * spelled correctly.
+ *
+ * So every query flag has to be idempotent. `multiValue` already is, by
+ * accident of returning strings; this makes it deliberate for booleans.
+ */
+export function booleanFlag() {
+  return z.union([z.boolean(), z.enum(["true", "false"]).transform((value) => value === "true")]);
+}
+
+/**
+ * Years as they arrive on a query string: `years=2024,2023`.
+ *
+ * The `multiValue` pattern rather than an array in a body, because a
+ * "Practise 2024" chip is a link, and a link is a query string. Wrapped in a
+ * union with the parsed form for the idempotency reason above: after one parse
+ * the value is `[2024]`, and `multiValue` alone would reject it as not a string.
+ *
+ * `.transform(Number)` rather than `z.coerce.number()`: a coerced schema
+ * declares its input as `unknown`, and `multiValue` requires an item that
+ * genuinely accepts a `string`. The regex does the rejecting the coercion would
+ * have done silently, and does it with a message worth reading — `Number("")` is
+ * 0 and `Number("20x4")` is NaN, and neither should reach a `WHERE` clause.
+ */
+export const yearsQuerySchema = z.union([
+  z.array(pastPaperYearSchema).min(1),
+  multiValue(
+    z
+      .string()
+      .regex(/^\d{4}$/, "must be a four-digit year")
+      .transform(Number)
+      .pipe(pastPaperYearSchema),
+  ),
+]);
+
 export const listQuestionsQuerySchema = z.object({
   subjectId: z.string().min(1).optional(),
   chapterId: z.string().min(1).optional(),
@@ -222,6 +292,30 @@ export const listQuestionsQuerySchema = z.object({
   type: multiValue(questionTypeSchema).optional(),
   difficulty: multiValue(difficultySchema).optional(),
   marks: z.coerce.number().int().positive().optional(),
+
+  /**
+   * Only questions taken from a real board or sample paper.
+   *
+   * A separate flag from `years`, and not a shorthand for "any year is set",
+   * because the two answer different questions. A question can carry a year
+   * without being from a paper (an adapted one does), and a paper question can
+   * predate anyone recording its year. "Board questions only" and "board
+   * questions from 2019-2024" are both things a student asks for.
+   */
+  previousYearOnly: booleanFlag().optional(),
+
+  /** `years=2024,2023` — the year chips above the browse list. */
+  years: yearsQuerySchema.optional(),
+
+  /**
+   * One registered paper, by id.
+   *
+   * The "show me everything we hold from 2024 Set 1" link out of the admin
+   * coverage grid, and the one filter that is exact rather than approximate:
+   * year plus session plus set can still match two papers in a region split,
+   * whereas a paper id matches the paper.
+   */
+  pastPaperId: z.string().min(1).max(60).optional(),
 
   /**
    * Case-insensitive substring match on the body. Deliberately not full-text

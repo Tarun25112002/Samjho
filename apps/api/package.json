@@ -16,6 +16,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "ingest:paper": "node --import tsx scripts/ingest-past-paper.ts",
     "db:reset": "prisma migrate reset --force",
     "db:test:prepare": "cross-env DATABASE_URL=postgresql://samjho:samjho@localhost:5432/samjho_test prisma migrate deploy",
     "clean": "rimraf dist src/generated *.tsbuildinfo"

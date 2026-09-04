@@ -1,0 +1,92 @@
+{
+  "_readme": "Copy this file, rename it <year>-<subject>-<code>.json, and replace every «...» with what is actually on the paper in front of you. Delete this key and any row types you are not using. See README.md.",
+
+  "subject": "class-10-mathematics-standard",
+
+  "paper": {
+    "year": 2024,
+    "examSession": "Annual",
+    "paperCode": "«30/1/1, as printed — null if the paper shows no code»",
+    "setCode": "«1 — null if the paper has no set number»",
+    "region": null,
+    "printedQuestionCount": 38,
+    "totalMarks": 80,
+    "sourceUrl": "«where this paper came from»"
+  },
+
+  "reproduction": "CBSE_BOARD_PAPER",
+  "licenceStatus": "NEEDS_REVIEW",
+
+  "rows": [
+    {
+      "questionNumber": "1",
+      "chapter": "«chapter slug in the current syllabus»",
+      "topics": ["«topic slug — the first is the primary one»"],
+      "type": "MCQ",
+      "body": "«the question, exactly as printed»",
+      "marks": 1,
+      "difficulty": "EASY",
+      "bloomLevel": "REMEMBER",
+      "options": [
+        { "label": "A", "body": "«option A»", "isCorrect": false },
+        { "label": "B", "body": "«option B»", "isCorrect": true },
+        { "label": "C", "body": "«option C»", "isCorrect": false },
+        { "label": "D", "body": "«option D»", "isCorrect": false }
+      ],
+      "answer": {
+        "correctValue": "B",
+        "solution": "«the worked solution — required before this can be published»"
+      }
+    },
+
+    {
+      "questionNumber": "21",
+      "chapter": "«chapter slug»",
+      "topics": ["«topic slug»"],
+      "type": "SHORT_ANSWER",
+      "body": "«the question, exactly as printed»",
+      "marks": 2,
+      "difficulty": "MEDIUM",
+      "bloomLevel": "APPLY",
+      "answer": {
+        "correctValue": null,
+        "solution": "«the worked solution»",
+        "markingScheme": [
+          { "step": "«what earns the first mark»", "marks": 1, "keyPoints": [] },
+          { "step": "«what earns the second»", "marks": 1, "keyPoints": [] }
+        ]
+      }
+    },
+
+    {
+      "questionNumber": "36",
+      "chapter": "«chapter slug»",
+      "topics": ["«topic slug»"],
+      "type": "CASE_STUDY",
+      "body": "«the stimulus passage — the shared context, not a question»",
+      "marks": 4,
+      "difficulty": "MEDIUM",
+      "bloomLevel": "ANALYSE",
+      "subParts": [
+        {
+          "type": "SHORT_ANSWER",
+          "body": "«(i) …»",
+          "marks": 1,
+          "answer": { "correctValue": null, "solution": "«…»" }
+        },
+        {
+          "type": "SHORT_ANSWER",
+          "body": "«(ii) …»",
+          "marks": 1,
+          "answer": { "correctValue": null, "solution": "«…»" }
+        },
+        {
+          "type": "LONG_ANSWER",
+          "body": "«(iii) …»",
+          "marks": 2,
+          "answer": { "correctValue": null, "solution": "«…»" }
+        }
+      ]
+    }
+  ]
+}

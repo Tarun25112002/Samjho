@@ -2,9 +2,12 @@ import { z } from "zod";
 
 import { difficultySchema, questionTypeSchema } from "../question/question-enums.js";
 import {
+  booleanFlag,
   multiValue,
+  pastPaperYearSchema,
   questionAnswerSchema,
   studentQuestionSchema,
+  yearsQuerySchema,
 } from "../question/question.schema.js";
 import { studentAnswerSchema } from "./answer.schema.js";
 import {
@@ -63,6 +66,28 @@ export const practiceFiltersSchema = z.object({
   difficulties: z.array(difficultySchema).max(3).optional(),
   marks: z.int().min(1).max(20).optional(),
   /**
+   * Draw only from these exam years.
+   *
+   * Independent of `mode`, and that is the point. `PREVIOUS_YEAR` already
+   * restricts the pool to board and sample papers; this narrows *which* papers,
+   * so "board questions, 2019 to 2024" is one set rather than a mode the
+   * enum would have to grow a value for. Applied on its own — in a `CHAPTER`
+   * set, say — it means "questions that happen to have come from these years",
+   * which is a coherent request and not the same one.
+   *
+   * Capped at 30 because the range this product covers is 2001 onwards and a
+   * student selecting every year of it is asking for no filter at all.
+   */
+  years: z.array(pastPaperYearSchema).max(30).optional(),
+  /**
+   * One registered paper, by id — "give me all of 2024 Set 1".
+   *
+   * The link out of the coverage grid and out of a paper's own page. Exact where
+   * `years` is approximate: a year plus a session can still span three regional
+   * sets, and rehearsing *a paper* means rehearsing one of them.
+   */
+  pastPaperId: z.string().min(1).max(60).optional(),
+  /**
    * Skip questions this student has already attempted.
    *
    * Off by default, and that is the pedagogically correct default rather than
@@ -92,10 +117,9 @@ export const practiceFiltersQuerySchema = z.object({
   types: multiValue(questionTypeSchema).optional(),
   difficulties: multiValue(difficultySchema).optional(),
   marks: z.coerce.number().int().min(1).max(20).optional(),
-  unseenOnly: z
-    .enum(["true", "false"])
-    .transform((value) => value === "true")
-    .optional(),
+  years: yearsQuerySchema.optional(),
+  pastPaperId: z.string().min(1).max(60).optional(),
+  unseenOnly: booleanFlag().optional(),
 });
 
 /**
