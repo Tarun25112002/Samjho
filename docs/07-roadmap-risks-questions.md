@@ -52,6 +52,20 @@ Session creation with the full filter set, question selection service, runner UI
 **Gate:** end-to-end practice session works; attempts and mastery update correctly; ownership enforced (verified by test, not inspection).
 **This is the product's core loop — the first phase that produces something genuinely usable, now running against real entered content rather than seed data.**
 
+> **Gate note, Phase 5 (shipped).** All three gate conditions are proven by tests in `practice.test.ts`, against real Postgres: a set is built, answered, scored and completed end to end; `TopicMastery`, `SubjectProgress` and `MistakeRecord` are asserted **from the database** rather than from the response that wrote them, including the case that opens a mistake and the later one that repairs it; and a second student exists in that file for the sole purpose of being refused — reading, answering, scoring and completing someone else's session all return 404 rather than 403, because a 403 confirms the session exists.
+>
+> Three decisions inside it are worth carrying into Phase 6, because the exam engine will face all three again and in a much less forgiving form:
+>
+> - **`PENDING` is a real state, not a placeholder.** A subjective answer is submitted long before it is scored. Collapsing that to "wrong until scored" would have put every unscored answer into the student's mistake list while it waited, and would have recorded a zero the student was never given. `isCorrect` is therefore nullable all the way from the column to the wire, and the rollups do not run until the score exists.
+> - **Session totals are recomputed from the attempt rows on every write, never incremented.** Incrementing is faster and produces four separate bugs: a retried submission double-counts, a case study becomes "correct" before its last part is scored, a late self-score never moves the total, and a partially-scored item is claimed either way. A session holds at most fifty items, so the recomputation is one indexed read of a bounded set.
+> - **Answering is idempotent.** A double-tapped Submit on a slow phone returns the first attempt rather than writing a second. This is the normal case, not the adversarial one, and the failure it prevents — mastery counted twice, a mistake record opened against an answer the student got right — is silent and permanent.
+>
+> One thing was deliberately **not** built: there is no client-side grading, not even for an MCQ where it would be four lines. Two graders is one more than the number of things that can disagree, and the one that would be wrong is the one the student sees first.
+>
+> **Verified in the running app, not only in tests.** A live run through the browser on the seeded database produced what it should: MCQs auto-graded (1/1 for the right one, 0/1 for the wrong ones), mistake reasons captured from the feedback panel's chips, `TopicMastery` rows created per primary topic with `masteryScore` at 1.000 and 0.000 respectively, `unrepairedMistakes` at 1 on each missed topic and 0 on the correct one, and `MistakeRecord` rows opened and unrepaired. That is the "attempts and mastery update correctly" half of the gate observed against a real session rather than a fixture.
+>
+> **Still owed:** the same pass on a real phone. Nothing in the tests or the desktop run says whether the feedback panel reads well at 360px with a five-mark marking scheme on it, and docs/07 Q10 already notes this audience is more phone-first than Class 12 would have been.
+
 ### Phase 6 — Exam engine (~7–9 days) — the big one
 
 `exam-blueprints` package + validator; paper/section/slot/slot-item model; admin paper editor; attempt creation with idempotency; **server-authoritative timer**; autosave with revision ordering; IndexedDB offline queue; resume; heartbeat; three-way auto-submit + sweeper job; idempotent submission; objective auto-grading; self-evaluation flow; exam runner UI (palette, internal choice, focus mode); results with section/chapter breakdown.
