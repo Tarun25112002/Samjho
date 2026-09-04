@@ -38,7 +38,9 @@ function SignalStrip() {
       <div className="mx-auto grid max-w-6xl divide-y divide-white/10 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
         {signals.map(([title, body], index) => (
           <div key={title} className="flex gap-4 py-6 md:px-6 md:first:pl-0 md:last:pr-0 lg:py-7">
-            <span className="text-brand-300 pt-0.5 text-xs font-semibold tracking-[0.12em]">0{index + 1}</span>
+            <span className="text-brand-300 pt-0.5 text-xs font-semibold tracking-[0.12em]">
+              0{index + 1}
+            </span>
             <div>
               <h2 className="text-sm font-semibold">{title}</h2>
               <p className="mt-1.5 max-w-[25ch] text-sm leading-relaxed text-white/65">{body}</p>
@@ -52,7 +54,10 @@ function SignalStrip() {
 
 function Inside() {
   return (
-    <section id="inside" className="bg-raised scroll-mt-24 border-y border-[var(--color-line)] py-24 lg:py-36">
+    <section
+      id="inside"
+      className="bg-raised scroll-mt-24 border-y border-[var(--color-line)] py-24 lg:py-36"
+    >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
           <div className="lg:col-span-7">
@@ -107,8 +112,13 @@ function FeatureLedger() {
       </p>
       <ol className="divide-line divide-y">
         {FEATURES.map((feature, index) => (
-          <li key={feature.title} className="group grid grid-cols-[2.75rem_1fr] gap-3 py-5 first:pt-6">
-            <span className="text-brand-700 pt-0.5 text-sm font-semibold tabular-nums">0{index + 1}</span>
+          <li
+            key={feature.title}
+            className="group grid grid-cols-[2.75rem_1fr] gap-3 py-5 first:pt-6"
+          >
+            <span className="text-brand-700 pt-0.5 text-sm font-semibold tabular-nums">
+              0{index + 1}
+            </span>
             <div>
               <h3 className="text-text text-lg font-semibold tracking-[-0.015em] transition-colors group-hover:text-brand-700">
                 {feature.title}
@@ -137,7 +147,9 @@ function MarkingScheme() {
       <div className="grid lg:grid-cols-[minmax(0,1fr)_10rem]">
         <div className="flex flex-col gap-6 px-5 py-6 sm:px-7 sm:py-8">
           <div>
-            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">The question</p>
+            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">
+              The question
+            </p>
             <p className="text-text mt-3 font-serif text-xl leading-[1.55] sm:text-2xl">
               Prove that <span className="whitespace-nowrap">√5</span> is irrational.
             </p>
@@ -150,10 +162,19 @@ function MarkingScheme() {
             </div>
             <ol className="mt-3 flex flex-col">
               {SCHEME.map((step) => (
-                <li key={step.text} className="border-line flex items-start gap-4 border-b py-4 last:border-0">
-                  <span className="text-brand-700 mt-0.5 text-xs font-semibold tabular-nums">{step.id}</span>
-                  <span className="text-text-soft flex-1 font-serif leading-[1.6]">{step.text}</span>
-                  <span className="marks-margin text-text shrink-0 text-sm font-semibold">{step.marks}</span>
+                <li
+                  key={step.text}
+                  className="border-line flex items-start gap-4 border-b py-4 last:border-0"
+                >
+                  <span className="text-brand-700 mt-0.5 text-xs font-semibold tabular-nums">
+                    {step.id}
+                  </span>
+                  <span className="text-text-soft flex-1 font-serif leading-[1.6]">
+                    {step.text}
+                  </span>
+                  <span className="marks-margin text-text shrink-0 text-sm font-semibold">
+                    {step.marks}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -162,7 +183,9 @@ function MarkingScheme() {
 
         <figcaption className="border-line bg-brand-50 flex flex-col justify-between gap-8 border-t px-5 py-6 sm:px-7 lg:border-t-0 lg:border-l lg:px-5">
           <div>
-            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">The point</p>
+            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">
+              The point
+            </p>
             <p className="text-text mt-3 text-sm leading-relaxed">
               You do not just see the answer. You can see what earns each mark.
             </p>
@@ -201,18 +224,25 @@ function ForParents() {
             </h2>
             <p className="mt-6 max-w-[38ch] text-base leading-relaxed text-white/65">
               This is a closed, free pilot for students preparing for an exam. That gives us a
-              simple standard: the product should respect a student and their family before it
-              asks for their time.
+              simple standard: the product should respect a student and their family before it asks
+              for their time.
             </p>
           </div>
 
           <ul className="divide-y divide-white/10 lg:col-span-7">
             {COMMITMENTS.map((item, index) => (
-              <li key={item.title} className="grid grid-cols-[2.5rem_1fr] gap-4 py-5 first:pt-0 last:pb-0">
-                <span className="text-brand-300 text-sm font-semibold tabular-nums">0{index + 1}</span>
+              <li
+                key={item.title}
+                className="grid grid-cols-[2.5rem_1fr] gap-4 py-5 first:pt-0 last:pb-0"
+              >
+                <span className="text-brand-300 text-sm font-semibold tabular-nums">
+                  0{index + 1}
+                </span>
                 <div>
                   <h3 className="text-base font-semibold">{item.title}</h3>
-                  <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-white/65">{item.body}</p>
+                  <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-white/65">
+                    {item.body}
+                  </p>
                 </div>
               </li>
             ))}
@@ -250,17 +280,26 @@ function FinalCall() {
   return (
     <section className="px-5 pb-24 sm:px-8 lg:pb-36">
       <div className="final-sheet relative mx-auto grid max-w-6xl overflow-hidden rounded-panel bg-brand-500 px-6 py-8 sm:px-10 sm:py-12 lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-14 lg:py-16">
-        <div aria-hidden="true" className="final-sheet-number text-on-brand absolute -bottom-14 -left-3 select-none font-semibold leading-none tracking-[-0.09em] sm:-bottom-20 sm:left-2">
+        <div
+          aria-hidden="true"
+          className="final-sheet-number text-on-brand absolute -bottom-14 -left-3 select-none font-semibold leading-none tracking-[-0.09em] sm:-bottom-20 sm:left-2"
+        >
           10
         </div>
 
         <div className="relative border-b border-black/15 pb-7 lg:col-span-3 lg:border-r lg:border-b-0 lg:py-3 lg:pr-10 lg:pb-3">
-          <p className="text-on-brand text-6xl leading-none font-semibold tracking-[-0.07em] sm:text-7xl">10</p>
-          <p className="text-sand-800 mt-2 max-w-[12ch] text-sm font-semibold">questions in your first set</p>
+          <p className="text-on-brand text-6xl leading-none font-semibold tracking-[-0.07em] sm:text-7xl">
+            10
+          </p>
+          <p className="text-sand-800 mt-2 max-w-[12ch] text-sm font-semibold">
+            questions in your first set
+          </p>
         </div>
 
         <div className="relative pt-8 lg:col-span-9 lg:pt-0">
-          <p className="text-sand-800 text-xs font-semibold tracking-[0.13em] uppercase">Start with the paper</p>
+          <p className="text-sand-800 text-xs font-semibold tracking-[0.13em] uppercase">
+            Start with the paper
+          </p>
           <h2 className="text-on-brand mt-3 max-w-[14ch] text-[2.35rem] leading-[1.04] font-semibold tracking-[-0.045em] sm:text-5xl">
             Sit down with the question you need.
           </h2>

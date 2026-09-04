@@ -86,8 +86,8 @@ export function HowItWorks() {
             A wrong answer is raw material.
           </h2>
           <p className="text-text-soft mt-6 max-w-[43ch] text-base leading-relaxed sm:text-lg">
-            Most practice tools announce a score and move on. Samjho makes the answer, the mark,
-            and the next attempt into one quiet loop.
+            Most practice tools announce a score and move on. Samjho makes the answer, the mark, and
+            the next attempt into one quiet loop.
           </p>
 
           <div className="border-line bg-raised mt-9 max-w-md overflow-hidden rounded-panel border">
@@ -103,7 +103,10 @@ export function HowItWorks() {
           </div>
         </div>
 
-        <ol data-steps className="relative flex flex-col gap-3 pl-12 sm:pl-16 lg:col-span-7 lg:pt-4">
+        <ol
+          data-steps
+          className="relative flex flex-col gap-3 pl-12 sm:pl-16 lg:col-span-7 lg:pt-4"
+        >
           <span
             aria-hidden="true"
             className="bg-line absolute top-7 bottom-7 left-[1.375rem] w-px sm:left-[1.875rem]"

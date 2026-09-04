@@ -156,7 +156,9 @@ export function Hero() {
                 <span data-count={fact.value}>{fact.value}</span>
                 {fact.suffix}
               </dd>
-              <dt className="text-text-soft mt-2 max-w-[15ch] text-sm leading-snug">{fact.label}</dt>
+              <dt className="text-text-soft mt-2 max-w-[15ch] text-sm leading-snug">
+                {fact.label}
+              </dt>
             </div>
           ))}
         </dl>
