@@ -1,6 +1,7 @@
 import { subjectListResponseSchema } from "@samjho/contracts";
 import type { Metadata } from "next";
 
+import { Check } from "@/components/icons";
 import { ProfileForm } from "@/features/profile/profile-form";
 import { apiFetchAuthed } from "@/lib/api-client";
 import { requireOnboarded } from "@/lib/me";
@@ -16,11 +17,11 @@ export default async function ProfilePage() {
     // An admin reaching this page. They have no learning profile by design, and
     // saying so beats rendering an empty form they cannot fill in.
     return (
-      <main className="mx-auto max-w-2xl px-6 py-10">
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+      <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8">
+        <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm">
           This account has no student profile. Signed in as {me.user.email} ({me.user.role}).
         </p>
-      </main>
+      </div>
     );
   }
 
@@ -31,13 +32,13 @@ export default async function ProfilePage() {
   );
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-10 px-6 py-10">
-      <header className="space-y-1">
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+    <div className="mx-auto flex max-w-2xl flex-col gap-9 px-5 py-8 sm:px-8 lg:py-10">
+      <header>
+        <h1 className="text-text text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
           Your profile
         </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
-          Class {profile.classLevel} · {profile.board} · {me.user.email}
+        <p className="text-text-soft mt-1.5 text-sm">
+          Class {profile.classLevel} {profile.board} · {me.user.email}
         </p>
       </header>
 
@@ -50,7 +51,7 @@ export default async function ProfilePage() {
         termsAcceptedAt={profile.termsAcceptedAt}
         termsAcceptedVersion={profile.termsAcceptedVersion}
       />
-    </main>
+    </div>
   );
 }
 
@@ -62,6 +63,10 @@ export default async function ProfilePage() {
  * consent, and the schema keeps them in separate columns precisely so this panel
  * can tell the truth. Showing "not yet confirmed" is also the honest prompt for
  * why the closed pilot is time-boxed.
+ *
+ * So the tick is only ever drawn for a thing that genuinely happened. A row
+ * without one is not a warning — it is a fact, in the same grey as every other
+ * fact on the page.
  */
 function ConsentPanel({
   parentEmail,
@@ -79,21 +84,27 @@ function ConsentPanel({
   return (
     <section
       aria-labelledby="consent-heading"
-      className="border-ink-100 dark:border-ink-700 space-y-3 rounded-xl border p-5 text-sm"
+      className="border-line bg-card rounded-panel border p-6"
     >
-      <h2 id="consent-heading" className="text-ink-700 dark:text-ink-100 font-semibold">
-        Guardian &amp; consent
+      <h2 id="consent-heading" className="text-text text-lg font-semibold">
+        Guardian and consent
       </h2>
 
-      <dl className="space-y-2">
-        <Row label="Guardian's email" value={parentEmail ?? "Not set"} />
+      <dl className="divide-line mt-4 divide-y text-sm">
+        <Row
+          label="Guardian's email"
+          value={parentEmail ?? "Not set"}
+          done={parentEmail !== null}
+        />
         <Row
           label="You declared a guardian permits this account"
           value={formatDate(guardianDeclaredAt) ?? "No"}
+          done={guardianDeclaredAt !== null}
         />
         <Row
           label="Guardian has confirmed directly"
           value={formatDate(parentConsentAt) ?? "Not yet — closed pilot"}
+          done={parentConsentAt !== null}
         />
         <Row
           label="Terms accepted"
@@ -102,10 +113,11 @@ function ConsentPanel({
               ? "No"
               : `${formatDate(termsAcceptedAt) ?? ""} (version ${termsAcceptedVersion ?? "unknown"})`
           }
+          done={termsAcceptedAt !== null}
         />
       </dl>
 
-      <p className="text-ink-500 dark:text-ink-300 text-xs text-pretty">
+      <p className="text-text-faint mt-4 text-xs leading-relaxed">
         Samjho collects no advertising or behavioural-tracking data. During the closed pilot we
         record your declaration rather than contacting your guardian to confirm it.
       </p>
@@ -113,11 +125,14 @@ function ConsentPanel({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, done }: { label: string; value: string; done: boolean }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <dt className="text-ink-500 dark:text-ink-300">{label}</dt>
-      <dd className="text-ink-900 dark:text-ink-50 font-medium">{value}</dd>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
+      <dt className="text-text-soft">{label}</dt>
+      <dd className="text-text inline-flex items-center gap-1.5 font-medium">
+        {done ? <Check className="text-tick-600 size-4" /> : null}
+        {value}
+      </dd>
     </div>
   );
 }

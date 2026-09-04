@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ChevronLeft } from "@/components/icons";
+import { ButtonLink } from "@/components/ui/button";
 import { SessionReview } from "@/features/practice/session-review";
 import { StartPractice } from "@/features/practice/start-practice";
 import { ApiClientError } from "@/lib/api-client";
@@ -44,62 +46,75 @@ export default async function PracticeResultPage({ params }: PageProps) {
       : 0;
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-10 px-6 py-10">
-      <header className="space-y-2">
-        <Link href="/practice" className="text-ink-500 hover:text-ink-900 text-sm">
-          ← Practice
+    <div className="mx-auto flex max-w-3xl flex-col gap-9 px-5 py-8 sm:px-8 lg:py-10">
+      <header>
+        <Link
+          href="/practice"
+          className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
+        >
+          <ChevronLeft className="size-4" />
+          Practice
         </Link>
 
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
           {session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
         </h1>
-
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+        <p className="text-text-soft mt-1.5 text-sm">
           {session.status === "IN_PROGRESS" ? "Still in progress · " : ""}
           {formatDuration(session.totals.timeSpentMs)}
         </p>
       </header>
 
-      <section aria-labelledby="score-heading" className="space-y-3">
+      <section aria-labelledby="score-heading" className="flex flex-col gap-4">
         <h2 id="score-heading" className="sr-only">
           Your score
         </h2>
 
-        {/*
-          Three tiles stay three tiles at 360px — a score a student wants to read
-          as one line should not become a column — so the padding and type
-          shrink instead of the grid reflowing.
-        */}
-        <dl className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Stat
-            label="Marks"
-            value={`${formatMarksValue(session.totals.marksEarned)} / ${formatMarksValue(session.totals.marksPossible)}`}
-          />
-          <Stat
-            label="Right"
-            value={`${String(session.totals.correct)} of ${String(session.totals.answered)}`}
-          />
-          <Stat label="Accuracy" value={`${String(accuracy)}%`} />
-        </dl>
+        <div className="rounded-panel border-brand-200 bg-brand-50 border p-6 sm:p-7">
+          <p className="text-brand-700 text-sm font-semibold">Marks</p>
+          <p className="text-text mt-1 flex items-baseline gap-2 text-5xl font-semibold tracking-[-0.04em] tabular-nums sm:text-6xl">
+            {formatMarksValue(session.totals.marksEarned)}
+            <span className="text-text-soft text-2xl font-medium tracking-normal">
+              / {formatMarksValue(session.totals.marksPossible)}
+            </span>
+          </p>
+
+          {/*
+            Three figures stay three figures at 360px — a score a student reads
+            as one line should not become a column — so the type shrinks rather
+            than the grid reflowing.
+          */}
+          <dl className="border-brand-200 mt-6 grid grid-cols-3 gap-4 border-t pt-5">
+            <Stat
+              label="Right"
+              value={`${String(session.totals.correct)} of ${String(session.totals.answered)}`}
+            />
+            <Stat label="Accuracy" value={`${String(accuracy)}%`} />
+            <Stat label="Time" value={formatDuration(session.totals.timeSpentMs)} />
+          </dl>
+        </div>
 
         {session.totals.awaitingSelfEvaluation > 0 ? (
-          <p className="border-brand-600 text-ink-700 dark:text-ink-100 rounded-lg border p-3 text-sm">
-            {session.totals.awaitingSelfEvaluation === 1
-              ? "One written answer is still waiting for you to score it"
-              : `${String(session.totals.awaitingSelfEvaluation)} written answers are still waiting for you to score them`}
-            . Scroll down, compare each with the marking scheme, and award yourself the marks — your
+          <p className="rounded-panel border-half-200 bg-half-50 text-sand-800 border p-5 text-sm leading-relaxed">
+            <strong className="font-semibold">
+              {session.totals.awaitingSelfEvaluation === 1
+                ? "One written answer is still waiting for you to score it"
+                : `${String(session.totals.awaitingSelfEvaluation)} written answers are still waiting for you to score them`}
+              .
+            </strong>{" "}
+            Scroll down, compare each with the marking scheme, and award yourself the marks — your
             total above will move as you do.
           </p>
         ) : null}
       </section>
 
       {topics.length > 0 ? (
-        <section aria-labelledby="topics-heading" className="space-y-3">
-          <h2 id="topics-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+        <section aria-labelledby="topics-heading" className="flex flex-col gap-4">
+          <h2 id="topics-heading" className="text-text text-lg font-semibold">
             By topic
           </h2>
 
-          <ul className="flex flex-col gap-2">
+          <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
             {topics.map((topic) => (
               <TopicRow
                 key={topic.topicId}
@@ -113,14 +128,14 @@ export default async function PracticeResultPage({ params }: PageProps) {
             Said plainly rather than left for a student to infer from small
             numbers: two questions is not a verdict on a topic.
           */}
-          <p className="text-ink-500 dark:text-ink-300 text-xs">
+          <p className="text-text-faint text-xs">
             Based only on this set. Your overall progress lives on your dashboard.
           </p>
         </section>
       ) : null}
 
-      <section aria-labelledby="next-heading" className="space-y-3">
-        <h2 id="next-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+      <section aria-labelledby="next-heading" className="flex flex-col gap-4">
+        <h2 id="next-heading" className="text-text text-lg font-semibold">
           What next
         </h2>
 
@@ -137,65 +152,68 @@ export default async function PracticeResultPage({ params }: PageProps) {
           ) : null}
 
           {weakTopics[0] ? (
-            <Link
+            <ButtonLink
               href={practiceHref({ unseenOnly: false, topicId: weakTopics[0].topicId })}
-              className="border-ink-100 dark:border-ink-700 rounded-lg border px-4 py-2 font-medium"
+              variant="secondary"
             >
               Practise {weakTopics[0].name}
-            </Link>
+            </ButtonLink>
           ) : null}
 
-          <Link
-            href="/practice"
-            className="border-ink-100 dark:border-ink-700 rounded-lg border px-4 py-2 font-medium"
-          >
+          <ButtonLink href="/practice" variant="secondary">
             Something else
-          </Link>
+          </ButtonLink>
         </div>
       </section>
 
-      <section aria-labelledby="review-heading" className="space-y-4">
-        <h2 id="review-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+      <section aria-labelledby="review-heading" className="flex flex-col gap-4">
+        <h2 id="review-heading" className="text-text text-lg font-semibold">
           Question by question
         </h2>
 
         <SessionReview initial={session} />
       </section>
-    </main>
+    </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-ink-100 dark:border-ink-700 rounded-xl border px-3 py-3 sm:px-4">
-      <dt className="text-ink-500 dark:text-ink-300 text-xs">{label}</dt>
-      <dd className="text-ink-900 dark:text-ink-50 text-base font-semibold tabular-nums sm:text-lg">
-        {value}
-      </dd>
+    <div>
+      <dd className="text-text text-lg font-semibold tabular-nums sm:text-xl">{value}</dd>
+      <dt className="text-text-soft mt-0.5 text-xs sm:text-sm">{label}</dt>
     </div>
   );
 }
 
+/**
+ * One topic's share of the marks.
+ *
+ * The bar is green or crimson depending on whether the topic came out weak, and
+ * the marks are stated beside it in figures — the colour is the summary, the
+ * numbers are the fact. A bar alone would be a chart nobody can read a value
+ * off.
+ */
 function TopicRow({ topic, weak }: { topic: PracticeTopicResult; weak: boolean }) {
   const share = topic.marksPossible > 0 ? (topic.marksEarned / topic.marksPossible) * 100 : 0;
 
   return (
-    <li className="border-ink-100 dark:border-ink-700 rounded-lg border px-4 py-3">
-      <div className="flex flex-wrap items-baseline gap-x-3 text-sm">
-        <span className="text-ink-900 dark:text-ink-50 font-medium">{topic.name}</span>
-        <span className="text-ink-500 dark:text-ink-300 text-xs">{topic.chapterName}</span>
-        <span className="text-ink-500 dark:text-ink-300 ml-auto tabular-nums">
+    <li className="px-5 py-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+        <span className="text-text font-medium">{topic.name}</span>
+        <span className="text-text-faint text-xs">{topic.chapterName}</span>
+        <span className="marks-margin text-text-soft ml-auto text-sm">
           {formatMarksValue(topic.marksEarned)} / {formatMarksValue(topic.marksPossible)}
         </span>
       </div>
 
       <div
-        className="bg-ink-100 dark:bg-ink-700 mt-2 h-1.5 w-full overflow-hidden rounded-full"
+        className="bg-raised mt-2.5 h-2 w-full overflow-hidden rounded-full"
         role="img"
         aria-label={`${String(Math.round(share))} per cent of the marks in ${topic.name}`}
       >
         <div
-          className={weak ? "bg-danger h-1.5" : "bg-success h-1.5"}
+          className={weak ? "bg-marker-500 h-2 rounded-full" : "bg-tick-500 h-2 rounded-full"}
           style={{ width: `${String(share)}%` }}
         />
       </div>

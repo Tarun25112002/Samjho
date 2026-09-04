@@ -61,26 +61,26 @@ export default async function StatusPage() {
   const result = await probeApi();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
+    // A `<div>`, not a `<main>`: the marketing layout now supplies the landmark,
+    // and two of them on one page means a screen reader offers a choice of "main
+    // content" — which is not a choice anyone can make. The rest of this page's
+    // styling is Phase 2's and is redesigned with the other utility surfaces.
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16">
       <header className="space-y-2">
-        <p className="text-brand-600 text-sm font-medium tracking-wide uppercase">System status</p>
-        <h1 className="text-ink-900 dark:text-ink-50 text-3xl font-semibold tracking-tight">
-          Samjho
-        </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-base">
+        <h1 className="text-text text-title">System status</h1>
+        <p className="text-text-soft text-base">
           Live health of the API and its database, checked on every page load.
         </p>
       </header>
 
       <section
         aria-labelledby="status-heading"
-        className="border-ink-100 dark:border-ink-700 rounded-xl border p-5"
+        className="border-line bg-card rounded-panel border p-6"
       >
-        <h2
-          id="status-heading"
-          className="text-ink-700 dark:text-ink-300 mb-4 text-sm font-semibold"
-        >
-          System status
+        {/* Was a second "System status" under the first. The heading now names
+            what is in the list rather than repeating the page. */}
+        <h2 id="status-heading" className="text-text mb-4 text-sm font-semibold">
+          Checks
         </h2>
 
         {result.ok ? (
@@ -111,37 +111,35 @@ export default async function StatusPage() {
           </dl>
         ) : (
           <div className="space-y-2 text-sm">
-            <p className="text-danger font-medium">{result.title}</p>
-            <p className="text-ink-500 dark:text-ink-300">{result.detail}</p>
+            <p className="text-marker-700 font-semibold">{result.title}</p>
+            <p className="text-text-soft leading-relaxed">{result.detail}</p>
             {result.requestId ? (
-              <p className="text-ink-500 dark:text-ink-300 font-mono text-xs">
-                request id: {result.requestId}
-              </p>
+              <p className="text-text-faint font-mono text-xs">request id: {result.requestId}</p>
             ) : null}
           </div>
         )}
       </section>
 
-      <footer className="text-ink-500 dark:text-ink-300 text-sm">
+      <footer className="text-text-faint text-sm">
         Specification and architecture live in{" "}
-        <code className="text-ink-700 dark:text-ink-100 font-mono">docs/</code>.
+        <code className="text-text-soft font-mono">docs/</code>.
       </footer>
-    </main>
+    </div>
   );
 }
 
 function Row({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-ink-500 dark:text-ink-300">{label}</dt>
+      <dt className="text-text-soft">{label}</dt>
       <dd className="flex items-center gap-2 text-right font-medium">
         {/* Status is carried by the text, not only the dot — a colour-only
             signal is invisible to a colour-vision-deficient reader. */}
         <span
           aria-hidden="true"
-          className={`inline-block size-2 rounded-full ${ok ? "bg-success" : "bg-danger"}`}
+          className={`inline-block size-2 rounded-full ${ok ? "bg-tick-600" : "bg-marker-600"}`}
         />
-        <span className={ok ? "text-ink-900 dark:text-ink-50" : "text-danger"}>{value}</span>
+        <span className={ok ? "text-text" : "text-marker-700"}>{value}</span>
       </dd>
     </div>
   );

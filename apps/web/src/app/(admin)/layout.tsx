@@ -18,35 +18,27 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-ink-100 dark:border-ink-700 border-b">
+      <header className="border-line border-b">
         <nav
           aria-label="Admin"
           className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4 text-sm"
         >
-          <Link
-            href="/admin"
-            className="text-ink-900 dark:text-ink-50 font-semibold tracking-tight"
-          >
-            Samjho <span className="text-ink-500 font-normal">content</span>
+          <Link href="/admin" className="text-text font-semibold tracking-tight">
+            Samjho <span className="text-text-soft font-normal">content</span>
           </Link>
 
-          <Link href="/admin" className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50">
+          <Link href="/admin" className="text-text-soft hover:text-text">
             Dashboard
           </Link>
-          <Link
-            href="/admin/questions"
-            className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50"
-          >
+          <Link href="/admin/questions" className="text-text-soft hover:text-text">
             Questions
           </Link>
-          <Link href="/home" className="text-ink-500 hover:text-ink-900 dark:hover:text-ink-50">
+          <Link href="/home" className="text-text-soft hover:text-text">
             Student view
           </Link>
 
           <div className="ml-auto flex items-center gap-3">
-            <span className="text-ink-500 dark:text-ink-300 hidden sm:inline">
-              {me.user.name ?? me.user.email}
-            </span>
+            <span className="text-text-soft hidden sm:inline">{me.user.name ?? me.user.email}</span>
             <UserButton />
           </div>
         </nav>

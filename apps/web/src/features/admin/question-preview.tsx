@@ -30,7 +30,7 @@ export function QuestionPreview({
 }) {
   if (draft.body.trim().length === 0) {
     return (
-      <div className="border-ink-100 dark:border-ink-700 text-ink-500 rounded-xl border p-4 text-sm">
+      <div className="border-line text-text-soft rounded-xl border p-4 text-sm">
         The preview appears here as you type the question.
       </div>
     );
@@ -51,7 +51,7 @@ export function QuestionPreview({
   });
 
   return (
-    <div className="border-ink-100 dark:border-ink-700 rounded-xl border p-4">
+    <div className="border-line rounded-xl border p-4">
       <QuestionRenderer question={question} displayNumber="1" />
     </div>
   );

@@ -1,6 +1,9 @@
 import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
 
+import { AuthAside } from "@/components/auth/auth-aside";
+import { AuthFormColumn } from "@/components/auth/auth-shell";
+
 export const metadata: Metadata = { title: "Sign in" };
 
 /**
@@ -10,5 +13,16 @@ export const metadata: Metadata = { title: "Sign in" };
  * 404s on the second.
  */
 export default function SignInPage() {
-  return <SignIn />;
+  return (
+    <>
+      <AuthAside
+        headline="Getting it wrong is the part that teaches."
+        note="Everything you have practised is where you left it — including the questions you got wrong and haven't beaten yet."
+      />
+
+      <AuthFormColumn mobileHeadline="Pick up where you left off">
+        <SignIn />
+      </AuthFormColumn>
+    </>
+  );
 }

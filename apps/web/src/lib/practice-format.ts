@@ -72,3 +72,27 @@ export function formatDuration(ms: number): string {
   const hours = Math.floor(minutes / 60);
   return `${String(hours)}h ${String(minutes % 60)}m`;
 }
+
+/**
+ * Which options were right, keyed by target id, ready for `QuestionRenderer`.
+ *
+ * The renderer cannot know this on its own — a `StudentQuestion` has no answer
+ * property, by design, so that a leak is a compile error rather than a forgotten
+ * strip. The key travels on the attempt instead, which is an object that cannot
+ * exist until the student has already answered. This function is the one place
+ * that turns the second into the first.
+ *
+ * Returns `undefined` rather than an empty object when there is nothing to mark,
+ * so a caller can spread it conditionally: under `exactOptionalPropertyTypes`,
+ * passing an explicit `undefined` to an optional prop is not the same as
+ * omitting it.
+ */
+export function markingFrom(
+  attempts: { targetId: string; key: { correctOptionIds: string[] } | null }[],
+): Record<string, readonly string[]> | undefined {
+  const entries = attempts
+    .filter((attempt) => (attempt.key?.correctOptionIds.length ?? 0) > 0)
+    .map((attempt) => [attempt.targetId, attempt.key?.correctOptionIds ?? []] as const);
+
+  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+}

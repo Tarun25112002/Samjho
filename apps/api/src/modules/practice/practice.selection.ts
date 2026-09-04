@@ -2,6 +2,7 @@ import type { Difficulty, PracticeFilters, PracticeMode, QuestionType } from "@s
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";
+import { randomInt, shuffle } from "../../lib/random.js";
 import { STUDENT_VISIBLE_TOP_LEVEL } from "../questions/question.visibility.js";
 
 /**
@@ -205,41 +206,4 @@ interface Candidate {
 
 function dedupe(values: string[]): string[] {
   return [...new Set(values)];
-}
-
-/**
- * Fisher–Yates, with the platform's CSPRNG.
- *
- * `Math.random()` would do — nothing here is a secret — but `crypto` costs
- * nothing at this size and removes the question of whether it ought to have
- * been used, which is a question that has to be answered again every time
- * somebody reads this.
- */
-function shuffle<T>(values: T[]): T[] {
-  const result = [...values];
-
-  for (let index = result.length - 1; index > 0; index--) {
-    const swap = randomInt(index + 1);
-    const held = result[index];
-    const other = result[swap];
-    if (held === undefined || other === undefined) continue;
-    result[index] = other;
-    result[swap] = held;
-  }
-
-  return result;
-}
-
-/** Uniform in `[0, bound)`, rejecting the biased tail of the random range. */
-function randomInt(bound: number): number {
-  if (bound <= 1) return 0;
-
-  const limit = Math.floor(0xff_ff_ff_ff / bound) * bound;
-  const buffer = new Uint32Array(1);
-
-  for (;;) {
-    crypto.getRandomValues(buffer);
-    const value = buffer[0] ?? 0;
-    if (value < limit) return value % bound;
-  }
 }

@@ -79,6 +79,18 @@ export interface QuestionRendererProps {
   displayNumber?: string;
   /** Hide the type/difficulty chips where the surrounding UI already says it. */
   hideMeta?: boolean;
+  /**
+   * Which options were right, keyed by target id — the question's own id, or a
+   * sub-part's.
+   *
+   * Absent by default, and that is the important half. A StudentQuestion has no
+   * answer property, so the renderer cannot mark anything on its own; a surface
+   * that legitimately holds the key — the practice runner, which has the graded
+   * attempt back from the API — passes one in. The compile-time guarantee that a
+   * student is never *sent* an answer key is untouched. Only a caller that
+   * already has one can produce marked options.
+   */
+  marking?: Record<string, readonly string[]>;
   className?: string;
 }
 
@@ -89,6 +101,7 @@ export function QuestionRenderer({
   onChange,
   displayNumber,
   hideMeta = false,
+  marking,
   className,
 }: QuestionRendererProps) {
   const readOnly = onChange === undefined;
@@ -124,6 +137,7 @@ export function QuestionRenderer({
           value={value ?? EMPTY_RESPONSE}
           readOnly={readOnly}
           onChange={onChange}
+          correctOptionIds={marking?.[question.id]}
         />
       )}
 
@@ -136,6 +150,7 @@ export function QuestionRenderer({
                 value={subPartValues?.[subPart.id] ?? EMPTY_RESPONSE}
                 readOnly={readOnly}
                 onChange={onChange}
+                correctOptionIds={marking?.[subPart.id]}
               />
             </li>
           ))}
@@ -152,10 +167,12 @@ function SubPartRenderer({
   value,
   readOnly,
   onChange,
+  correctOptionIds,
 }: {
   subPart: StudentSubPart;
   value: QuestionResponse;
   readOnly: boolean;
+  correctOptionIds: readonly string[] | undefined;
   // Explicitly `| undefined` rather than `?`. Under `exactOptionalPropertyTypes`
   // those are different types, and only this form accepts a value that may be
   // undefined being forwarded from the caller.
@@ -170,7 +187,13 @@ function SubPartRenderer({
       <MathText className="samjho-question__body">{subPart.body}</MathText>
       <AssetList assets={subPart.assets} />
 
-      <ResponseArea question={subPart} value={value} readOnly={readOnly} onChange={onChange} />
+      <ResponseArea
+        question={subPart}
+        value={value}
+        readOnly={readOnly}
+        onChange={onChange}
+        correctOptionIds={correctOptionIds}
+      />
     </div>
   );
 }
@@ -185,10 +208,12 @@ function ResponseArea({
   value,
   readOnly,
   onChange,
+  correctOptionIds,
 }: {
   question: Respondable;
   value: QuestionResponse;
   readOnly: boolean;
+  correctOptionIds: readonly string[] | undefined;
   // Explicitly `| undefined` rather than `?`. Under `exactOptionalPropertyTypes`
   // those are different types, and only this form accepts a value that may be
   // undefined being forwarded from the caller.
@@ -203,7 +228,15 @@ function ResponseArea({
   };
 
   if (shape === "CHOICE") {
-    return <OptionList question={question} value={value} readOnly={readOnly} onSelect={emit} />;
+    return (
+      <OptionList
+        question={question}
+        value={value}
+        readOnly={readOnly}
+        onSelect={emit}
+        correctOptionIds={correctOptionIds}
+      />
+    );
   }
 
   if (shape === "BOOLEAN") {
@@ -234,11 +267,13 @@ function OptionList({
   value,
   readOnly,
   onSelect,
+  correctOptionIds,
 }: {
   question: Respondable;
   value: QuestionResponse;
   readOnly: boolean;
   onSelect: (next: QuestionResponse) => void;
+  correctOptionIds: readonly string[] | undefined;
 }) {
   const groupName = useId();
 
@@ -258,8 +293,26 @@ function OptionList({
 
       {question.options.map((option) => {
         const selected = value.optionIds.includes(option.id);
+
+        /*
+         * Only two options are ever marked: the right one, and the one the
+         * student chose if it was not. Colouring all four turns a question into
+         * an answer key — the other wrong options stay silent, because "not the
+         * answer" is not something the student got wrong.
+         */
+        const verdict = correctOptionIds?.includes(option.id)
+          ? "correct"
+          : correctOptionIds !== undefined && selected
+            ? "incorrect"
+            : undefined;
+
         return (
-          <label key={option.id} className="samjho-option" data-selected={selected || undefined}>
+          <label
+            key={option.id}
+            className="samjho-option"
+            data-selected={selected || undefined}
+            data-verdict={verdict}
+          >
             <input
               type="radio"
               name={groupName}
@@ -277,6 +330,20 @@ function OptionList({
             <MathText inline className="samjho-option__body">
               {option.body}
             </MathText>
+
+            {/* Shape and a word, not only a colour. docs/01 §9 requires the
+                answer states to survive colour-vision deficiency, and this is
+                the row where being wrong about that matters most. */}
+            {verdict ? (
+              <>
+                <span className="samjho-visually-hidden">
+                  {verdict === "correct" ? " — correct answer" : " — your answer, not right"}
+                </span>
+                <span className="samjho-option__verdict" aria-hidden="true">
+                  {verdict === "correct" ? <TickGlyph /> : <CrossGlyph />}
+                </span>
+              </>
+            ) : null}
           </label>
         );
       })}
@@ -416,4 +483,42 @@ function Provenance({ provenance }: { provenance: NonNullable<StudentQuestion["p
   if (!label) return null;
 
   return <p className="samjho-question__provenance">{label}</p>;
+}
+
+/**
+ * The tick and the cross.
+ *
+ * Drawn here rather than imported, because `@samjho/ui` deliberately has no
+ * icon set and two paths is not a reason to start one. They are the same two
+ * shapes the app draws elsewhere, at the same stroke weight.
+ */
+function TickGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4.5 12.5 9.5 17.5 19.5 6.5" />
+    </svg>
+  );
+}
+
+function CrossGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 6 18 18" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
 }

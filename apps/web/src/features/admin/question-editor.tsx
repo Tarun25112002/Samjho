@@ -142,8 +142,8 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
                       }}
                       className={`min-h-11 rounded-full border px-3 text-sm ${
                         selected
-                          ? "border-brand-600 text-ink-900 dark:text-ink-50"
-                          : "border-ink-300 dark:border-ink-700 text-ink-500"
+                          ? "border-brand-500 text-text"
+                          : "border-line-strong text-text-soft"
                       }`}
                     >
                       {position === 0 ? "★ " : ""}
@@ -152,7 +152,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
                   );
                 })}
                 {topics.length === 0 ? (
-                  <p className="text-ink-500 text-sm">This chapter has no topics yet.</p>
+                  <p className="text-text-soft text-sm">This chapter has no topics yet.</p>
                 ) : null}
               </div>
             )}
@@ -296,7 +296,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
                       editor.markCorrect(index);
                     }}
                   />
-                  <span className="text-ink-500 w-4 font-semibold">{option.label}</span>
+                  <span className="text-text-soft w-4 font-semibold">{option.label}</span>
                 </label>
 
                 <input
@@ -311,7 +311,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
             ))}
 
             {fieldErrors["options"] ? (
-              <p role="alert" className="text-danger text-xs">
+              <p role="alert" className="text-marker-700 text-xs">
                 {fieldErrors["options"]}
               </p>
             ) : null}
@@ -324,17 +324,14 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
             description={`A case study is one question worth the sum of its parts. Parts currently total ${String(editor.subPartTotal)} of ${String(draft.marks)}.`}
           >
             {draft.subParts.map((part, index) => (
-              <div
-                key={index}
-                className="border-ink-100 dark:border-ink-700 space-y-3 border-l-2 pl-4"
-              >
+              <div key={index} className="border-line space-y-3 border-l-2 pl-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-ink-500 text-xs font-semibold">
+                  <span className="text-text-soft text-xs font-semibold">
                     ({SUB_PART_LABELS[index] ?? String(index + 1)}) Part {index + 1}
                   </span>
                   <button
                     type="button"
-                    className="text-ink-500 hover:text-danger min-h-11 text-xs"
+                    className="text-text-soft hover:text-marker-700 min-h-11 text-xs"
                     onClick={() => {
                       editor.removeSubPart(index);
                     }}
@@ -428,14 +425,14 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
 
             <button
               type="button"
-              className="border-ink-300 dark:border-ink-700 min-h-11 rounded-lg border px-4 text-sm"
+              className="border-line-strong min-h-11 rounded-lg border px-4 text-sm"
               onClick={editor.addSubPart}
             >
               Add a sub-part
             </button>
 
             {fieldErrors["subParts"] || fieldErrors["marks"] ? (
-              <p role="alert" className="text-danger text-xs">
+              <p role="alert" className="text-marker-700 text-xs">
                 {fieldErrors["subParts"] ?? fieldErrors["marks"]}
               </p>
             ) : null}
@@ -629,10 +626,10 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         </Fieldset>
 
         {editor.failure ? (
-          <div role="alert" className="border-danger space-y-1 rounded-xl border p-4 text-sm">
-            <p className="text-ink-900 dark:text-ink-50">{editor.failure.message}</p>
+          <div role="alert" className="border-marker-500 space-y-1 rounded-xl border p-4 text-sm">
+            <p className="text-text">{editor.failure.message}</p>
             {editor.failure.requestId ? (
-              <p className="text-ink-500 text-xs">
+              <p className="text-text-soft text-xs">
                 Reference: <code>{editor.failure.requestId}</code>
               </p>
             ) : null}
@@ -643,7 +640,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
           <button
             type="submit"
             disabled={editor.saving}
-            className="bg-brand-600 min-h-11 rounded-lg px-5 text-sm font-medium text-white disabled:opacity-60"
+            className="bg-brand-500 min-h-11 rounded-lg px-5 text-sm font-medium text-white disabled:opacity-60"
           >
             {editor.saving ? "Saving…" : question ? "Save changes" : "Save draft"}
           </button>
@@ -655,20 +652,20 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
               onClick={() => {
                 void editor.submit("saved-and-next");
               }}
-              className="border-ink-300 dark:border-ink-700 min-h-11 rounded-lg border px-5 text-sm disabled:opacity-60"
+              className="border-line-strong min-h-11 rounded-lg border px-5 text-sm disabled:opacity-60"
             >
               Save and add another
             </button>
           )}
 
           {editor.savedAt ? (
-            <span aria-live="polite" className="text-ink-500 text-xs">
+            <span aria-live="polite" className="text-text-soft text-xs">
               Saved {editor.savedAt.toLocaleTimeString()}
             </span>
           ) : null}
 
           {!editor.isValid ? (
-            <span className="text-ink-500 text-xs">
+            <span className="text-text-soft text-xs">
               Not complete yet — the fields above say what is missing.
             </span>
           ) : null}
@@ -677,12 +674,10 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
 
       <aside className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">
-            Preview, as a student sees it
-          </h2>
+          <h2 className="text-text text-sm font-semibold">Preview, as a student sees it</h2>
           <button
             type="button"
-            className="text-ink-500 min-h-11 text-xs"
+            className="text-text-soft min-h-11 text-xs"
             onClick={() => {
               setShowPreview((value) => !value);
             }}

@@ -9,6 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { sendJson } from "@/lib/client-api";
 
 /**
@@ -44,8 +45,8 @@ export function StartPractice({
 
   return (
     <div className={className}>
-      <button
-        type="button"
+      <Button
+        variant={variant}
         disabled={busy}
         onClick={() => {
           void start({
@@ -54,18 +55,12 @@ export function StartPractice({
             count: count ?? 10,
           });
         }}
-        className={[
-          "min-h-11 rounded-lg px-4 py-2 font-medium disabled:opacity-50",
-          variant === "primary"
-            ? "bg-brand-600 text-white"
-            : "border-ink-100 dark:border-ink-700 border",
-        ].join(" ")}
       >
         {busy ? "Building your set…" : label}
-      </button>
+      </Button>
 
       {message ? (
-        <p role="status" className="text-ink-500 dark:text-ink-300 mt-2 text-sm">
+        <p role="status" className="text-text-soft mt-2 text-sm">
           {message}
         </p>
       ) : null}

@@ -2,6 +2,7 @@ import { practiceFiltersQuerySchema, type SubjectDetail } from "@samjho/contract
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ChevronLeft } from "@/components/icons";
 import { PracticeSetup } from "@/features/practice/practice-setup";
 import { loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
@@ -42,17 +43,19 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
   );
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
-      <header className="space-y-2">
-        <Link href="/practice" className="text-ink-500 hover:text-ink-900 text-sm">
-          ← Practice
+    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
+      <header>
+        <Link
+          href="/practice"
+          className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
+        >
+          <ChevronLeft className="size-4" />
+          Practice
         </Link>
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
           Build a set
         </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
-          Leave anything blank to include all of it.
-        </p>
+        <p className="text-text-soft mt-1.5 text-sm">Leave anything blank to include all of it.</p>
       </header>
 
       {/*
@@ -68,7 +71,7 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
           ...(count === undefined ? {} : { count }),
         }}
       />
-    </main>
+    </div>
   );
 }
 

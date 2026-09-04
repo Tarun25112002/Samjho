@@ -5,6 +5,9 @@ import { useMemo } from "react";
 
 import { suggestBoardSessions } from "@/features/onboarding/board-sessions";
 
+import { Button } from "@/components/ui/button";
+import { ChoiceCard, FieldError, inputClass, Label } from "@/components/ui/form";
+
 import { useProfileForm } from "./use-profile-form";
 
 /**
@@ -48,19 +51,14 @@ export function ProfileForm({
 
   return (
     <form
-      className="space-y-6"
+      className="border-line bg-card rounded-panel flex flex-col gap-7 border p-6"
       onSubmit={(event) => {
         event.preventDefault();
         void form.save();
       }}
     >
-      <div className="space-y-2">
-        <label
-          htmlFor="school"
-          className="text-ink-700 dark:text-ink-100 block text-sm font-medium"
-        >
-          School
-        </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="school">School</Label>
         <input
           id="school"
           value={form.draft.school}
@@ -68,18 +66,13 @@ export function ProfileForm({
             form.update({ school: event.target.value });
           }}
           aria-invalid={Boolean(form.errors["school"])}
-          className="border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
+          className={inputClass}
         />
-        <Error message={form.errors["school"]} />
+        <FieldError message={form.errors["school"]} />
       </div>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="preferredLanguage"
-          className="text-ink-700 dark:text-ink-100 block text-sm font-medium"
-        >
-          Preferred language
-        </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="preferredLanguage">Preferred language</Label>
         <select
           id="preferredLanguage"
           value={form.draft.preferredLanguage}
@@ -88,45 +81,52 @@ export function ProfileForm({
               preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
             });
           }}
-          className="border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
+          className={inputClass}
         >
           <option value="ENGLISH">English</option>
           <option value="HINDI">Hindi</option>
         </select>
       </div>
 
-      <fieldset className="space-y-3">
-        <legend className="text-ink-700 dark:text-ink-100 text-sm font-medium">Subjects</legend>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-text text-sm font-semibold">Subjects</legend>
         <ul className="grid gap-2 sm:grid-cols-2">
           {subjectOptions.map((subject) => (
             <li key={subject.id}>
-              <label className="border-ink-100 dark:border-ink-700 flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+              <ChoiceCard
+                selected={form.draft.subjectIds.includes(subject.id)}
+                className="items-center p-3.5"
+              >
                 <input
                   type="checkbox"
                   checked={form.draft.subjectIds.includes(subject.id)}
                   onChange={() => {
                     form.toggleSubject(subject.id);
                   }}
+                  className="accent-brand-500 size-4"
                 />
-                <span className="text-ink-900 dark:text-ink-50">{subject.name}</span>
-              </label>
+                <span className="text-text text-sm font-medium">{subject.name}</span>
+              </ChoiceCard>
             </li>
           ))}
         </ul>
-        <Error message={form.errors["subjectIds"]} />
-        <p className="text-ink-500 dark:text-ink-300 text-xs">
+        <FieldError message={form.errors["subjectIds"]} />
+        <p className="text-text-soft text-xs leading-relaxed">
           Un-ticking a subject hides it, but keeps everything you have already practised in it.
         </p>
       </fieldset>
 
-      <fieldset className="space-y-3">
-        <legend className="text-ink-700 dark:text-ink-100 text-sm font-medium">
-          Target sitting
-        </legend>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-text text-sm font-semibold">Target sitting</legend>
         <ul className="space-y-2">
           {sessionOptions.map((option) => (
             <li key={`${option.session}-${option.phase}`}>
-              <label className="border-ink-100 dark:border-ink-700 flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+              <ChoiceCard
+                selected={
+                  form.draft.session === option.session && form.draft.phase === option.phase
+                }
+                className="items-center p-3.5"
+              >
                 <input
                   type="radio"
                   name="targetExam"
@@ -136,21 +136,17 @@ export function ProfileForm({
                   onChange={() => {
                     form.update({ session: option.session, phase: option.phase });
                   }}
+                  className="accent-brand-500 size-4"
                 />
-                <span className="text-ink-900 dark:text-ink-50">{option.label}</span>
-              </label>
+                <span className="text-text text-sm font-medium">{option.label}</span>
+              </ChoiceCard>
             </li>
           ))}
         </ul>
       </fieldset>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="parentEmail"
-          className="text-ink-700 dark:text-ink-100 block text-sm font-medium"
-        >
-          Parent or guardian&rsquo;s email
-        </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="parentEmail">Parent or guardian&rsquo;s email</Label>
         <input
           id="parentEmail"
           type="email"
@@ -160,42 +156,29 @@ export function ProfileForm({
           }}
           aria-invalid={Boolean(form.errors["parentEmail"])}
           aria-describedby="parentEmail-hint"
-          className="border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
+          className={inputClass}
         />
-        <p id="parentEmail-hint" className="text-ink-500 dark:text-ink-300 text-xs text-pretty">
+        <p id="parentEmail-hint" className="text-text-soft text-xs leading-relaxed">
           Changing this clears any consent already recorded, because consent was given by the person
           at the old address.
         </p>
-        <Error message={form.errors["parentEmail"]} />
+        <FieldError message={form.errors["parentEmail"]} />
       </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={form.state.status === "saving"}
-          className="bg-brand-600 hover:bg-brand-500 rounded-lg px-5 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60"
-        >
+      <div className="border-line flex flex-wrap items-center gap-4 border-t pt-6">
+        <Button type="submit" disabled={form.state.status === "saving"}>
           {form.state.status === "saving" ? "Saving…" : "Save changes"}
-        </button>
+        </Button>
 
         {/* `role="status"` so the outcome is announced, not just shown. */}
-        <p role="status" className="text-sm">
+        <p role="status" className="text-sm font-medium">
           {form.state.status === "saved" ? (
-            <span className="text-success">Saved.</span>
+            <span className="text-tick-700">Saved.</span>
           ) : form.state.status === "error" ? (
-            <span className="text-danger">{form.state.message}</span>
+            <span className="text-marker-700">{form.state.message}</span>
           ) : null}
         </p>
       </div>
     </form>
-  );
-}
-
-function Error({ message }: { message: string | undefined }) {
-  if (message === undefined) return null;
-  return (
-    <p role="alert" className="text-danger text-sm">
-      {message}
-    </p>
   );
 }

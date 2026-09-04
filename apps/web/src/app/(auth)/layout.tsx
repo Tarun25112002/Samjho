@@ -1,22 +1,20 @@
-import Link from "next/link";
-
 /**
  * Shell for Clerk's sign-in and sign-up components.
  *
- * Its only job is to centre them and keep a way back to the marketing page. The
- * forms themselves are Clerk's — credentials, password rules, MFA and the OAuth
- * dance are exactly the things you do not want to hand-roll for a product that
- * holds minors' data.
+ * The layout owns only the split: a brand panel and a form column, side by side
+ * from `lg` up and stacked below it. Both cells are supplied by the page rather
+ * than by this file, because the two pages say different things — a returning
+ * student and a parent reading over a fourteen-year-old's shoulder are not the
+ * same reader, and one shared headline would be written for neither.
+ *
+ * The forms themselves are Clerk's. Credentials, password rules, verification,
+ * MFA and the OAuth dance are exactly the things you do not want to hand-roll
+ * for a product that holds minors' data. Their appearance is themed once, in the
+ * root layout.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-6 py-16">
-      <Link
-        href="/"
-        className="text-ink-700 dark:text-ink-100 text-xl font-semibold tracking-tight"
-      >
-        Samjho
-      </Link>
+    <main className="min-h-screen lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       {children}
     </main>
   );

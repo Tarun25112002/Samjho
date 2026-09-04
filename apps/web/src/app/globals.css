@@ -1,42 +1,277 @@
 @import "tailwindcss";
 
 /**
- * Tailwind v4 configures itself in CSS. `@theme` variables become utility
- * classes automatically — `--color-ink-500` gives you `text-ink-500`, `bg-ink-500`
- * and so on.
+ * Samjho's design tokens.
  *
- * These are placeholder tokens so Phase 0 has something coherent to render. The
- * real palette and type scale are Phase 3 work (see docs/01-information-
- * architecture.md §9): warm and calm rather than SaaS-blue, with the five
- * semantic answer states — correct / incorrect / partial / review / unattempted —
- * defined as first-class tokens.
+ * ## The palette in one line
+ *
+ * White paper, saffron marks. The page is the answer sheet — white, calm,
+ * generous — and saffron is the product's own voice on it: every action, every
+ * piece of progress, every place the app is asking you to do something. Nothing
+ * else is orange, which is what keeps orange meaning "here".
+ *
+ * The marking vocabulary is separate and never mixes with the brand:
+ *
+ *   crimson — wrong. The examiner's pen, and nothing else.
+ *   green   — right.
+ *   gold    — the half mark: partial credit, and answers still owed a score.
+ *
+ * Gold sits at hue 95 against saffron's 55 so the two are told apart at a
+ * glance; crimson sits at 18. docs/01 §9 requires the answer states to be
+ * distinguishable by shape and label as well as colour — a meaningful fraction
+ * of teenage boys are colour-vision deficient — so each one carries an icon and
+ * a word wherever it appears, and colour is the third signal rather than the
+ * only one.
+ *
+ * ## Two layers of token, on purpose
+ *
+ * `sand-*`, `brand-*`, `marker-*` and friends are *literal* ramps. Light stays
+ * light in dark mode. They never flip.
+ *
+ * `page`, `card`, `text`, `line` and friends are *semantic*. They flip.
+ *
+ * A component written against the semantic layer needs no `dark:` variant at
+ * all, which is the point. The commonest dark-mode bug in this codebase's
+ * history is a `text-ink-900 dark:text-ink-50` pair with the second half
+ * missing; if the token already knows what it means there is nothing to forget.
+ * Tailwind v4 compiles `bg-card` to `background-color: var(--color-card)`, so
+ * overriding the custom property is enough — no class-level duplication.
+ *
+ * The `ink-*` ramp that the Phase 2 pages were written against was kept as an
+ * alias while they migrated one branch at a time. Every surface is on the
+ * semantic layer now, so the aliases have gone with it.
+ *
+ * ## Contrast, and the one decision it forced
+ *
+ * Every pair below was measured rather than eyeballed. The measurement that
+ * shaped the whole design: **white text on a vivid orange is unreadable.**
+ * `brand-500` is 2.8:1 against white, and dulling it to reach 4.5 produces a
+ * burnt rust that is not the brand.
+ *
+ * So the primary button is saffron with near-black type on it — 5.8:1, and the
+ * orange stays as bright as it was drawn. Orange fills carry ink; white sits on
+ * `brand-700` and darker. That rule is worth keeping in mind before adding any
+ * new orange surface.
  */
+
 @theme {
-  --color-ink-50: oklch(0.98 0.005 85);
-  --color-ink-100: oklch(0.95 0.008 85);
-  --color-ink-300: oklch(0.75 0.015 85);
-  --color-ink-500: oklch(0.55 0.02 85);
-  --color-ink-700: oklch(0.35 0.02 85);
-  --color-ink-900: oklch(0.18 0.015 85);
-  --color-ink-950: oklch(0.12 0.012 85);
+  /* ── Sand: the warm neutral ramp ────────────────────────────────────────
+     A whisper of warmth (hue 65, chroma ≤0.02) so that white next to saffron
+     reads as paper rather than as a screen. Deliberately not a cream: the page
+     is #FCFAF9, half a step off pure white, not a beige. */
+  --color-sand-50: oklch(0.985 0.004 65);
+  --color-sand-100: oklch(0.962 0.006 65);
+  --color-sand-200: oklch(0.925 0.009 65);
+  --color-sand-300: oklch(0.855 0.013 65);
+  --color-sand-400: oklch(0.72 0.018 65);
+  --color-sand-500: oklch(0.59 0.02 65);
+  --color-sand-600: oklch(0.49 0.02 65);
+  --color-sand-700: oklch(0.395 0.018 65);
+  --color-sand-800: oklch(0.305 0.015 65);
+  --color-sand-900: oklch(0.245 0.013 65);
+  --color-sand-950: oklch(0.185 0.011 65);
 
-  --color-brand-400: oklch(0.72 0.14 45);
-  --color-brand-500: oklch(0.64 0.16 45);
-  --color-brand-600: oklch(0.56 0.16 45);
+  /* The `ink-*`, `success` and `danger` aliases that carried the Phase 2 pages
+     through the migration are gone: every surface is on the semantic layer now,
+     and leaving the old names defined is how the next person writes
+     `text-ink-500` without noticing it is not the vocabulary any more. */
 
-  --color-success: oklch(0.65 0.15 155);
-  --color-danger: oklch(0.62 0.19 25);
+  /* ── Brand: saffron ─────────────────────────────────────────────────────
+     `500` is the signature — the fill on every primary button, always with
+     `text-ink` on it. `700` is the orange that may be *read*: it clears 4.5:1
+     on white, which nothing brighter does. */
+  --color-brand-50: oklch(0.975 0.018 55);
+  --color-brand-100: oklch(0.945 0.045 55);
+  --color-brand-200: oklch(0.895 0.085 55);
+  --color-brand-300: oklch(0.83 0.135 55);
+  --color-brand-400: oklch(0.765 0.175 57);
+  --color-brand-500: oklch(0.7 0.19 55);
+  --color-brand-600: oklch(0.615 0.19 52);
+  --color-brand-700: oklch(0.52 0.19 50);
+  --color-brand-800: oklch(0.43 0.16 48);
+  --color-brand-900: oklch(0.34 0.12 46);
 
-  --font-sans: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  /* ── The marker: wrong ──────────────────────────────────────────────────
+     Crimson rather than a plain red, so it is unmistakable next to saffron.
+     Separate steps for fills and for text: the red that reads well as a 12px
+     word is not the red that reads well as a filled bar. */
+  --color-marker-50: oklch(0.965 0.018 18);
+  --color-marker-100: oklch(0.925 0.045 18);
+  --color-marker-200: oklch(0.86 0.09 18);
+  --color-marker-500: oklch(0.6 0.22 18);
+  --color-marker-600: oklch(0.535 0.215 18);
+  --color-marker-700: oklch(0.46 0.18 18);
+
+  /* ── The tick: right ────────────────────────────────────────────────────── */
+  --color-tick-50: oklch(0.965 0.022 155);
+  --color-tick-100: oklch(0.925 0.05 155);
+  --color-tick-200: oklch(0.86 0.09 155);
+  --color-tick-500: oklch(0.63 0.135 155);
+  --color-tick-600: oklch(0.545 0.125 155);
+  --color-tick-700: oklch(0.465 0.107 155);
+
+  /* ── The half mark: partial credit, and answers awaiting a score ────────
+     Gold, 40° of hue away from saffron. `700` is the only step that may set
+     text; everything lighter fills a shape behind a label. */
+  --color-half-50: oklch(0.975 0.03 95);
+  --color-half-100: oklch(0.945 0.07 95);
+  --color-half-200: oklch(0.895 0.12 95);
+  --color-half-500: oklch(0.8 0.155 95);
+  --color-half-600: oklch(0.68 0.145 95);
+  --color-half-700: oklch(0.535 0.115 95);
+
+  /* ── Semantic surfaces. These flip; see the dark blocks below. ─────────── */
+  --color-page: oklch(0.987 0.003 70);
+  --color-card: oklch(1 0 0);
+  --color-raised: oklch(0.965 0.006 68);
+  --color-line: oklch(0.915 0.009 68);
+  --color-line-strong: oklch(0.845 0.013 68);
+  --color-text: oklch(0.245 0.013 65);
+  --color-text-soft: oklch(0.49 0.02 65);
+  --color-text-faint: oklch(0.545 0.02 65);
+  /* What goes *on* a saffron fill. Near-black, not white — see the note above. */
+  --color-on-brand: oklch(0.185 0.011 65);
+
+  /* ── Type ───────────────────────────────────────────────────────────────
+     Poppins runs the interface. Geometric, high-contrast at heavy weights, and
+     it carries Devanagari in the same family — so `समझो` in the wordmark is set
+     in the brand's own typeface rather than in whatever the OS happens to have.
+
+     Source Serif carries question bodies, marking schemes and solutions:
+     everything a student reads for an hour rather than glances at. docs/01 §9
+     asks for exactly this split, and it is also the practical call — Poppins has
+     a small x-height for its cap height and geometric circular bowls, which is
+     lovely on a button and tiring across four hundred words of physics. The
+     reference for the reading face is an NCERT page, not a magazine cover. */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+
+  /* Display sizes for the two or three places where a number or a greeting is
+     the largest thing on the screen. Poppins is drawn on a wide geometric
+     rhythm, so display sizes need real negative tracking to stop reading as a
+     poster. */
+  --text-display: 3rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 700;
+
+  --text-title: 1.875rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.022em;
+  --text-title--font-weight: 600;
+
+  /* ── Radius: three sizes, each meaning something ────────────────────────
+     A page where every corner has the same radius reads as a component kit
+     rather than as a design. Panels are the softest, controls are middling,
+     chips are pills. Nothing else takes a radius. */
+  --radius-panel: 1.5rem;
+  --radius-control: 0.875rem;
+  --radius-pill: 999px;
+
+  /* ── Elevation ──────────────────────────────────────────────────────────
+     Warm-tinted rather than neutral black, and spent on one element per view.
+     Structure is carried by 1px lines; a page of identically shadowed cards is
+     precisely what this avoids. `--shadow-brand` is for the primary button
+     alone, so the one thing the page wants you to press has a physical presence
+     nothing else does. */
+  --shadow-lift:
+    0 1px 2px -1px oklch(0.3 0.03 60 / 0.12), 0 10px 24px -12px oklch(0.3 0.03 60 / 0.24);
+  --shadow-pop:
+    0 2px 4px -2px oklch(0.3 0.03 60 / 0.14), 0 24px 44px -20px oklch(0.3 0.03 60 / 0.3);
+  --shadow-brand: 0 6px 18px -6px oklch(0.7 0.19 55 / 0.5);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Dark mode from day one — the primary usage window is late at night. */
+/**
+ * The dark theme.
+ *
+ * Not an inversion — the literal ramps stay where they are and only the semantic
+ * layer moves, plus the handful of steps that are unreadable on a dark ground. A
+ * warm near-black rather than a neutral one, because the whole palette is warm
+ * and a grey-blue dark mode would make the saffron look like a warning light.
+ * docs/01 §9 puts the primary usage window late at night, so this is not a
+ * secondary theme.
+ *
+ * The values live here once and are assigned twice: the media query is the
+ * system preference, `[data-theme]` is an explicit choice, and an explicit
+ * choice wins in both directions. `light-dark()` would collapse the two
+ * assignments into one and was rejected — it needs Chrome 123, and this
+ * product's audience is on mid-range Android phones whose WebView is often years
+ * behind. A palette that fails to parse is a blank page.
+ */
+:root {
+  --dk-page: oklch(0.215 0.011 62);
+  --dk-card: oklch(0.265 0.013 62);
+  --dk-raised: oklch(0.315 0.014 62);
+  --dk-line: oklch(0.365 0.015 62);
+  --dk-line-strong: oklch(0.45 0.016 62);
+  --dk-text: oklch(0.965 0.005 70);
+  --dk-text-soft: oklch(0.79 0.014 68);
+  --dk-text-faint: oklch(0.675 0.016 66);
+
+  /* The readable steps are tuned for a white ground. On warm near-black they
+     have to come up, or they read as scorch marks rather than as ink. Each of
+     these clears 4.5:1 on `--dk-card`. */
+  --dk-brand-700: oklch(0.765 0.175 57);
+  --dk-marker-600: oklch(0.68 0.19 18);
+  --dk-marker-700: oklch(0.75 0.155 18);
+  --dk-tick-600: oklch(0.72 0.135 155);
+  --dk-tick-700: oklch(0.79 0.12 155);
+  --dk-half-600: oklch(0.82 0.15 95);
+  --dk-half-700: oklch(0.87 0.13 95);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
+
+    --color-page: var(--dk-page);
+    --color-card: var(--dk-card);
+    --color-raised: var(--dk-raised);
+    --color-line: var(--dk-line);
+    --color-line-strong: var(--dk-line-strong);
+    --color-text: var(--dk-text);
+    --color-text-soft: var(--dk-text-soft);
+    --color-text-faint: var(--dk-text-faint);
+    --color-brand-700: var(--dk-brand-700);
+    --color-marker-600: var(--dk-marker-600);
+    --color-marker-700: var(--dk-marker-700);
+    --color-tick-600: var(--dk-tick-600);
+    --color-tick-700: var(--dk-tick-700);
+    --color-half-600: var(--dk-half-600);
+    --color-half-700: var(--dk-half-700);
   }
 }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-page: var(--dk-page);
+  --color-card: var(--dk-card);
+  --color-raised: var(--dk-raised);
+  --color-line: var(--dk-line);
+  --color-line-strong: var(--dk-line-strong);
+  --color-text: var(--dk-text);
+  --color-text-soft: var(--dk-text-soft);
+  --color-text-faint: var(--dk-text-faint);
+  --color-brand-700: var(--dk-brand-700);
+  --color-marker-600: var(--dk-marker-600);
+  --color-marker-700: var(--dk-marker-700);
+  --color-tick-600: var(--dk-tick-600);
+  --color-tick-700: var(--dk-tick-700);
+  --color-half-600: var(--dk-half-600);
+  --color-half-700: var(--dk-half-700);
+}
+
+/*
+ * `dark:` continues to resolve against the system preference alone. Rewriting it
+ * to follow `[data-theme]` would silently change every legacy `dark:` class in
+ * the app, including on pages nobody has opened since Phase 2. New surfaces use
+ * the semantic tokens and need no variant; the variant stays as it is until the
+ * last of those pages has been migrated.
+ */
 
 @layer base {
   html {
@@ -44,19 +279,36 @@
   }
 
   body {
-    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+    background-color: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  @media (prefers-color-scheme: dark) {
-    body {
-      @apply bg-ink-950 text-ink-100;
-    }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-900);
   }
 
   /* Never remove focus rings — only restyle them. Keyboard users, including
-     every student navigating the exam palette by keyboard, depend on these. */
+     every student who will navigate the exam palette by keyboard, depend on
+     these. `brand-700` rather than the brighter fill: a 2px ring in `brand-500`
+     is invisible against a `brand-500` button. */
   :focus-visible {
-    @apply outline-brand-500 outline-2 outline-offset-2;
+    outline: 2px solid var(--color-brand-700);
+    outline-offset: 2px;
+    border-radius: 0.375rem;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -65,6 +317,116 @@
     *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
+  }
+}
+
+@layer components {
+  /**
+   * The marks rule.
+   *
+   * On a printed CBSE paper the mark allocation sits out in the right margin,
+   * separated from the question by nothing but space. It is the most
+   * recognisable feature of the document this whole product is about, so it
+   * becomes the app's recurring structural device: wherever a number is *what
+   * something is worth*, it goes right, in tabular figures, behind a hairline.
+   *
+   * A device that encodes information rather than decorating one. A reader
+   * learns in a single screen that anything in that column is marks.
+   */
+  .marks-margin {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--color-line);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /**
+   * Ruled paper.
+   *
+   * A school register: feint horizontal lines and a single margin rule down the
+   * left. It is the surface every one of these students has written on every day
+   * for eleven years, and it does in one texture what a stock illustration of a
+   * girl with a laptop does badly.
+   *
+   * Two gradient layers, no image — it costs nothing, scales to any panel size,
+   * and stays crisp on a 3x screen. Drawn in saffron rather than grey: on a white
+   * ground a grey rule reads as a border someone forgot to remove, and a faint
+   * orange one reads as a page.
+   */
+  .ruled-paper {
+    background-image:
+      /* Layer one paints on top and fades the ruling out down the page, so the
+         texture supports the headline at the top and stops competing with the
+         small print at the bottom. A background layer rather than a mask,
+         because a mask would take the panel's own colour with it. */
+      linear-gradient(to bottom, transparent 45%, var(--color-page) 96%),
+      linear-gradient(
+        to right,
+        transparent 0 3.5rem,
+        color-mix(in oklab, var(--color-brand-500) 50%, transparent) 3.5rem 3.5625rem,
+        transparent 3.5625rem
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 2.25rem,
+        color-mix(in oklab, var(--color-brand-500) 11%, transparent) 2.25rem 2.3125rem
+      );
+  }
+  /**
+   * A page-load settle, used once per screen and nowhere else.
+   *
+   * docs/01 §9: motion minimal and fast. One orchestrated moment on the surface
+   * a student opens forty times a week is worth having. The same 300ms
+   * fade-and-rise on every card in a list is the thing that makes a page feel
+   * machine-made.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .settle {
+      animation: settle 420ms var(--ease-out-soft) both;
+    }
+  }
+
+  @keyframes settle {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+}
+
+@layer components {
+  /**
+   * Ruled lines without the margin rule.
+   *
+   * `.ruled-paper` is a page: it has a left margin and it is meant to sit in a
+   * column. A full-bleed section wants the ruling and nothing else — a red
+   * margin rule 56px from the viewport edge reads as a rendering error rather
+   * than as a notebook. Same texture, one layer fewer.
+   */
+  .ruled-lines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 2.75rem,
+      color-mix(in oklab, var(--color-brand-500) 9%, transparent) 2.75rem 2.8125rem
+    );
+  }
+
+  /**
+   * A line of display type that rises into place from behind its own baseline.
+   *
+   * The mask is the point: `overflow: hidden` on the wrapper means the line is
+   * revealed rather than faded, which is a typographic gesture rather than the
+   * fade-and-slide every generated page opens with. It is used once, on the one
+   * headline, and the wrapper is inert when the animation does not run.
+   */
+  .line-mask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
   }
 }

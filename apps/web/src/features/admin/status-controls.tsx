@@ -70,14 +70,14 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
   }
 
   return (
-    <section className="border-ink-100 dark:border-ink-700 space-y-4 rounded-xl border p-4">
+    <section className="border-line space-y-4 rounded-xl border p-4">
       <div>
-        <h2 className="text-ink-900 dark:text-ink-50 text-sm font-semibold">Status</h2>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">{STATUS_TEXT[question.status]}</p>
+        <h2 className="text-text text-sm font-semibold">Status</h2>
+        <p className="text-text-soft text-sm">{STATUS_TEXT[question.status]}</p>
       </div>
 
       {blocked ? (
-        <ul className="text-ink-500 list-disc space-y-1 pl-5 text-xs">
+        <ul className="text-text-soft list-disc space-y-1 pl-5 text-xs">
           {question.publicationBlockers.map((message) => (
             <li key={message}>{message}</li>
           ))}
@@ -85,8 +85,8 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
       ) : null}
 
       <label className="block space-y-1.5">
-        <span className="text-ink-700 dark:text-ink-100 text-sm font-medium">
-          Reason <span className="text-ink-500 font-normal">(recorded in the log)</span>
+        <span className="text-text text-sm font-medium">
+          Reason <span className="text-text-soft font-normal">(recorded in the log)</span>
         </span>
         <input
           value={reason}
@@ -94,7 +94,7 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
             setReason(event.target.value);
           }}
           placeholder="Student reported the answer key is wrong"
-          className="border-ink-300 dark:border-ink-700 w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
+          className="border-line-strong w-full rounded-lg border bg-transparent px-3 py-2 text-sm"
         />
       </label>
 
@@ -110,7 +110,7 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
               onClick={() => {
                 void move(status);
               }}
-              className="border-ink-300 dark:border-ink-700 min-h-11 rounded-lg border px-4 text-sm disabled:opacity-50"
+              className="border-line-strong min-h-11 rounded-lg border px-4 text-sm disabled:opacity-50"
             >
               {busy === status ? "Working…" : LABELS[status]}
             </button>
@@ -119,7 +119,7 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
       </div>
 
       {failure ? (
-        <p role="alert" className="text-danger text-xs">
+        <p role="alert" className="text-marker-700 text-xs">
           {failure.message}
         </p>
       ) : null}

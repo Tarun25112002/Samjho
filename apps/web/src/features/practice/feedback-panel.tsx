@@ -10,6 +10,7 @@ import {
 } from "@samjho/contracts";
 import { formatMarks, MathText } from "@samjho/ui";
 
+import { Check, Cross, HalfMark } from "@/components/icons";
 import { formatMarksValue } from "@/lib/practice-format";
 
 /**
@@ -34,6 +35,13 @@ import { formatMarksValue } from "@/lib/practice-format";
  * evaluation, and hiding the steps until after the score would make it a guess.
  * MVP exam scores for subjective work are self-assessed (docs/07 R3, Q8) and
  * this is where a student learns to do it honestly.
+ *
+ * ## The verdict is a shape before it is a colour
+ *
+ * A tick, a cross and a half-filled circle, each beside its own word. docs/01 §9
+ * requires the answer states to survive colour-vision deficiency, and this is
+ * the surface where getting that wrong matters most — it is the one that tells a
+ * student whether they were right.
  */
 
 const REASONS = mistakeReasonSchema.options;
@@ -58,7 +66,7 @@ export function FeedbackPanel({
   return (
     <section
       aria-label="Feedback"
-      className="border-ink-100 dark:border-ink-700 flex flex-col gap-6 rounded-xl border p-5"
+      className="rounded-panel border-line bg-card divide-line flex flex-col divide-y border"
     >
       {item.attempts.map((attempt) => (
         <AttemptFeedback
@@ -94,11 +102,15 @@ function AttemptFeedback({
   const key = attempt.key;
 
   return (
-    <article className="flex flex-col gap-3">
-      <header className="flex flex-wrap items-center gap-2 text-sm">
-        {label ? <span className="text-ink-500 dark:text-ink-300">{label}</span> : null}
+    <article className="flex flex-col gap-4 p-5 sm:p-6">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {label ? (
+          <span className="bg-raised text-text-soft rounded-pill px-2.5 py-1 text-xs font-semibold">
+            {label}
+          </span>
+        ) : null}
         <Verdict attempt={attempt} />
-        <span className="text-ink-500 dark:text-ink-300">
+        <span className="marks-margin text-text-soft ml-auto text-sm font-medium">
           {formatMarksValue(attempt.marksAwarded)} / {formatMarksValue(attempt.marksPossible)}
         </span>
       </header>
@@ -112,12 +124,12 @@ function AttemptFeedback({
       {key?.markingScheme?.length ? <MarkingScheme steps={key.markingScheme} /> : null}
 
       {key ? (
-        <div className="text-ink-700 dark:text-ink-100 text-sm">
-          <h4 className="text-ink-500 dark:text-ink-300 text-xs font-semibold tracking-wide uppercase">
-            Solution
-          </h4>
-          <MathText>{key.solution}</MathText>
-          {key.explanation ? <MathText>{key.explanation}</MathText> : null}
+        <div>
+          <h4 className="text-text text-sm font-semibold">Solution</h4>
+          <div className="text-text-soft mt-1.5 font-serif text-[0.9375rem] leading-[1.7]">
+            <MathText>{key.solution}</MathText>
+            {key.explanation ? <MathText>{key.explanation}</MathText> : null}
+          </div>
         </div>
       ) : null}
 
@@ -130,21 +142,41 @@ function AttemptFeedback({
 
 function Verdict({ attempt }: { attempt: PracticeAttempt }) {
   if (attempt.evaluationMode === "PENDING") {
-    return <span className="text-ink-700 dark:text-ink-100 font-medium">Score yourself below</span>;
+    return (
+      <span className="text-half-700 inline-flex items-center gap-1.5 font-semibold">
+        <HalfMark className="size-4" />
+        Score yourself below
+      </span>
+    );
   }
 
   if (attempt.isCorrect === true) {
-    return <span className="text-success font-medium">Correct</span>;
+    return (
+      <span className="text-tick-700 inline-flex items-center gap-1.5 font-semibold">
+        <Check className="size-4" />
+        Correct
+      </span>
+    );
   }
 
   // Partial credit is not "incorrect" in a way a student recognises — they got
-  // three of the five marks and being told they were wrong is both untrue and
+  // three of the five marks, and being told they were wrong is both untrue and
   // discouraging. It still counts as a mistake everywhere the data goes.
   if (attempt.marksAwarded > 0) {
-    return <span className="text-brand-600 font-medium">Partly right</span>;
+    return (
+      <span className="text-half-700 inline-flex items-center gap-1.5 font-semibold">
+        <HalfMark className="size-4" />
+        Partly right
+      </span>
+    );
   }
 
-  return <span className="text-danger font-medium">Not right</span>;
+  return (
+    <span className="text-marker-700 inline-flex items-center gap-1.5 font-semibold">
+      <Cross className="size-4" />
+      Not right
+    </span>
+  );
 }
 
 /**
@@ -176,9 +208,9 @@ function CorrectAnswer({
   if (!answerText) return null;
 
   return (
-    <p className="text-sm">
-      <span className="text-ink-500 dark:text-ink-300">Correct answer: </span>
-      <span className="text-ink-900 dark:text-ink-50 font-medium">{answerText}</span>
+    <p className="rounded-control border-tick-200 bg-tick-50 border px-4 py-3 text-sm">
+      <span className="text-tick-700">Correct answer: </span>
+      <span className="text-sand-900 font-semibold">{answerText}</span>
     </p>
   );
 }
@@ -203,8 +235,8 @@ function SelfEvaluation({
   const choices = Array.from({ length: attempt.marksPossible + 1 }, (_, marks) => marks);
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-ink-500 dark:text-ink-300 text-sm">
+    <div className="rounded-control border-half-200 bg-half-50 flex flex-col gap-3 border p-4">
+      <p className="text-sand-800 text-sm leading-relaxed">
         Compare your answer with the scheme below, then award yourself the marks you would have got.
       </p>
 
@@ -217,7 +249,7 @@ function SelfEvaluation({
             onClick={() => {
               onSelfEvaluate(attempt.id, marks);
             }}
-            className="border-ink-100 dark:border-ink-700 hover:border-brand-600 min-h-11 rounded-lg border px-3 py-1.5 text-sm disabled:opacity-50"
+            className="rounded-control border-line-strong bg-card text-text hover:border-brand-500 min-h-11 border px-4 text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {marks === 0 ? "No marks" : formatMarks(marks)}
           </button>
@@ -227,28 +259,33 @@ function SelfEvaluation({
   );
 }
 
+/**
+ * The scheme, with the marks out in the margin.
+ *
+ * Laid out the way the printed one is: the step on the left, what it is worth on
+ * the right, behind a hairline. A student reading this is learning where marks
+ * come from, and the shape of the document is part of that lesson.
+ */
 function MarkingScheme({
   steps,
 }: {
   steps: { step: string; marks: number; keyPoints: string[] }[];
 }) {
   return (
-    <div className="text-sm">
-      <h4 className="text-ink-500 dark:text-ink-300 text-xs font-semibold tracking-wide uppercase">
-        Marking scheme
-      </h4>
-      <ul className="mt-1 flex flex-col gap-1">
+    <div>
+      <h4 className="text-text text-sm font-semibold">Marking scheme</h4>
+      <ol className="divide-line mt-1.5 flex flex-col divide-y">
         {steps.map((step, position) => (
-          <li key={position} className="flex gap-3">
-            <span className="text-ink-500 dark:text-ink-300 shrink-0 tabular-nums">
-              {formatMarksValue(step.marks)}
-            </span>
-            <span className="text-ink-700 dark:text-ink-100">
+          <li key={position} className="flex items-start gap-4 py-2.5">
+            <span className="text-text-soft font-serif text-[0.9375rem] leading-[1.6]">
               <MathText inline>{step.step}</MathText>
+            </span>
+            <span className="marks-margin text-text ml-auto shrink-0 text-sm font-semibold">
+              {formatMarksValue(step.marks)}
             </span>
           </li>
         ))}
-      </ul>
+      </ol>
     </div>
   );
 }
@@ -269,10 +306,8 @@ function MistakeReasons({
   onSetMistakeReason: (attemptId: string, reason: MistakeReason | null) => void;
 }) {
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-ink-500 dark:text-ink-300 text-xs font-semibold tracking-wide uppercase">
-        What went wrong? (optional)
-      </legend>
+    <fieldset className="border-line flex flex-col gap-2.5 border-t pt-4">
+      <legend className="text-text text-sm font-semibold">What went wrong? (optional)</legend>
 
       <div className="flex flex-wrap gap-2">
         {REASONS.map((reason) => {
@@ -286,10 +321,10 @@ function MistakeReasons({
                 onSetMistakeReason(attempt.id, selected ? null : reason);
               }}
               className={[
-                "min-h-11 rounded-full border px-3 py-1 text-sm",
+                "rounded-pill min-h-11 border px-3.5 text-sm font-medium transition-colors",
                 selected
-                  ? "border-brand-600 text-brand-600"
-                  : "border-ink-100 dark:border-ink-700 text-ink-500 hover:border-brand-600",
+                  ? "border-brand-500 bg-brand-50 text-brand-700"
+                  : "border-line-strong text-text-soft hover:border-brand-300",
               ].join(" ")}
             >
               {MISTAKE_REASON_LABELS[reason]}

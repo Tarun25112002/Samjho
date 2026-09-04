@@ -3,6 +3,8 @@
 import { EMPTY_ANSWER, type PracticeSession } from "@samjho/contracts";
 import { QuestionRenderer } from "@samjho/ui";
 
+import { markingFrom } from "@/lib/practice-format";
+
 import { FeedbackPanel } from "./feedback-panel";
 import { usePracticeRunner } from "./use-practice-runner";
 
@@ -24,7 +26,7 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
 
   if (runner.session.items.length === 0) {
     return (
-      <p className="text-ink-500 dark:text-ink-300 text-sm">
+      <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm">
         The questions in this set are no longer available.
       </p>
     );
@@ -36,11 +38,12 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
         const answers = Object.fromEntries(
           item.attempts.map((attempt) => [attempt.targetId, attempt.answer]),
         );
+        const marking = markingFrom(item.attempts);
 
         return (
           <li
             key={item.question.id}
-            className="border-ink-100 dark:border-ink-700 flex flex-col gap-4 rounded-xl border p-5"
+            className="rounded-panel border-line bg-card flex flex-col gap-4 border p-5 sm:p-6"
           >
             {/* No `onChange`: every control renders disabled. The review shows
                 what the student answered, and the answer is now history. */}
@@ -49,12 +52,11 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
               displayNumber={String(position + 1)}
               value={answers[item.question.id] ?? EMPTY_ANSWER}
               subPartValues={answers}
+              {...(marking ? { marking } : {})}
             />
 
             {item.attempts.length === 0 ? (
-              <p className="text-ink-500 dark:text-ink-300 text-sm">
-                You didn&rsquo;t reach this one.
-              </p>
+              <p className="text-text-faint text-sm">You didn&rsquo;t reach this one.</p>
             ) : (
               <FeedbackPanel
                 item={item}
@@ -70,7 +72,10 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
       })}
 
       {runner.failure ? (
-        <li role="alert" className="text-danger text-sm">
+        <li
+          role="alert"
+          className="rounded-control border-marker-200 bg-marker-50 text-marker-700 border px-4 py-3 text-sm"
+        >
           {runner.failure.message}
         </li>
       ) : null}

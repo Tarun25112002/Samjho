@@ -13,6 +13,8 @@ import {
 import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@samjho/ui";
 import { useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 import { useStartPractice } from "./start-practice";
 
 /**
@@ -92,7 +94,7 @@ export function PracticeSetup({
             // A chapter from the old subject would silently match nothing.
             setChapterId("");
           }}
-          className="border-ink-100 dark:border-ink-700 min-h-11 w-full rounded-lg border px-3 py-2"
+          className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base"
         >
           <option value="">Any subject</option>
           {subjects.map((option) => (
@@ -110,7 +112,7 @@ export function PracticeSetup({
             onChange={(event) => {
               setChapterId(event.target.value);
             }}
-            className="border-ink-100 dark:border-ink-700 min-h-11 w-full rounded-lg border px-3 py-2"
+            className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base"
           >
             <option value="">Any chapter</option>
             {chapters.map((chapter) => (
@@ -158,10 +160,10 @@ export function PracticeSetup({
                 setCount(option);
               }}
               className={[
-                "min-h-11 rounded-lg border px-4 py-2 text-sm",
+                "rounded-control min-h-11 border px-5 text-sm font-semibold transition-colors",
                 count === option
-                  ? "border-brand-600 text-brand-600"
-                  : "border-ink-100 dark:border-ink-700",
+                  ? "border-brand-500 bg-brand-50 text-brand-700"
+                  : "border-line-strong text-text-soft hover:border-brand-300",
               ].join(" ")}
             >
               {option}
@@ -170,34 +172,30 @@ export function PracticeSetup({
         </div>
       </Field>
 
-      <label className="flex items-start gap-3 text-sm">
+      <label className="rounded-control border-line bg-card flex cursor-pointer items-start gap-3 border p-4 text-sm">
         <input
           type="checkbox"
           checked={unseenOnly}
           onChange={(event) => {
             setUnseenOnly(event.target.checked);
           }}
-          className="mt-1"
+          className="accent-brand-500 mt-0.5 size-4"
         />
         <span>
-          <span className="text-ink-900 dark:text-ink-50">Only questions I haven&rsquo;t seen</span>
-          <span className="text-ink-500 dark:text-ink-300 block text-xs">
+          <span className="text-text block font-medium">Only questions I haven&rsquo;t seen</span>
+          <span className="text-text-soft mt-0.5 block text-xs leading-relaxed">
             Off by default — meeting a question again after getting it wrong is how it sticks.
           </span>
         </span>
       </label>
 
       <div>
-        <button
-          type="submit"
-          disabled={busy}
-          className="bg-brand-600 min-h-11 rounded-lg px-5 py-2.5 font-medium text-white disabled:opacity-50"
-        >
+        <Button type="submit" size="lg" disabled={busy}>
           {busy ? "Building your set…" : "Start practising"}
-        </button>
+        </Button>
 
         {message ? (
-          <p role="status" className="text-ink-500 dark:text-ink-300 mt-2 text-sm">
+          <p role="status" className="text-text-soft mt-2 text-sm">
             {message}
           </p>
         ) : null}
@@ -209,7 +207,7 @@ export function PracticeSetup({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-ink-700 dark:text-ink-100 text-sm font-medium">{label}</span>
+      <span className="text-text text-sm font-semibold">{label}</span>
       {children}
     </div>
   );
@@ -228,9 +226,7 @@ function ChipGroup<T extends string>({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {selected.length === 0 ? (
-        <span className="text-ink-500 dark:text-ink-300 text-xs">{emptyHint}</span>
-      ) : null}
+      {selected.length === 0 ? <span className="text-text-faint text-xs">{emptyHint}</span> : null}
 
       {options.map((option) => {
         const isSelected = selected.includes(option.value);
@@ -243,10 +239,10 @@ function ChipGroup<T extends string>({
               onToggle(option.value);
             }}
             className={[
-              "min-h-11 rounded-full border px-3 py-1 text-sm",
+              "rounded-pill min-h-11 border px-3.5 text-sm font-medium transition-colors",
               isSelected
-                ? "border-brand-600 text-brand-600"
-                : "border-ink-100 dark:border-ink-700 text-ink-500",
+                ? "border-brand-500 bg-brand-50 text-brand-700"
+                : "border-line-strong text-text-soft hover:border-brand-300",
             ].join(" ")}
           >
             {option.label}

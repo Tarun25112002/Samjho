@@ -44,13 +44,11 @@ export default async function AdminQuestionPage({ params }: PageProps) {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
       <header className="space-y-1">
-        <Link href="/admin/questions" className="text-ink-500 hover:text-ink-900 text-sm">
+        <Link href="/admin/questions" className="text-text-soft hover:text-text text-sm">
           ← Questions
         </Link>
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
-          Edit question
-        </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+        <h1 className="text-text text-2xl font-semibold tracking-tight">Edit question</h1>
+        <p className="text-text-soft text-sm">
           {question.chapter.name} · version {question.version}
           {question.authorName ? ` · written by ${question.authorName}` : ""}
         </p>
@@ -69,25 +67,25 @@ export default async function AdminQuestionPage({ params }: PageProps) {
       />
 
       <section aria-labelledby="revisions-heading" className="space-y-3">
-        <h2 id="revisions-heading" className="text-ink-700 dark:text-ink-100 text-sm font-semibold">
+        <h2 id="revisions-heading" className="text-text text-sm font-semibold">
           What has changed
         </h2>
 
         {revisions.length === 0 ? (
-          <p className="text-ink-500 text-sm">Nothing has changed since it was written.</p>
+          <p className="text-text-soft text-sm">Nothing has changed since it was written.</p>
         ) : (
-          <ol className="divide-ink-100 dark:divide-ink-700 divide-y text-sm">
+          <ol className="divide-line divide-y text-sm">
             {revisions.map((revision) => (
               <li key={revision.id} className="space-y-1 py-3">
-                <p className="text-ink-500 text-xs">
+                <p className="text-text-soft text-xs">
                   {new Date(revision.createdAt).toLocaleString()}
                   {revision.editedByName ? ` · ${revision.editedByName}` : ""}
                   {revision.reason ? ` · ${revision.reason}` : ""}
                 </p>
-                <ul className="text-ink-700 dark:text-ink-100 space-y-0.5">
+                <ul className="text-text space-y-0.5">
                   {revision.changes.map((change) => (
                     <li key={change.field}>
-                      <span className="text-ink-500">{change.field}:</span>{" "}
+                      <span className="text-text-soft">{change.field}:</span>{" "}
                       <span className="line-clamp-1">
                         {change.from ?? "—"} → {change.to ?? "—"}
                       </span>

@@ -27,13 +27,13 @@ export default async function NewQuestionPage({ searchParams }: PageProps) {
   if (!chapter) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-10">
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
+        <h1 className="text-text text-2xl font-semibold tracking-tight">
           {subject.name} has no chapters yet
         </h1>
-        <p className="text-ink-500 dark:text-ink-300 mt-2 text-sm">
+        <p className="text-text-soft mt-2 text-sm">
           A question belongs to a chapter, so the syllabus has to exist first.
         </p>
-        <Link href="/admin" className="text-ink-900 dark:text-ink-50 mt-4 inline-block underline">
+        <Link href="/admin" className="text-text mt-4 inline-block underline">
           Back to the dashboard
         </Link>
       </main>
@@ -51,13 +51,11 @@ export default async function NewQuestionPage({ searchParams }: PageProps) {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
       <header className="space-y-1">
-        <Link href="/admin/questions" className="text-ink-500 hover:text-ink-900 text-sm">
+        <Link href="/admin/questions" className="text-text-soft hover:text-text text-sm">
           ← Questions
         </Link>
-        <h1 className="text-ink-900 dark:text-ink-50 text-2xl font-semibold tracking-tight">
-          New question
-        </h1>
-        <p className="text-ink-500 dark:text-ink-300 text-sm">
+        <h1 className="text-text text-2xl font-semibold tracking-tight">New question</h1>
+        <p className="text-text-soft text-sm">
           {subject.name}. Saves as a draft — publishing is a separate step.
         </p>
       </header>
