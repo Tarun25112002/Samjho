@@ -68,6 +68,67 @@ export class TokenVerificationError extends Error {
   }
 }
 
+/**
+ * We could not *decide* whether the token is valid, because the key set was
+ * unreachable.
+ *
+ * A separate class because the two failures are not the same event and must not
+ * produce the same response. "Your token is bad" is a 401 and tells the browser
+ * to go and sign in again. "We cannot reach Clerk" is a 503 and tells it to try
+ * later — signing in again cannot possibly help, because signing in also needs
+ * the thing that is down.
+ *
+ * Collapsing the two is not a cosmetic mistake. It produces an infinite loop:
+ * every request 401s, the web app sends the student to `/sign-in`, Clerk's
+ * component sees a perfectly good session in the browser and bounces them back,
+ * forever, with nothing in any log that says why. That loop is the single most
+ * expensive failure this file can cause, and this class exists to make it
+ * impossible.
+ */
+export class KeyResolutionError extends Error {
+  constructor(
+    message: string,
+    readonly reason: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.name = "KeyResolutionError";
+  }
+}
+
+/**
+ * jose error codes that mean "the key set could not be obtained or understood",
+ * as opposed to "this token failed a check".
+ *
+ * `ERR_JWKS_NO_MATCHING_KEY` is deliberately *not* here. jose already refetches
+ * on an unknown `kid`, so reaching that error means the key genuinely is not in
+ * the published set — which is what a forged `kid` looks like, and is the
+ * caller's problem. `ERR_JOSE_GENERIC` is: jose raises it for a non-200 or
+ * unparseable JWKS response, both of which are Clerk having a bad day.
+ */
+const KEY_RESOLUTION_CODES = new Set(["ERR_JWKS_TIMEOUT", "ERR_JWKS_INVALID", "ERR_JOSE_GENERIC"]);
+
+/**
+ * Does this error mean the key set was unreachable rather than the token bad?
+ *
+ * Two shapes to recognise. jose's own failures carry a `code`. A transport
+ * failure — DNS, a refused connection, a firewall answering EACCES — is not
+ * wrapped at all and arrives as `TypeError: fetch failed` with the real syscall
+ * error hanging off `cause`. Neither has anything to do with the token, and
+ * both used to be reported as "not authenticated".
+ */
+function isKeyResolutionFailure(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+
+  const code: unknown = (error as { code?: unknown }).code;
+  if (typeof code === "string" && KEY_RESOLUTION_CODES.has(code)) return true;
+
+  // `fetch` rejects with a TypeError whose `cause` is the underlying system
+  // error. A TypeError out of jwtVerify has no other plausible source: every
+  // token-shaped failure is a JOSEError subclass.
+  return error instanceof TypeError;
+}
+
 export type TokenVerifier = (token: string) => Promise<VerifiedToken>;
 
 export interface TokenVerifierOptions {
@@ -112,6 +173,16 @@ export function createTokenVerifier(options: TokenVerifierOptions): TokenVerifie
         requiredClaims: ["sub", "exp", "iat", "nbf"],
       }));
     } catch (error) {
+      // Classified before anything else, because the wrong answer here is the
+      // one that produces a sign-in loop rather than an error anyone can read.
+      if (isKeyResolutionFailure(error)) {
+        throw new KeyResolutionError(
+          "Could not reach the identity provider's key set",
+          "jwks_unreachable",
+          { cause: error },
+        );
+      }
+
       throw new TokenVerificationError("Session token is not valid", "signature_or_claims", {
         cause: error,
       });
@@ -124,12 +195,11 @@ export function createTokenVerifier(options: TokenVerifierOptions): TokenVerifie
 
     const claims = parsed.data;
 
-    // Clerk's default session tokens always carry `azp`. Treating its absence as
-    // a failure rather than as "nothing to check" is the stricter reading, and
-    // the right one: a missing claim should never be easier to satisfy than a
-    // wrong one. If a future JWT template drops `azp`, this fails loudly with a
-    // reason in the logs rather than quietly widening who may call this API.
-    if (claims.azp === undefined || !authorizedParties.includes(claims.azp)) {
+    // `azp` binds a token to the browser Origin that obtained it. Clerk omits
+    // it when that Origin is empty, so there is no origin to compare in that
+    // case. A present claim must still match exactly: accepting a *wrong* origin
+    // would allow a token issued for another frontend to be replayed here.
+    if (claims.azp !== undefined && !authorizedParties.includes(claims.azp)) {
       throw new TokenVerificationError(
         "Session token was not issued for this application",
         "azp_mismatch",

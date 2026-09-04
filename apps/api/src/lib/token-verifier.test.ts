@@ -1,3 +1,4 @@
+import { errors as joseErrors, type JWTVerifyGetKey } from "jose";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -7,7 +8,12 @@ import {
   TEST_ISSUER,
   testJwks,
 } from "../test/auth-fixtures.js";
-import { createTokenVerifier, TokenVerificationError } from "./token-verifier.js";
+import {
+  createTokenVerifier,
+  KeyResolutionError,
+  TokenVerificationError,
+  type TokenVerifier,
+} from "./token-verifier.js";
 
 /**
  * The security boundary of the product, tested directly.
@@ -85,10 +91,13 @@ describe("createTokenVerifier", () => {
     );
   });
 
-  it("rejects a token with no azp claim at all", async () => {
-    // The stricter reading, deliberately: a missing claim must not be easier to
-    // satisfy than a wrong one.
-    expect(await reasonFor(await mintToken({ azp: null }))).toBe("azp_mismatch");
+  it("accepts a valid token with no azp claim", async () => {
+    // Clerk omits azp when the originating request has no Origin header. There
+    // is no origin to compare in that case; issuer and signature verification
+    // still bind the token to this Clerk instance.
+    await expect(verify(await mintToken({ azp: null }))).resolves.toMatchObject({
+      clerkUserId: "user_test_default",
+    });
   });
 
   it("rejects garbage that is not a JWT", async () => {
@@ -121,5 +130,57 @@ describe("createTokenVerifier", () => {
     await expect(multi(await mintToken())).resolves.toMatchObject({
       clerkUserId: "user_test_default",
     });
+  });
+});
+
+/**
+ * "Could not check" is not "checked and failed".
+ *
+ * These four cases are the difference between a 503 that says what is wrong and
+ * a 401 that sends a signed-in student round an endless sign-in loop — which is
+ * exactly what a firewall answering EACCES on the JWKS fetch produced once, and
+ * cost an afternoon to find because every symptom pointed at the token.
+ */
+describe("createTokenVerifier — key set unreachable", () => {
+  function verifierWhoseKeysFail(error: unknown): TokenVerifier {
+    const jwks: JWTVerifyGetKey = () => Promise.reject(error);
+    return createTokenVerifier({
+      jwks,
+      issuer: TEST_ISSUER,
+      authorizedParties: [TEST_AUTHORIZED_PARTY],
+    });
+  }
+
+  it("reports a transport failure as unavailable, not as a bad token", async () => {
+    // The real shape: `fetch` rejects with a TypeError carrying the syscall
+    // error, and nothing in it mentions JOSE at all.
+    const cause = Object.assign(new Error("connect EACCES 104.18.34.146:443"), {
+      code: "EACCES",
+    });
+    const verifyBroken = verifierWhoseKeysFail(new TypeError("fetch failed", { cause }));
+
+    await expect(verifyBroken(await mintToken())).rejects.toBeInstanceOf(KeyResolutionError);
+  });
+
+  it("reports a JWKS timeout as unavailable", async () => {
+    const verifyBroken = verifierWhoseKeysFail(new joseErrors.JWKSTimeout());
+    await expect(verifyBroken(await mintToken())).rejects.toMatchObject({
+      name: "KeyResolutionError",
+      reason: "jwks_unreachable",
+    });
+  });
+
+  it("still rejects a token whose key is genuinely absent from the key set", async () => {
+    // The line that matters most: jose already refetched before raising this, so
+    // it means the signer is not published — a forgery, not an outage. Widening
+    // the unavailable branch to swallow this would turn a rejected forgery into
+    // a retry-later.
+    const verifyBroken = verifierWhoseKeysFail(new joseErrors.JWKSNoMatchingKey());
+
+    await expect(verifyBroken(await mintToken())).rejects.toBeInstanceOf(TokenVerificationError);
+  });
+
+  it("does not report an ordinary bad token as unavailable", async () => {
+    await expect(verify("not-a-token")).rejects.not.toBeInstanceOf(KeyResolutionError);
   });
 });

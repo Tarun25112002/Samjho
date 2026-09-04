@@ -8,7 +8,7 @@ import { createTokenVerifier, type TokenVerifier } from "../lib/token-verifier.j
  * The alternative — stubbing `verifyToken` to return `{ clerkUserId: "u_1" }` —
  * would test that a mock returns what it was told to. The thing worth testing is
  * the verifier itself: that it rejects an expired token, a foreign signature, a
- * wrong issuer, a missing `azp`. So the tests generate an RSA key pair, publish
+ * wrong issuer, or a mismatched `azp`. So the tests generate an RSA key pair, publish
  * the public half as a local JWKS, and sign genuine RS256 JWTs with the private
  * half. `createTokenVerifier` cannot tell the difference between this and Clerk,
  * which is exactly the property that makes these tests worth having.
