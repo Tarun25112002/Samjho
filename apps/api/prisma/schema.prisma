@@ -233,6 +233,52 @@ enum ConversationStatus {
   ARCHIVED
 }
 
+/// Where a teacher's uploaded paper came from. The three inputs need genuinely
+/// different handling on the way to the model — a PDF and a photograph go as
+/// document and image blocks, typed text goes as text — so this is read at
+/// extraction time rather than being decoration on an audit row.
+enum PaperUploadSourceKind {
+  PDF
+  IMAGE
+  TEXT
+}
+
+/// The life of one upload.
+///
+/// `EXTRACTING` is a real state rather than an implementation detail, because
+/// extraction is a multi-minute model call that outlives the HTTP request which
+/// started it. The client polls; without a stored state there is nothing to poll.
+enum PaperUploadStatus {
+  UPLOADED
+  EXTRACTING
+  READY
+  FAILED
+  IMPORTED
+}
+
+/// A teacher's verdict on one extracted question.
+///
+/// `PROPOSED` is the model's output, untouched. Nothing reaches the question
+/// bank from that state: import reads `ACCEPTED` only, so a teacher who never
+/// opens the review screen imports nothing — rather than importing everything
+/// the model guessed.
+enum ExtractedQuestionStatus {
+  PROPOSED
+  ACCEPTED
+  REJECTED
+  IMPORTED
+}
+
+/// Which bank an assignment draws its questions from.
+///
+/// `SHARED` is the editorially reviewed platform bank. `TEACHER_BANK` is the
+/// uploading teacher's own questions — theirs to use with their own class, and
+/// invisible to every other classroom and to open practice.
+enum AssignmentSourcePool {
+  SHARED
+  TEACHER_BANK
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  Identity
 // ═══════════════════════════════════════════════════════════════════════════
@@ -255,21 +301,24 @@ model User {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  studentProfile    StudentProfile?
-  practiceSessions  PracticeSession[]
-  examAttempts      ExamAttempt[]
-  questionAttempts  QuestionAttempt[]
-  bookmarks         Bookmark[]
-  mistakeRecords    MistakeRecord[]
-  topicMastery      TopicMastery[]
-  subjectProgress   SubjectProgress[]
-  aiConversations   AIConversation[]
-  aiUsage           AIUsageLedger[]
-  taughtClassrooms  Classroom[]           @relation("ClassroomTeacher")
-  classMemberships  ClassroomMembership[] @relation("ClassroomStudent")
+  studentProfile        StudentProfile?
+  teacherProfile        TeacherProfile?
+  practiceSessions      PracticeSession[]
+  examAttempts          ExamAttempt[]
+  questionAttempts      QuestionAttempt[]
+  bookmarks             Bookmark[]
+  mistakeRecords        MistakeRecord[]
+  topicMastery          TopicMastery[]
+  subjectProgress       SubjectProgress[]
+  aiConversations       AIConversation[]
+  aiUsage               AIUsageLedger[]
+  taughtClassrooms      Classroom[]            @relation("ClassroomTeacher")
+  classMemberships      ClassroomMembership[]  @relation("ClassroomStudent")
   assignmentSubmissions AssignmentSubmission[] @relation("AssignmentStudent")
-  authoredQuestions Question[]         @relation("QuestionAuthor")
-  questionRevisions QuestionRevision[]
+  authoredQuestions     Question[]             @relation("QuestionAuthor")
+  ownedQuestions        Question[]             @relation("QuestionOwnerTeacher")
+  paperUploads          QuestionPaperUpload[]  @relation("PaperUploadTeacher")
+  questionRevisions     QuestionRevision[]
 
   @@index([status])
   @@map("users")
@@ -329,6 +378,49 @@ model StudentProfile {
   @@map("student_profiles")
 }
 
+/// The teacher's side of the account.
+///
+/// A separate table rather than nullable columns on `User`, for the same reason
+/// `StudentProfile` is: the two roles have almost nothing in common. A teacher
+/// has no class level, no board sitting and no parental consent; a student has
+/// no school affiliation to state on a class code. Folding both into `User`
+/// would give every row a majority of columns that must be null and a handful
+/// of rules nothing enforces.
+///
+/// Its existence is also the answer to "has this teacher finished setting up",
+/// which is why `onboardedAt` is here and not derived from `role` alone. Role
+/// is the authorization fact; this timestamp is the product state, and the app
+/// shell needs both.
+model TeacherProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  school         String?
+  /// Free text, shown to students on the classroom card: "Physics · Class 10".
+  /// Not a foreign key to Subject — a teacher's self-description is a sentence,
+  /// and the subjects they actually teach are already implied by their classrooms.
+  subjectsTaught String?
+
+  /// Null until the teacher finishes setup. Route guards key off this exactly
+  /// as they do off the student equivalent.
+  onboardedAt DateTime?
+
+  /// Reserved for the school-verification step (docs/00 §7, the B2B path).
+  /// Present from the start because retrofitting "when were they verified" onto
+  /// accounts created before the column existed is not possible after the fact.
+  /// Nothing reads it yet, and no feature is gated on it.
+  verifiedAt DateTime?
+
+  termsAcceptedAt      DateTime?
+  termsAcceptedVersion String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teacher_profiles")
+}
+
 model TargetExam {
   id        String         @id @default(cuid())
   profileId String
@@ -370,16 +462,16 @@ model SubjectEnrolment {
 /// separate from a student's profile: joining a class does not grant a teacher
 /// access to the student's account, answers, or private practice history.
 model Classroom {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   teacherId String
-  teacher   User   @relation("ClassroomTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher   User    @relation("ClassroomTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
   subjectId String
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
 
-  name     String
+  name       String
   /// Short, human-shareable, and unique. It is an invitation identifier, not
   /// an authentication credential; joining still requires a signed-in student.
-  joinCode String @unique
+  joinCode   String  @unique
   isArchived Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -421,9 +513,13 @@ model ClassroomAssignment {
   title         String
   instructions  String?
   questionCount Int
+  /// Which bank the student's set is materialised from. Stored on the
+  /// assignment rather than resolved at start time, so re-reading an old
+  /// assignment says what it actually drew from.
+  sourcePool    AssignmentSourcePool @default(SHARED)
   dueAt         DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   submissions AssignmentSubmission[]
 
@@ -448,6 +544,143 @@ model AssignmentSubmission {
   @@unique([assignmentId, studentId])
   @@index([studentId, startedAt(sort: Desc)])
   @@map("assignment_submissions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Paper upload and AI extraction
+//
+//  A staging area between a PDF a teacher had on their desk and the question
+//  bank. It is deliberately a staging area and not a direct write: a language
+//  model reading a scanned paper gets things wrong, and the two places it gets
+//  them wrong — which chapter a question belongs to, how hard it is — are
+//  exactly the two a teacher can correct in seconds and a student would suffer
+//  silently for months.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// One paper a teacher uploaded, and the record of what the model made of it.
+model QuestionPaperUpload {
+  id        String  @id @default(cuid())
+  teacherId String
+  teacher   User    @relation("PaperUploadTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  title      String
+  sourceKind PaperUploadSourceKind
+
+  fileName String?
+  mimeType String?
+  byteSize Int?
+
+  /// The bytes, for a PDF or an image, base64-encoded exactly as they were sent
+  /// to the model.
+  ///
+  /// Kept rather than discarded after extraction, because the single most
+  /// common thing a teacher wants after a bad extraction is to run it again —
+  /// and asking them to re-upload a 6MB scan over a school connection to fix
+  /// our prompt is not a retry, it is a punishment. Nulled when the upload is
+  /// deleted; never served back to any student-facing route.
+  fileData String?
+  /// Typed or pasted text, when that is what was submitted.
+  rawText  String?
+
+  /// What the teacher told us about the paper — "the answer key is on the last
+  /// two pages". Passed to the model verbatim and kept, so a re-run after a
+  /// failed extraction still has the hint that made it work.
+  notes String?
+
+  status PaperUploadStatus @default(UPLOADED)
+  /// Operator-readable reason a FAILED upload failed. Shown to the teacher, so
+  /// it says "the model could not read page 3", never a stack trace.
+  error  String?
+
+  /// What actually ran. Model ids change; an upload extracted six months ago
+  /// should be able to say which model produced its questions.
+  model        String?
+  inputTokens  Int?
+  outputTokens Int?
+  extractionMs Int?
+
+  extractedCount Int @default(0)
+  importedCount  Int @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  items ExtractedQuestion[]
+
+  @@index([teacherId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("question_paper_uploads")
+}
+
+/// One question the model found in a paper, before a human has agreed with it.
+model ExtractedQuestion {
+  id       String              @id @default(cuid())
+  uploadId String
+  upload   QuestionPaperUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  /// Position in the paper, so the review screen reads in the order the teacher
+  /// is looking at on the page in front of them.
+  orderIndex    Int
+  /// The question number as printed — "17", "22(b)". The teacher's anchor back
+  /// to the paper, and worth more than our id in every conversation about it.
+  printedNumber String?
+
+  /// The proposal itself, in `writeQuestionInputSchema` shape minus the ids
+  /// only the server can resolve.
+  ///
+  /// Json, and this is the one place in the schema where that is the right
+  /// answer. A proposal is not yet a question: it is allowed to be wrong, to be
+  /// missing an answer key, to name a chapter that does not exist. Modelling it
+  /// as columns would mean either a second, weaker copy of the question tables
+  /// — options, answers, sub-parts, all nullable — or rejecting the model's
+  /// output at the exact moment the teacher most needs to see it and fix it.
+  /// It is parsed against the real schema at import, which is the point where
+  /// being wrong stops being allowed.
+  payload Json
+
+  // ── Denormalised for the review screen ────────────────────────────────────
+  //
+  // These four also live inside `payload`, and that duplication is deliberate:
+  // the review screen's whole job is "show me the hard ones", "show me
+  // everything the model filed under Chapter 4", and filtering on a JSON path
+  // across a few hundred rows per upload is a scan where a column is an index.
+  // The service writes both together; `payload` stays the source of truth.
+  chapterId  String?
+  chapter    Chapter?     @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  type       QuestionType
+  difficulty Difficulty
+  marks      Int
+
+  /// The model's own confidence, 0–1. Used to sort the review queue so the
+  /// questions most likely to be wrong are the ones a teacher sees first.
+  confidence Float?
+  /// What the model was unsure about, in a teacher's language: "the answer key
+  /// was not printed on this paper".
+  note       String?
+
+  status ExtractedQuestionStatus @default(PROPOSED)
+
+  /// Set once imported. Its presence is what makes a second import of the same
+  /// upload idempotent rather than duplicating the paper into the bank.
+  ///
+  /// A real relation rather than a loose id, because it is also read in the
+  /// other direction: "show me the questions that came from this paper" is a
+  /// filter a teacher uses constantly, and without the relation it is a second
+  /// query whose results are fed back as an `id IN (…)` list.
+  questionId String?   @unique
+  question   Question? @relation("QuestionFromUpload", fields: [questionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([uploadId, orderIndex])
+  @@index([uploadId, status])
+  @@index([uploadId, difficulty])
+  @@index([chapterId])
+  @@map("extracted_questions")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -490,6 +723,7 @@ model Subject {
   enrolments       SubjectEnrolment[]
   progress         SubjectProgress[]
   classrooms       Classroom[]
+  paperUploads     QuestionPaperUpload[]
 
   /// Does NOT constrain rows where `variant` is NULL — Postgres treats NULL as
   /// distinct from NULL, and NULL is the normal case here (only Maths has a
@@ -543,9 +777,11 @@ model Chapter {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  topics    Topic[]
-  questions Question[]
+  topics               Topic[]
+  questions            Question[]
   classroomAssignments ClassroomAssignment[]
+  extractedQuestions   ExtractedQuestion[]
+  aiConversations      AIConversation[]
 
   @@unique([subjectId, slug])
   @@index([subjectId, domain, orderIndex])
@@ -623,6 +859,27 @@ model Question {
   authorId String?
   author   User?   @relation("QuestionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
 
+  /// Null for the shared, editorially reviewed bank — which is every question a
+  /// student can meet in open practice.
+  ///
+  /// Set when a teacher imports their own uploaded paper. Those questions are
+  /// real questions in every other respect, but they belong to one classroom's
+  /// teacher: they are drawn only for that teacher's assignments and are
+  /// excluded from the shared pool by `STUDENT_VISIBLE_QUESTION`. The
+  /// alternative — letting one teacher's unreviewed OCR into everyone's
+  /// practice — is the exact failure the publication and licensing gates exist
+  /// to prevent, and it would arrive at the scale of a bulk import.
+  ///
+  /// `SetNull` on delete, deliberately: a deleted teacher account must not take
+  /// questions with it while attempts still reference them. Such a question
+  /// becomes shared-but-unpublished, which an editor can then decide about.
+  ownerTeacherId String?
+  ownerTeacher   User?   @relation("QuestionOwnerTeacher", fields: [ownerTeacherId], references: [id], onDelete: SetNull)
+
+  /// The extraction row this question was imported from, if any. One-to-one:
+  /// `ExtractedQuestion.questionId` is unique.
+  extractedFrom ExtractedQuestion? @relation("QuestionFromUpload")
+
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -647,6 +904,10 @@ model Question {
   @@index([subjectId, chapterId, status, marks])
   @@index([parentId])
   @@index([status, publishedAt])
+  // Every student-facing query filters `ownerTeacherId IS NULL`, and every
+  // teacher bank query filters it to one id. Leading with it keeps both on an
+  // index instead of on a scan that grows with the whole bank.
+  @@index([ownerTeacherId, subjectId, status])
   @@map("questions")
 }
 
@@ -795,7 +1056,7 @@ model PastPaper {
   subjectId String
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Restrict)
 
-  year Int
+  year        Int
   /// The sitting, as CBSE names it: "March", "February", "May", "Compartment".
   /// Not an enum — the sitting calendar has changed twice in the range this
   /// table covers, and it will change again.
@@ -815,7 +1076,7 @@ model PastPaper {
   /// False for a sitting that never happened. See the note above.
   wasHeld Boolean @default(true)
 
-  sourceUrl String?
+  sourceUrl     String?
   /// The licensing decision for the paper as a whole. Per-question status still
   /// governs what is served — this is the record of the decision that was made
   /// once, for the paper, rather than re-litigated per question.
@@ -1066,7 +1327,7 @@ model PracticeSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  attempts QuestionAttempt[]
+  attempts             QuestionAttempt[]
   assignmentSubmission AssignmentSubmission?
 
   @@index([userId, status])
@@ -1315,6 +1576,12 @@ model AIConversation {
   question          Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
   questionAttemptId String?
 
+  /// What a CHAPTER conversation is about, when there is no question to anchor
+  /// it. Grounding is re-read from here on every turn rather than snapshotted,
+  /// so a renamed topic corrects itself mid-conversation.
+  chapterId String?
+  chapter   Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
   context      AIContext
   title        String
   messageCount Int                @default(0)
@@ -1327,6 +1594,7 @@ model AIConversation {
 
   @@index([userId, updatedAt(sort: Desc)])
   @@index([questionId])
+  @@index([chapterId])
   @@map("ai_conversations")
 }
 

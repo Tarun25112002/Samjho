@@ -179,6 +179,17 @@ export interface ResolvedQuestionWrite {
   expectedTimeSeconds: number;
   subPartTimes: number[];
   contentHash: string;
+  /**
+   * Null for the shared bank — every question written through the admin form or
+   * bulk import. Set only by the teacher upload importer.
+   *
+   * It has to travel down to sub-parts as well as the container. A case study
+   * whose parent is teacher-owned and whose parts are not would be a question
+   * that `STUDENT_VISIBLE_QUESTION` hides while its parts stay shared — which
+   * is not a subtle inconsistency but a leak of the exact kind the ownership
+   * column exists to prevent.
+   */
+  ownerTeacherId?: string | null;
 }
 
 type Tx = Prisma.TransactionClient;
@@ -276,6 +287,7 @@ export const questionAdminRepository = {
         isContainer,
         contentHash: write.contentHash,
         authorId: write.authorId,
+        ownerTeacherId: write.ownerTeacherId ?? null,
       },
       select: { id: true },
     });
@@ -289,6 +301,7 @@ export const questionAdminRepository = {
         subjectId: write.subjectId,
         chapterId,
         authorId: write.authorId,
+        ownerTeacherId: write.ownerTeacherId ?? null,
         index,
         part,
         expectedTimeSeconds: write.subPartTimes[index] ?? part.marks * 60,
@@ -340,6 +353,15 @@ export const questionAdminRepository = {
     await writeChildren(tx, id, input, input.topicIds);
     await writeSource(tx, id, input);
 
+    // Read from the row rather than from `write`: ownership is set once at
+    // creation and an edit must not be able to move a question between banks.
+    // A sub-part added by this edit inherits whatever its container already is,
+    // so a case study cannot end up half-owned.
+    const owner = await tx.question.findUnique({
+      where: { id },
+      select: { ownerTeacherId: true },
+    });
+
     const existing = await tx.question.findMany({
       where: { parentId: id },
       select: { id: true, subPartIndex: true },
@@ -372,6 +394,7 @@ export const questionAdminRepository = {
           subjectId: write.subjectId,
           chapterId,
           authorId: write.authorId,
+          ownerTeacherId: owner?.ownerTeacherId ?? null,
           index,
           part,
           expectedTimeSeconds: write.subPartTimes[index] ?? part.marks * 60,
@@ -602,6 +625,8 @@ async function createSubPart(
     subjectId: string;
     chapterId: string;
     authorId: string;
+    /** Always the container's. See `ResolvedQuestionWrite.ownerTeacherId`. */
+    ownerTeacherId: string | null;
     index: number;
     part: SubPartInput;
     expectedTimeSeconds: number;
@@ -629,6 +654,7 @@ async function createSubPart(
       status: "DRAFT",
       isContainer: false,
       authorId: ctx.authorId,
+      ownerTeacherId: ctx.ownerTeacherId,
     },
     select: { id: true },
   });

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 
-import { HomeIcon, PenIcon, UserIcon } from "@/components/icons";
-import { ClassroomIcon, TeachingIcon } from "@/components/icons";
+import { HomeIcon, PenIcon, ProgressIcon, UserIcon } from "@/components/icons";
+import { ClassroomIcon, PaperIcon, StackIcon, TeachingIcon } from "@/components/icons";
 
 /**
  * The signed-in navigation, in its two forms.
@@ -14,13 +14,12 @@ import { ClassroomIcon, TeachingIcon } from "@/components/icons";
  *
  * docs/07 Q10 puts this audience on phones, and a phone-first study app with its
  * navigation in a menu behind a hamburger is one where a student cannot get from
- * a chapter back to practice without two taps and a decision. Three destinations
- * across the bottom of the screen, reachable by thumb, is what every app these
- * students already use looks like — and it is the right shape here for the
- * boring reason that there are exactly three places to go.
+ * a chapter back to practice without two taps and a decision. Five destinations
+ * across the bottom of the screen remain reachable by thumb, while keeping the
+ * live study spaces — practice and progress — one tap away.
  *
  * The same three items become a rail on a wide screen. One source of truth, two
- * layouts, so a fourth destination cannot appear in one and not the other.
+ * layouts, so a destination cannot appear in one and not the other.
  *
  * ## The active rule
  *
@@ -39,12 +38,27 @@ interface Destination {
 const DESTINATIONS: Destination[] = [
   { href: "/home", label: "Home", icon: HomeIcon, exact: true },
   { href: "/practice", label: "Practice", icon: PenIcon },
+  { href: "/progress", label: "Progress", icon: ProgressIcon },
   { href: "/classroom", label: "Class", icon: ClassroomIcon },
   { href: "/profile", label: "You", icon: UserIcon },
 ];
 
+/**
+ * A teacher's rail.
+ *
+ * Three, not the teacher workspace's four: the workspace's own tabs live inside
+ * `/teacher` (see `teacher-shell.tsx`), and duplicating them here would put the
+ * same four links in two places a thumb-width apart. What is here is the top
+ * level — the overview, the papers pipeline, and the bank those papers fill —
+ * because those are the three a teacher moves between during a free period.
+ *
+ * `exact` on the first, because `/teacher` is a prefix of the other two and
+ * would otherwise light up on every screen in the section.
+ */
 const TEACHER_DESTINATIONS: Destination[] = [
-  { href: "/teacher", label: "Teaching", icon: TeachingIcon },
+  { href: "/teacher", label: "Teaching", icon: TeachingIcon, exact: true },
+  { href: "/teacher/uploads", label: "Papers", icon: PaperIcon },
+  { href: "/teacher/questions", label: "Bank", icon: StackIcon },
 ];
 
 function destinationsFor(role: "STUDENT" | "TEACHER" | "CONTENT_EDITOR" | "ADMIN") {

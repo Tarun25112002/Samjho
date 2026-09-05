@@ -41,11 +41,24 @@ export const joinClassroomSchema = z.object({
 
 export type JoinClassroomInput = z.infer<typeof joinClassroomSchema>;
 
+/**
+ * Which bank an assignment draws from.
+ *
+ * `SHARED` is the editorially reviewed platform bank — the default, and what
+ * every assignment written before teacher uploads existed used. `TEACHER_BANK`
+ * is the questions this teacher imported from their own papers: theirs to set
+ * for their own class, and invisible to open practice and to every other
+ * classroom.
+ */
+export const assignmentSourcePoolSchema = z.enum(["SHARED", "TEACHER_BANK"]);
+export type AssignmentSourcePool = z.infer<typeof assignmentSourcePoolSchema>;
+
 export const createClassroomAssignmentSchema = z.object({
   title: assignmentTitleSchema,
   instructions: z.string().trim().max(600).optional(),
   chapterId: z.string().min(1).max(60).nullable().optional(),
   questionCount: z.int().min(3).max(30),
+  sourcePool: assignmentSourcePoolSchema.default("SHARED"),
   dueAt: z.iso.datetime().nullable().optional(),
 });
 
@@ -98,6 +111,7 @@ export const teacherAssignmentSchema = z.object({
   title: z.string().min(1),
   chapterName: z.string().nullable(),
   questionCount: z.int().positive(),
+  sourcePool: assignmentSourcePoolSchema,
   dueAt: z.iso.datetime().nullable(),
   startedCount: z.int().nonnegative(),
   completedCount: z.int().nonnegative(),

@@ -18,25 +18,37 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-line border-b">
+      <header className="border-line bg-card/95 sticky top-0 z-40 border-b backdrop-blur-md">
         <nav
           aria-label="Admin"
-          className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4 text-sm"
+          className="mx-auto flex min-h-16 w-full max-w-[90rem] items-center gap-1 px-5 text-sm sm:px-8 xl:px-10"
         >
-          <Link href="/admin" className="text-text font-semibold tracking-tight">
-            Samjho <span className="text-text-soft font-normal">content</span>
+          <Link href="/admin" className="text-text mr-3 shrink-0 font-semibold tracking-[-0.02em]">
+            Samjho <span className="text-text-soft font-normal">Content</span>
           </Link>
 
-          <Link href="/admin" className="text-text-soft hover:text-text">
+          <Link
+            href="/admin"
+            className="text-text-soft rounded-control px-2.5 py-2 font-medium hover:bg-raised hover:text-text"
+          >
             Dashboard
           </Link>
-          <Link href="/admin/questions" className="text-text-soft hover:text-text">
+          <Link
+            href="/admin/questions"
+            className="text-text-soft rounded-control px-2.5 py-2 font-medium hover:bg-raised hover:text-text"
+          >
             Questions
           </Link>
-          <Link href="/admin/past-papers" className="text-text-soft hover:text-text">
+          <Link
+            href="/admin/past-papers"
+            className="text-text-soft rounded-control px-2.5 py-2 font-medium hover:bg-raised hover:text-text"
+          >
             Past papers
           </Link>
-          <Link href="/home" className="text-text-soft hover:text-text">
+          <Link
+            href="/home"
+            className="text-text-soft ml-1 hidden rounded-control px-2.5 py-2 font-medium hover:bg-raised hover:text-text sm:inline-flex"
+          >
             Student view
           </Link>
 

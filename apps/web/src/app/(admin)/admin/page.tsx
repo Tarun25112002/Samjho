@@ -20,32 +20,69 @@ export default async function AdminDashboardPage() {
   const stats = await loadContentStats();
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
-      <header className="space-y-1">
-        <h1 className="text-text text-2xl font-semibold tracking-tight">Content</h1>
-        <p className="text-text-soft text-sm">
-          {stats.editedThisWeek} question{stats.editedThisWeek === 1 ? "" : "s"} touched in the last
-          seven days.
-        </p>
+    <main className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
+      <header className="border-line bg-card rounded-panel flex flex-wrap items-end justify-between gap-5 border p-6 sm:p-8">
+        <div>
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Content operations
+          </p>
+          <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+            Content dashboard
+          </h1>
+          <p className="text-text-soft mt-3 max-w-2xl text-sm leading-relaxed">
+            See what is ready to serve, what needs review, and where the bank still has gaps.
+          </p>
+        </div>
+        <div className="border-brand-200 bg-brand-50 rounded-control min-w-40 px-5 py-4 sm:text-right">
+          <p className="text-text text-3xl font-semibold tracking-[-0.04em] tabular-nums">
+            {stats.editedThisWeek}
+          </p>
+          <p className="text-brand-700 text-xs font-bold tracking-[0.08em] uppercase">
+            updated this week
+          </p>
+        </div>
       </header>
 
       <section aria-labelledby="subjects-heading" className="space-y-4">
-        <h2 id="subjects-heading" className="text-text text-sm font-semibold">
-          By subject
-        </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Question coverage
+            </p>
+            <h2
+              id="subjects-heading"
+              className="text-text mt-1 text-xl font-semibold tracking-[-0.025em]"
+            >
+              By subject
+            </h2>
+          </div>
+          <p className="text-text-faint text-sm">
+            Open a subject to work from its complete question list.
+          </p>
+        </div>
 
         {stats.subjects.length === 0 ? (
-          <p className="text-text-soft text-sm">No active subjects yet.</p>
+          <div className="border-line bg-card rounded-panel border p-6 text-sm text-text-soft">
+            No active subjects yet.
+          </div>
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2">
+          <ul className="grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {stats.subjects.map((subject) => (
-              <li key={subject.subjectId} className="border-line space-y-3 rounded-xl border p-4">
-                <div>
-                  <h3 className="text-text font-medium">{subject.name}</h3>
-                  <p className="text-text-soft text-xs">Class {subject.classLevel}</p>
+              <li
+                key={subject.subjectId}
+                className="border-line bg-card rounded-panel flex min-h-72 flex-col border p-5 transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift sm:p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-text font-semibold tracking-[-0.02em]">{subject.name}</h3>
+                    <p className="text-text-faint mt-1 text-sm">Class {subject.classLevel}</p>
+                  </div>
+                  <span className="bg-raised text-text-soft rounded-pill px-2.5 py-1 text-xs font-semibold tabular-nums">
+                    {subject.total} total
+                  </span>
                 </div>
 
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <dl className="mt-5 grid grid-cols-2 gap-2">
                   <Stat
                     label="Published"
                     value={subject.byStatus.PUBLISHED ?? 0}
@@ -69,23 +106,22 @@ export default async function AdminDashboardPage() {
                 </dl>
 
                 {subject.chaptersWithNoQuestions > 0 ? (
-                  <p className="text-text-soft text-xs">
+                  <p className="text-text-soft mt-4 text-sm leading-relaxed">
                     {/*
                       The number that a total hides. 400 questions spread evenly is
                       a usable product; the same 400 in six chapters is not, because
                       the student practising next week's chapter finds it empty.
                     */}
                     {subject.chaptersWithNoQuestions} chapter
-                    {subject.chaptersWithNoQuestions === 1 ? " has" : "s have"} nothing in{" "}
-                    {subject.chaptersWithNoQuestions === 1 ? "it" : "them"} yet.
+                    {subject.chaptersWithNoQuestions === 1 ? " has" : "s have"} no questions yet.
                   </p>
                 ) : null}
 
                 <Link
                   href={`/admin/questions?subjectId=${subject.subjectId}`}
-                  className="text-text-soft hover:text-text inline-block text-sm"
+                  className="text-brand-700 mt-auto inline-flex min-h-11 items-center pt-4 text-sm font-semibold hover:underline"
                 >
-                  Open {subject.total} question{subject.total === 1 ? "" : "s"} →
+                  Open question bank →
                 </Link>
               </li>
             ))}
@@ -93,15 +129,32 @@ export default async function AdminDashboardPage() {
         )}
       </section>
 
-      <section aria-labelledby="licence-heading" className="space-y-3">
-        <h2 id="licence-heading" className="text-text text-sm font-semibold">
-          Licensing across the whole bank
-        </h2>
-        <dl className="flex flex-wrap gap-6 text-sm">
+      <section
+        aria-labelledby="licence-heading"
+        className="border-line bg-card rounded-panel border p-5 sm:p-6"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Safety check
+            </p>
+            <h2 id="licence-heading" className="text-text mt-1 font-semibold tracking-[-0.02em]">
+              Licensing across the bank
+            </h2>
+          </div>
+          <p className="text-text-faint text-xs">
+            Publication stays blocked until the source is reviewed.
+          </p>
+        </div>
+        <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(stats.byLicenceStatus).map(([status, count]) => (
-            <div key={status}>
-              <dt className="text-text-soft text-xs">{status.replace(/_/g, " ").toLowerCase()}</dt>
-              <dd className="text-text font-medium">{count}</dd>
+            <div key={status} className="bg-raised rounded-control px-4 py-3">
+              <dt className="text-text-soft text-xs font-medium capitalize">
+                {status.replace(/_/g, " ").toLowerCase()}
+              </dt>
+              <dd className="text-text mt-1 text-xl font-semibold tracking-[-0.025em] tabular-nums">
+                {count}
+              </dd>
             </div>
           ))}
         </dl>
@@ -112,13 +165,13 @@ export default async function AdminDashboardPage() {
 
 function Stat({ label, value, href }: { label: string; value: number; href: string }) {
   return (
-    <>
-      <dt className="text-text-soft">{label}</dt>
-      <dd className="text-right font-medium">
-        <Link href={href} className="text-text hover:underline">
+    <div className="bg-raised rounded-control px-3 py-2.5">
+      <dt className="text-text-soft text-xs font-medium">{label}</dt>
+      <dd className="text-text mt-1 text-lg font-semibold tracking-[-0.02em] tabular-nums">
+        <Link href={href} className="hover:text-brand-700 hover:underline">
           {value}
         </Link>
       </dd>
-    </>
+    </div>
   );
 }

@@ -131,6 +131,21 @@ export function TeachingIcon({ className }: IconProps) {
   );
 }
 
+/** Progress. A rising line with three deliberate points, not a generic chart. */
+export function ProgressIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M4.5 19.5V5.5M4.5 19.5h15" />
+      <path d="m7.5 15 4-4 3 2.5 4-5" />
+      <circle cx="7.5" cy="15" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="11.5" cy="11" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="14.5" cy="13.5" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="18.5" cy="8.5" r="0.8" fill="currentColor" stroke="none" />
+    </>,
+    className,
+  );
+}
+
 /** A streak. Deliberately a small flame — the number does the talking. */
 export function FlameIcon({ className }: IconProps) {
   return svg(
@@ -201,5 +216,22 @@ export function SlidersIcon({ className }: IconProps) {
       <circle cx="10" cy="16" r="2" />
     </>,
     className,
+  );
+}
+
+/**
+ * The tutor. A four-pointed spark — deliberately not a robot or a speech
+ * bubble: one implies a machine that knows, the other a chat, and the thing
+ * being offered is neither. A spark is "a bit of help", which is the promise
+ * the panel can actually keep.
+ */
+export function SparkIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M12 3.5 13.7 9 19 10.7 13.7 12.4 12 17.9 10.3 12.4 5 10.7 10.3 9Z" />
+      <path d="M18 16.5 18.7 18.6 20.8 19.3 18.7 20 18 22.1 17.3 20 15.2 19.3 17.3 18.6Z" />
+    </>,
+    className,
+    1.7,
   );
 }

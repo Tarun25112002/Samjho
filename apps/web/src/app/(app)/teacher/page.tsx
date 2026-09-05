@@ -1,22 +1,25 @@
-import { subjectListResponseSchema } from "@samjho/contracts";
 import type { Metadata } from "next";
 
-import { TeacherWorkspace } from "@/features/classrooms/teacher-workspace";
-import { apiFetchAuthed } from "@/lib/api-client";
-import { loadTeacherClassrooms } from "@/lib/classrooms";
+import { TeacherDashboardView } from "@/features/teacher/dashboard";
+import { TeacherShell } from "@/features/teacher/teacher-shell";
+import { loadTeacherDashboard } from "@/lib/teacher";
 import { requireTeacher } from "@/lib/me";
 
 export const metadata: Metadata = { title: "Teaching" };
 export const dynamic = "force-dynamic";
 
-export default async function TeacherPage() {
-  await requireTeacher();
-  const [classrooms, subjects] = await Promise.all([
-    loadTeacherClassrooms(),
-    apiFetchAuthed("/api/v1/catalog/subjects?board=CBSE&classLevel=10", subjectListResponseSchema, {
-      cache: "no-store",
-    }),
-  ]);
+export default async function TeacherOverviewPage() {
+  const me = await requireTeacher();
+  const dashboard = await loadTeacherDashboard();
 
-  return <TeacherWorkspace classrooms={classrooms} subjects={subjects.subjects} />;
+  const firstName = me.user.name?.split(" ")[0];
+
+  return (
+    <TeacherShell
+      title={firstName ? `Where things stand, ${firstName}.` : "Where things stand."}
+      blurb="What needs you next, and nothing that does not. Student answers stay with the student."
+    >
+      <TeacherDashboardView data={dashboard} />
+    </TeacherShell>
+  );
 }

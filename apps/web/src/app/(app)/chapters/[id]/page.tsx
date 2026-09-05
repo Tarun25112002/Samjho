@@ -48,8 +48,8 @@ export default async function ChapterPage({ params }: PageProps) {
   const typesPresent = chapter.counts.byType.filter((row) => row.count > 0);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
-      <header>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
+      <header className="border-line border-b pb-6">
         <Link
           href={`/subjects/${chapter.subject.slug}`}
           className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
@@ -58,89 +58,141 @@ export default async function ChapterPage({ params }: PageProps) {
           {chapter.subject.name}
         </Link>
 
-        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
-          {chapter.name}
-        </h1>
-
-        <p className="text-text-soft mt-2 text-sm">
-          {chapter.domain ? `${chapter.domain} · ` : ""}
-          {chapter.counts.total} questions
+        <p className="text-brand-700 mt-4 text-xs font-bold tracking-[0.14em] uppercase">
+          {chapter.domain ?? "Chapter guide"}
         </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <h1 className="text-text text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
+              {chapter.name}
+            </h1>
+            <p className="text-text-soft mt-2 text-sm">
+              {chapter.counts.total} {chapter.counts.total === 1 ? "question" : "questions"} ready
+              to practise
+            </p>
+          </div>
 
-        {/*
-          A plain link, because `/practice/new` is deep-linkable — the filters
-          travel in the query string and the student can adjust them before
-          starting.
-        */}
-        {chapter.counts.total > 0 ? (
-          <ButtonLink
-            href={practiceHref({ unseenOnly: false, chapterId: chapter.id })}
-            className="mt-5"
-          >
-            Practise this chapter
-          </ButtonLink>
-        ) : null}
+          {/*
+            A plain link, because `/practice/new` is deep-linkable — the filters
+            travel in the query string and the student can adjust them before
+            starting.
+          */}
+          {chapter.counts.total > 0 ? (
+            <ButtonLink href={practiceHref({ unseenOnly: false, chapterId: chapter.id })}>
+              Practise this chapter
+            </ButtonLink>
+          ) : null}
+        </div>
       </header>
 
-      <section aria-labelledby="topics-heading" className="flex flex-col gap-3">
-        <h2 id="topics-heading" className="text-text text-lg font-semibold">
-          Topics
-        </h2>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)]">
+        <section
+          aria-labelledby="topics-heading"
+          className="rounded-panel border-line bg-card border p-5 sm:p-6"
+        >
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Chapter content
+          </p>
+          <h2
+            id="topics-heading"
+            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
+          >
+            Topics to work through
+          </h2>
 
-        <ul className="flex flex-wrap gap-2">
-          {chapter.topics.map((topic) => (
-            <li
-              key={topic.id}
-              className="border-line bg-card rounded-pill flex items-center gap-2 border px-3.5 py-1.5 text-sm"
-            >
-              <span className="text-text">{topic.name}</span>
-              <span className="text-text-faint tabular-nums">{topic.questionCount}</span>
-            </li>
-          ))}
-        </ul>
+          {chapter.topics.length > 0 ? (
+            <ul className="mt-5 flex flex-wrap gap-2">
+              {chapter.topics.map((topic) => (
+                <li
+                  key={topic.id}
+                  className="border-line bg-raised/60 rounded-pill flex min-h-9 items-center gap-2 border px-3.5 py-1.5 text-sm"
+                >
+                  <span className="text-text">{topic.name}</span>
+                  <span className="text-text-faint tabular-nums">{topic.questionCount}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-text-soft mt-5 text-sm">
+              Topic labels are not available for this chapter yet.
+            </p>
+          )}
 
-        {/*
-          Topic counts sum to more than the chapter total, because a question
-          tagged with three topics counts in all three. Said out loud, because
-          otherwise the numbers look like a bug.
-        */}
-        <p className="text-text-faint text-xs">
-          A question can belong to more than one topic, so these add up to more than the chapter
-          total.
-        </p>
-      </section>
+          {/*
+            Topic counts sum to more than the chapter total, because a question
+            tagged with three topics counts in all three. Said out loud, because
+            otherwise the numbers look like a bug.
+          */}
+          {chapter.topics.length > 0 ? (
+            <p className="text-text-faint mt-4 text-xs leading-relaxed">
+              A question can belong to more than one topic, so these counts may add up to more than
+              the chapter total.
+            </p>
+          ) : null}
+        </section>
 
-      <section aria-labelledby="breakdown-heading" className="flex flex-col gap-3">
-        <h2 id="breakdown-heading" className="text-text text-lg font-semibold">
-          What&rsquo;s in this chapter
-        </h2>
+        <section
+          aria-labelledby="breakdown-heading"
+          className="rounded-panel border-line bg-card border p-5 sm:p-6"
+        >
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Question mix
+          </p>
+          <h2
+            id="breakdown-heading"
+            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
+          >
+            At a glance
+          </h2>
 
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {typesPresent.map((row) => (
-            <div key={row.type} className="border-line bg-card rounded-control border px-4 py-3">
-              <dd className="text-text text-xl font-semibold tabular-nums">{row.count}</dd>
-              <dt className="text-text-soft mt-0.5 text-xs">{QUESTION_TYPE_LABELS[row.type]}</dt>
-            </div>
-          ))}
-        </dl>
+          {typesPresent.length > 0 ? (
+            <dl className="mt-5 grid grid-cols-2 gap-3">
+              {typesPresent.map((row) => (
+                <div key={row.type} className="bg-raised rounded-control p-3.5">
+                  <dd className="text-text text-xl font-semibold tabular-nums">{row.count}</dd>
+                  <dt className="text-text-soft mt-0.5 text-xs">
+                    {QUESTION_TYPE_LABELS[row.type]}
+                  </dt>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-text-soft mt-5 text-sm">
+              Question types will appear as the chapter is populated.
+            </p>
+          )}
 
-        <ul className="flex flex-wrap gap-2">
-          {chapter.counts.byDifficulty.map((row) => (
-            <li
-              key={row.difficulty}
-              className="bg-raised text-text-soft rounded-pill px-3 py-1 text-xs font-medium"
-            >
-              {row.difficulty[0]}
-              {row.difficulty.slice(1).toLowerCase()}: {row.count}
-            </li>
-          ))}
-        </ul>
-      </section>
+          {chapter.counts.byDifficulty.length > 0 ? (
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {chapter.counts.byDifficulty.map((row) => (
+                <li
+                  key={row.difficulty}
+                  className="bg-raised text-text-soft rounded-pill px-3 py-1.5 text-xs font-medium"
+                >
+                  {row.difficulty[0]}
+                  {row.difficulty.slice(1).toLowerCase()}: {row.count}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      </div>
 
       <section aria-labelledby="questions-heading" className="flex flex-col gap-4">
-        <h2 id="questions-heading" className="text-text text-lg font-semibold">
-          Questions
-        </h2>
+        <div>
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Question preview
+          </p>
+          <h2
+            id="questions-heading"
+            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
+          >
+            Explore this chapter
+          </h2>
+          <p className="text-text-soft mt-2 text-sm leading-relaxed">
+            Preview the first few questions here, then start a set when you are ready to answer.
+          </p>
+        </div>
 
         {/*
           The data is already resolved by the time this renders, so only the

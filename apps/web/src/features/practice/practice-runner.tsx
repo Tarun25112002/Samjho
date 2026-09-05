@@ -14,6 +14,7 @@ import Link from "next/link";
 import { BookmarkIcon, ChevronLeft, ChevronRight } from "@/components/icons";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { formatMarksValue, markingFrom } from "@/lib/practice-format";
+import { TutorPanel } from "@/features/ai/tutor-panel";
 import { FeedbackPanel } from "./feedback-panel";
 import { usePracticeRunner } from "./use-practice-runner";
 
@@ -118,6 +119,25 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
             }
           />
         ) : null}
+
+        {/*
+          Below the feedback, not above it. Before answering this is the hint
+          ladder; after answering it is "ask about this" — and in that second
+          case the student must meet the official solution first. A tutor panel
+          sitting above the marking scheme would be the product answering a
+          question the student has not finished asking.
+
+          Not keyed on the question: the hook resets its own conversation when
+          `questionId` changes, which keeps the panel's open/closed state across
+          navigation. A student working through a set with the tutor open should
+          not have to re-open it ten times.
+        */}
+        <TutorPanel
+          questionId={item.question.id}
+          answered={answered}
+          answeredWrong={item.attempts.some((attempt) => attempt.isCorrect === false)}
+          attemptId={item.attempts[0]?.id}
+        />
       </main>
 
       <div className="border-line bg-card/95 sticky bottom-0 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-md">

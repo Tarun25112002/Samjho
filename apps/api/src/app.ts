@@ -11,6 +11,7 @@ import { logger } from "./lib/logger.js";
 import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
+import { buildAIRouter } from "./modules/ai/ai.routes.js";
 import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
@@ -21,11 +22,13 @@ import { buildPastPaperRouter } from "./modules/exams/past-paper.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { buildBookmarkRouter } from "./modules/practice/bookmark.routes.js";
 import { buildPracticeRouter } from "./modules/practice/practice.routes.js";
+import { buildProgressRouter } from "./modules/progress/progress.routes.js";
 import { buildQuestionRouter } from "./modules/questions/question.routes.js";
 import { buildQuestionAdminRouter } from "./modules/questions/question.admin.routes.js";
 import { buildAdminDashboardRouter } from "./modules/questions/dashboard.routes.js";
 import { buildClerkWebhookRouter } from "./modules/webhooks/clerk.routes.js";
 import { buildClassroomRouter } from "./modules/classrooms/classroom.routes.js";
+import { buildTeacherRouter } from "./modules/teacher/teacher.routes.js";
 
 export const API_PREFIX = "/api/v1";
 
@@ -138,7 +141,14 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/questions", buildQuestionRouter(verifyToken));
   router.use("/practice-sessions", buildPracticeRouter(verifyToken));
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
+  router.use("/progress", buildProgressRouter(verifyToken));
   router.use("/classrooms", buildClassroomRouter(verifyToken));
+  router.use("/ai", buildAIRouter(verifyToken));
+
+  // Its own prefix rather than extra verbs on `/admin/questions`, so a teacher
+  // token never reaches the shared bank's routes. See the router for why the
+  // two blast radii want two surfaces.
+  router.use("/teacher", buildTeacherRouter(verifyToken));
   router.use("/exam-papers", buildExamPaperRouter(verifyToken));
   router.use("/past-papers", buildPastPaperRouter(verifyToken));
 

@@ -76,7 +76,14 @@ export async function sendJson<T extends z.ZodType>(
   return { ok: true, data: parsed.data };
 }
 
-function toFailure(payload: unknown, status: number): ApiFailure {
+/**
+ * Turn an error envelope into something a component can render.
+ *
+ * Exported because the streaming tutor client parses the same envelope: a
+ * failure before the first frame is an ordinary JSON error response, and it
+ * should reach the student through the same shape as every other failure.
+ */
+export function toFailure(payload: unknown, status: number): ApiFailure {
   const parsed = errorResponseSchema.safeParse(payload);
 
   if (!parsed.success) {

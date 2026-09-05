@@ -1,6 +1,10 @@
 import {
+  aiActionSchema,
+  aiContextSchema,
+  aiRoleSchema,
   bloomLevelSchema,
   boardSchema,
+  conversationStatusSchema,
   difficultySchema,
   evaluationModeSchema,
   examPhaseSchema,
@@ -11,8 +15,12 @@ import {
   roleSchema,
   sessionStatusSchema,
   userStatusSchema,
+  type AIAction,
+  type AIContext,
+  type AIRole,
   type BloomLevel,
   type Board,
+  type ConversationStatus,
   type Difficulty,
   type EvaluationMode,
   type ExamPhase,
@@ -27,8 +35,12 @@ import {
 import { describe, expect, it } from "vitest";
 
 import {
+  AIAction as PrismaAIAction,
+  AIContext as PrismaAIContext,
+  AIRole as PrismaAIRole,
   BloomLevel as PrismaBloomLevel,
   Board as PrismaBoard,
+  ConversationStatus as PrismaConversationStatus,
   Difficulty as PrismaDifficulty,
   EvaluationMode as PrismaEvaluationMode,
   ExamPhase as PrismaExamPhase,
@@ -78,6 +90,10 @@ describe("Prisma ↔ contracts enum parity", () => {
     ["SessionStatus", PrismaSessionStatus, sessionStatusSchema.options],
     ["EvaluationMode", PrismaEvaluationMode, evaluationModeSchema.options],
     ["MistakeReason", PrismaMistakeReason, mistakeReasonSchema.options],
+    ["AIContext", PrismaAIContext, aiContextSchema.options],
+    ["AIRole", PrismaAIRole, aiRoleSchema.options],
+    ["AIAction", PrismaAIAction, aiActionSchema.options],
+    ["ConversationStatus", PrismaConversationStatus, conversationStatusSchema.options],
   ])(
     "%s matches",
     (_name, prismaEnum: Record<string, string>, contractOptions: readonly string[]) => {
@@ -102,6 +118,10 @@ describe("Prisma ↔ contracts enum parity", () => {
     const session: SessionStatus = PrismaSessionStatus.COMPLETED;
     const evaluation: EvaluationMode = PrismaEvaluationMode.PENDING;
     const reason: MistakeReason = PrismaMistakeReason.CALCULATION_ERROR;
+    const aiContext: AIContext = PrismaAIContext.REVIEW;
+    const aiRole: AIRole = PrismaAIRole.ASSISTANT;
+    const aiAction: AIAction = PrismaAIAction.STEP_BY_STEP;
+    const conversation: ConversationStatus = PrismaConversationStatus.ARCHIVED;
 
     expect([
       type,
@@ -116,6 +136,10 @@ describe("Prisma ↔ contracts enum parity", () => {
       session,
       evaluation,
       reason,
+      aiContext,
+      aiRole,
+      aiAction,
+      conversation,
     ]).toEqual([
       "CASE_BASED",
       "HARD",
@@ -129,6 +153,10 @@ describe("Prisma ↔ contracts enum parity", () => {
       "COMPLETED",
       "PENDING",
       "CALCULATION_ERROR",
+      "REVIEW",
+      "ASSISTANT",
+      "STEP_BY_STEP",
+      "ARCHIVED",
     ]);
   });
 });

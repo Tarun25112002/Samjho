@@ -6,6 +6,9 @@ import {
   type Role,
   type SessionUser,
   type StudentProfile,
+  type TeacherOnboardingInput,
+  type TeacherProfile,
+  type TeacherProfileUpdateInput,
   type UserStatus,
 } from "@samjho/contracts";
 
@@ -114,6 +117,82 @@ export const authService = {
     return authService.getMe(user.id);
   },
 
+  /**
+   * Become a teacher.
+   *
+   * This is the one endpoint in the product that writes `User.role`, and it is
+   * worth being explicit about why that is defensible when the column's own
+   * comment insists role is *our* authorization decision.
+   *
+   * It still is. The request body cannot name a role — it carries a school and
+   * a sentence about what they teach. The conclusion "therefore TEACHER" is
+   * drawn here, from rules the client cannot influence:
+   *
+   *  1. **Only from a fresh account.** A student who has onboarded or practised
+   *     is refused. Their history is real, and the teacher surfaces render none
+   *     of it — converting would not delete a term's work but would hide it
+   *     behind screens that never show it.
+   *  2. **One direction only.** There is no endpoint back. An account that has
+   *     been a teacher stays one until an admin says otherwise, so this cannot
+   *     be used to toggle between two views of the same data.
+   *  3. **Never for an admin or content editor.** Those roles are granted, not
+   *     claimed, and quietly demoting one to TEACHER would be a privilege
+   *     *loss* delivered by a form the holder thought was a profile edit.
+   *
+   * What being a teacher unlocks is bounded accordingly: their own classrooms,
+   * their own uploads, and answer keys for the subjects they teach. Not another
+   * student's answers, not another teacher's classes, not the shared bank's
+   * editing tools. `verifiedAt` on the profile is where school verification
+   * lands when the B2B path opens (docs/00 §7); nothing is gated on it yet.
+   */
+  async completeTeacherOnboarding(
+    user: AuthenticatedUser,
+    input: TeacherOnboardingInput,
+  ): Promise<MeResponse> {
+    if (user.role === "ADMIN" || user.role === "CONTENT_EDITOR") {
+      throw new ForbiddenError(
+        "Staff accounts cannot be converted to teacher accounts. Ask an administrator.",
+      );
+    }
+
+    if (user.role === "STUDENT") {
+      const blockers = await authRepository.findConversionBlockers(user.id);
+
+      if (blockers.onboardedStudent || blockers.practiceSessions > 0) {
+        throw new ConflictError(
+          "This account is already set up as a student. Sign up with a separate email to teach — " +
+            "your practice history stays where it is.",
+        );
+      }
+    }
+
+    await authRepository.completeTeacherOnboarding({
+      userId: user.id,
+      school: input.school ?? null,
+      subjectsTaught: input.subjectsTaught ?? null,
+      termsVersion: CURRENT_TERMS_VERSION,
+    });
+
+    return authService.getMe(user.id);
+  },
+
+  async updateTeacherProfile(
+    user: AuthenticatedUser,
+    input: TeacherProfileUpdateInput,
+  ): Promise<MeResponse> {
+    if (user.role !== "TEACHER") {
+      throw new ForbiddenError("Only teacher accounts have a teaching profile");
+    }
+
+    await authRepository.updateTeacherProfile({
+      userId: user.id,
+      ...(input.school !== undefined ? { school: input.school } : {}),
+      ...(input.subjectsTaught !== undefined ? { subjectsTaught: input.subjectsTaught } : {}),
+    });
+
+    return authService.getMe(user.id);
+  },
+
   async updateProfile(user: AuthenticatedUser, input: ProfileUpdateInput): Promise<MeResponse> {
     const current = await authRepository.findMe(user.id);
     const profile = current?.studentProfile;
@@ -199,19 +278,40 @@ export function toAuthenticatedUser(row: AuthUserRow): AuthenticatedUser {
     imageUrl: row.imageUrl,
     role: row.role,
     status: row.status,
-    onboarded: isOnboarded(row.role, row.studentProfile?.onboardedAt ?? null),
+    onboarded: isOnboarded(
+      row.role,
+      row.studentProfile?.onboardedAt ?? null,
+      row.teacherProfile?.onboardedAt ?? null,
+    ),
   };
 }
 
 /**
- * Only students onboard. An admin or content editor has no class, no board and
- * no subjects, so gating them behind a student wizard would lock them out of
- * their own tools — with a redirect loop, since the wizard would have nothing
- * valid to submit.
+ * Whether this account has finished the setup its own role requires.
+ *
+ * Three answers, not two, and the middle one is the reason this is a function
+ * rather than a null check:
+ *
+ *  - **A student** needs a `StudentProfile`: class, board, subjects, guardian.
+ *  - **A teacher** needs a `TeacherProfile`. They have no class level and no
+ *    board sitting, so the student wizard has nothing valid for them to submit;
+ *    they get their own short one, and this is what gates it.
+ *  - **An admin or content editor** needs neither. Gating them behind either
+ *    wizard would lock them out of their own tools with a redirect loop, since
+ *    neither form has anything to ask them.
+ *
+ * Getting this wrong is not a subtle bug: a role whose "onboarded" answer never
+ * becomes true is an account that bounces between the shell and a setup page
+ * forever.
  */
-function isOnboarded(role: Role, onboardedAt: Date | null): boolean {
-  if (role !== "STUDENT") return true;
-  return onboardedAt !== null;
+function isOnboarded(
+  role: Role,
+  studentOnboardedAt: Date | null,
+  teacherOnboardedAt: Date | null,
+): boolean {
+  if (role === "STUDENT") return studentOnboardedAt !== null;
+  if (role === "TEACHER") return teacherOnboardedAt !== null;
+  return true;
 }
 
 function toSessionUser(row: MeRow): SessionUser {
@@ -225,14 +325,30 @@ function toSessionUser(row: MeRow): SessionUser {
   };
 }
 
+function toTeacherProfile(row: MeRow): TeacherProfile | null {
+  const teacher = row.teacherProfile;
+  if (!teacher) return null;
+
+  return {
+    school: teacher.school,
+    subjectsTaught: teacher.subjectsTaught,
+    onboardedAt: toIso(teacher.onboardedAt),
+    verifiedAt: toIso(teacher.verifiedAt),
+    termsAcceptedAt: toIso(teacher.termsAcceptedAt),
+    termsAcceptedVersion: teacher.termsAcceptedVersion,
+  };
+}
+
 async function toMeResponse(row: MeRow): Promise<MeResponse> {
   const profile = row.studentProfile;
+  const teacherProfile = toTeacherProfile(row);
 
   if (!profile) {
     return {
       user: toSessionUser(row),
       profile: null,
-      onboarded: isOnboarded(row.role, null),
+      teacherProfile,
+      onboarded: isOnboarded(row.role, null, row.teacherProfile?.onboardedAt ?? null),
     };
   }
 
@@ -262,7 +378,8 @@ async function toMeResponse(row: MeRow): Promise<MeResponse> {
         : null,
       subjects,
     },
-    onboarded: isOnboarded(row.role, profile.onboardedAt),
+    teacherProfile,
+    onboarded: isOnboarded(row.role, profile.onboardedAt, row.teacherProfile?.onboardedAt ?? null),
   };
 }
 

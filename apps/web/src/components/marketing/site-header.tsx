@@ -7,9 +7,11 @@ import { MobileNav } from "@/components/marketing/mobile-nav";
 import { ButtonLink } from "@/components/ui/button";
 
 const LINKS = [
-  { href: "#how", label: "How it works" },
-  { href: "#inside", label: "What you get" },
-  { href: "#parents", label: "For parents" },
+  // These links are rendered on `/status` too. Absolute fragments keep them
+  // useful there instead of pointing at IDs that only exist on the home page.
+  { href: "/#how", label: "How it works" },
+  { href: "/#inside", label: "What you get" },
+  { href: "/#parents", label: "For parents" },
 ];
 
 /**
@@ -60,9 +62,11 @@ export async function SiteHeader() {
           <Show
             when="signed-out"
             fallback={
-              <ButtonLink href="/home" size="sm" className="hidden lg:inline-flex">
-                Go to your dashboard
-              </ButtonLink>
+              <div className="hidden lg:block">
+                <ButtonLink href="/home" size="sm">
+                  Go to your dashboard
+                </ButtonLink>
+              </div>
             }
           >
             <Link
@@ -71,9 +75,14 @@ export async function SiteHeader() {
             >
               Sign in
             </Link>
-            <ButtonLink href="/sign-up" size="sm" className="hidden lg:inline-flex">
-              Start practising free
-            </ButtonLink>
+            {/* `ButtonLink` is itself `inline-flex`, which overrides a `hidden`
+                utility at small widths. Hide a neutral wrapper instead so the
+                compact phone header contains just the menu trigger. */}
+            <div className="hidden lg:block">
+              <ButtonLink href="/sign-up" size="sm">
+                Start practising free
+              </ButtonLink>
+            </div>
           </Show>
 
           <MobileNav links={LINKS} signedIn={userId !== null} />

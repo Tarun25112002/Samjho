@@ -17,19 +17,24 @@ export default async function AssignmentReportPage(props: { params: Promise<{ id
   ).length;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-7 px-5 py-8 sm:px-8 lg:py-10">
-      <Link href="/teacher" className="text-brand-700 w-fit text-sm font-semibold hover:underline">
-        ← Back to teaching
+    <main className="mx-auto flex w-full max-w-[90rem] flex-col gap-7 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
+      <Link
+        href="/teacher/classrooms"
+        className="text-brand-700 w-fit text-sm font-semibold hover:underline"
+      >
+        ← Back to classrooms
       </Link>
 
       <header className="border-line bg-card rounded-panel border p-6 sm:p-8">
-        <p className="text-brand-700 text-sm font-semibold">{report.assignment.subjectName}</p>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <h1 className="text-text text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+          Assignment report · {report.assignment.subjectName}
+        </p>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-6">
+          <div className="min-w-0 max-w-3xl">
+            <h1 className="text-text text-3xl leading-tight font-semibold tracking-[-0.04em] sm:text-4xl">
               {report.assignment.title}
             </h1>
-            <p className="text-text-soft mt-2 text-sm">
+            <p className="text-text-soft mt-3 text-sm leading-relaxed">
               {report.assignment.classroomName} · {report.assignment.chapterName ?? "Whole subject"}{" "}
               · {report.assignment.questionCount} questions
               {report.assignment.dueAt ? ` · due ${dueLabel(report.assignment.dueAt)}` : ""}
@@ -40,21 +45,33 @@ export default async function AssignmentReportPage(props: { params: Promise<{ id
               </p>
             ) : null}
           </div>
-          <div className="border-brand-200 bg-brand-50 rounded-2xl px-5 py-4 text-right">
+          <div className="border-brand-200 bg-brand-50 rounded-control min-w-35 px-5 py-4 text-right">
             <p className="text-text text-3xl font-semibold tabular-nums">
               {completed}/{report.students.length}
             </p>
-            <p className="text-brand-700 text-sm font-semibold">completed</p>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.08em] uppercase">
+              completed
+            </p>
           </div>
         </div>
       </header>
 
       <section aria-labelledby="students-heading">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 id="students-heading" className="text-text text-lg font-semibold">
-            Class progress
-          </h2>
-          <p className="text-text-faint text-sm">Marks are shown only after a set is finished.</p>
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <h2
+              id="students-heading"
+              className="text-text text-lg font-semibold tracking-[-0.02em]"
+            >
+              Class progress
+            </h2>
+            <p className="text-text-faint mt-1 text-sm">
+              Marks appear once a student finishes the set.
+            </p>
+          </div>
+          <p className="text-text-faint text-sm font-medium tabular-nums">
+            {report.students.length} {report.students.length === 1 ? "student" : "students"}
+          </p>
         </div>
 
         {report.students.length === 0 ? (
@@ -66,7 +83,7 @@ export default async function AssignmentReportPage(props: { params: Promise<{ id
             {report.students.map((student) => (
               <li
                 key={student.studentId}
-                className="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4 sm:px-6"
+                className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4 sm:px-6"
               >
                 <div className="min-w-40 flex-1">
                   <p className="text-text font-semibold">
@@ -94,7 +111,7 @@ export default async function AssignmentReportPage(props: { params: Promise<{ id
           </ul>
         )}
       </section>
-    </div>
+    </main>
   );
 }
 

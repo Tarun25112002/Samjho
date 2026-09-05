@@ -46,8 +46,8 @@ export default async function PracticeResultPage({ params }: PageProps) {
       : 0;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-9 px-5 py-8 sm:px-8 lg:py-10">
-      <header>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
+      <header className="border-line border-b pb-6">
         <Link
           href="/practice"
           className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
@@ -56,10 +56,13 @@ export default async function PracticeResultPage({ params }: PageProps) {
           Practice
         </Link>
 
-        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
+        <p className="text-brand-700 mt-4 text-xs font-bold tracking-[0.14em] uppercase">
+          Practice result
+        </p>
+        <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
           {session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
         </h1>
-        <p className="text-text-soft mt-1.5 text-sm">
+        <p className="text-text-soft mt-2 text-sm">
           {session.status === "IN_PROGRESS" ? "Still in progress · " : ""}
           {formatDuration(session.totals.timeSpentMs)}
         </p>
@@ -70,28 +73,37 @@ export default async function PracticeResultPage({ params }: PageProps) {
           Your score
         </h2>
 
-        <div className="rounded-panel border-brand-200 bg-brand-50 border p-6 sm:p-7">
-          <p className="text-brand-700 text-sm font-semibold">Marks</p>
-          <p className="text-text mt-1 flex items-baseline gap-2 text-5xl font-semibold tracking-[-0.04em] tabular-nums sm:text-6xl">
-            {formatMarksValue(session.totals.marksEarned)}
-            <span className="text-text-soft text-2xl font-medium tracking-normal">
-              / {formatMarksValue(session.totals.marksPossible)}
-            </span>
-          </p>
+        <div className="rounded-panel border-brand-200 bg-brand-50 relative overflow-hidden border p-5 sm:p-7">
+          <div
+            aria-hidden="true"
+            className="border-brand-200/70 absolute -top-16 -right-12 size-48 rounded-full border-[18px]"
+          />
+          <div className="relative">
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Your result
+            </p>
+            <p className="text-text-soft mt-3 text-sm font-medium">Marks earned</p>
+            <p className="text-text mt-1 flex items-baseline gap-2 text-5xl font-semibold tracking-[-0.045em] tabular-nums sm:text-6xl">
+              {formatMarksValue(session.totals.marksEarned)}
+              <span className="text-text-soft text-2xl font-medium tracking-normal">
+                / {formatMarksValue(session.totals.marksPossible)}
+              </span>
+            </p>
 
-          {/*
-            Three figures stay three figures at 360px — a score a student reads
-            as one line should not become a column — so the type shrinks rather
-            than the grid reflowing.
-          */}
-          <dl className="border-brand-200 mt-6 grid grid-cols-3 gap-4 border-t pt-5">
-            <Stat
-              label="Right"
-              value={`${String(session.totals.correct)} of ${String(session.totals.answered)}`}
-            />
-            <Stat label="Accuracy" value={`${String(accuracy)}%`} />
-            <Stat label="Time" value={formatDuration(session.totals.timeSpentMs)} />
-          </dl>
+            {/*
+              Three figures stay three figures at 360px — a score a student reads
+              as one line should not become a column — so the type shrinks rather
+              than the grid reflowing.
+            */}
+            <dl className="border-brand-200 mt-7 grid grid-cols-3 gap-4 border-t pt-5 sm:max-w-xl sm:gap-8">
+              <Stat
+                label="Correct"
+                value={`${String(session.totals.correct)} of ${String(session.totals.answered)}`}
+              />
+              <Stat label="Accuracy" value={`${String(accuracy)}%`} />
+              <Stat label="Time taken" value={formatDuration(session.totals.timeSpentMs)} />
+            </dl>
+          </div>
         </div>
 
         {session.totals.awaitingSelfEvaluation > 0 ? (
@@ -110,9 +122,17 @@ export default async function PracticeResultPage({ params }: PageProps) {
 
       {topics.length > 0 ? (
         <section aria-labelledby="topics-heading" className="flex flex-col gap-4">
-          <h2 id="topics-heading" className="text-text text-lg font-semibold">
-            By topic
-          </h2>
+          <div>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Session detail
+            </p>
+            <h2
+              id="topics-heading"
+              className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
+            >
+              Performance by topic
+            </h2>
+          </div>
 
           <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
             {topics.map((topic) => (
@@ -134,12 +154,20 @@ export default async function PracticeResultPage({ params }: PageProps) {
         </section>
       ) : null}
 
-      <section aria-labelledby="next-heading" className="flex flex-col gap-4">
-        <h2 id="next-heading" className="text-text text-lg font-semibold">
-          What next
+      <section
+        aria-labelledby="next-heading"
+        className="rounded-panel border-line bg-card border p-5 sm:p-6"
+      >
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Keep moving</p>
+        <h2 id="next-heading" className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
+          Turn this result into your next set
         </h2>
+        <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
+          A quick retry while the work is still fresh is the fastest way to turn a mistake into a
+          strength.
+        </p>
 
-        <div className="flex flex-wrap items-start gap-3">
+        <div className="mt-5 flex flex-wrap items-start gap-3">
           {mistakeQuestionIds.length > 0 ? (
             <StartPractice
               mode="MISTAKE_REVIEW"
@@ -161,15 +189,21 @@ export default async function PracticeResultPage({ params }: PageProps) {
           ) : null}
 
           <ButtonLink href="/practice" variant="secondary">
-            Something else
+            Choose another set
           </ButtonLink>
         </div>
       </section>
 
       <section aria-labelledby="review-heading" className="flex flex-col gap-4">
-        <h2 id="review-heading" className="text-text text-lg font-semibold">
-          Question by question
-        </h2>
+        <div>
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Review</p>
+          <h2
+            id="review-heading"
+            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
+          >
+            Question by question
+          </h2>
+        </div>
 
         <SessionReview initial={session} />
       </section>

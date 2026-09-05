@@ -24,22 +24,22 @@ export function TeacherWorkspace({
   const [showCreate, setShowCreate] = useState(classrooms.length === 0);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="flex flex-col gap-6">
+      <div className="border-line bg-card rounded-panel flex flex-wrap items-center justify-between gap-4 border px-5 py-4 sm:px-6">
         <div>
-          <p className="text-brand-700 text-sm font-semibold">Teaching space</p>
-          <h1 className="text-text mt-1 text-[1.9rem] leading-tight font-semibold tracking-[-0.035em] sm:text-4xl">
-            See the next useful conversation.
-          </h1>
-          <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-            Set focused practice, notice who needs a nudge, and keep student answers private to the
-            student.
+          <p className="text-text text-sm font-semibold">
+            {classrooms.length === 0
+              ? "Set up your first classroom"
+              : `${String(classrooms.length)} ${classrooms.length === 1 ? "classroom" : "classrooms"}`}
+          </p>
+          <p className="text-text-faint mt-0.5 text-xs">
+            Create a focused space, share its code, then set practice when it helps.
           </p>
         </div>
         <Button onClick={() => setShowCreate((open) => !open)}>
-          {showCreate ? "Close" : "New classroom"}
+          {showCreate ? "Close setup" : "New classroom"}
         </Button>
-      </header>
+      </div>
 
       {showCreate ? (
         <CreateClassroom subjects={subjects} onCreated={() => setShowCreate(false)} />
@@ -47,7 +47,7 @@ export function TeacherWorkspace({
 
       {classrooms.length === 0 ? <TeacherEmpty onCreate={() => setShowCreate(true)} /> : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid items-start gap-5 xl:grid-cols-2">
         {classrooms.map((classroom) => (
           <TeacherClassroomCard key={classroom.id} classroom={classroom} />
         ))}
@@ -145,10 +145,10 @@ function CreateClassroom({
 
 function TeacherEmpty({ onCreate }: { onCreate: () => void }) {
   return (
-    <section className="border-line bg-card rounded-panel relative overflow-hidden border p-7 sm:p-9">
+    <section className="border-line bg-card rounded-panel relative min-h-72 overflow-hidden border p-7 sm:p-9">
       <div className="bg-brand-100 absolute -right-10 -bottom-16 size-56 rounded-full blur-2xl" />
       <div className="relative max-w-2xl">
-        <p className="text-text text-xl font-semibold">Begin with one class, not a dashboard.</p>
+        <p className="text-text text-xl font-semibold tracking-[-0.02em]">Start with one class.</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Make a classroom for a subject, share its code, and send a short chapter practice set.
           Completion becomes visible here—without turning private student work into a feed.
@@ -165,7 +165,7 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <section className="border-line bg-card rounded-panel overflow-hidden border">
+    <section className="border-line bg-card rounded-panel overflow-hidden border transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift">
       <div className="border-line bg-raised/60 border-b p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -186,7 +186,14 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
 
       <div className="p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
-          <h3 className="text-text font-semibold">Assigned practice</h3>
+          <div>
+            <h3 className="text-text font-semibold">Assigned practice</h3>
+            <p className="text-text-faint mt-0.5 text-xs">
+              {classroom.assignments.length === 0
+                ? "Nothing has been set yet"
+                : `${String(classroom.assignments.length)} ${classroom.assignments.length === 1 ? "set" : "sets"}`}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => setAssigning((open) => !open)}
@@ -210,11 +217,12 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
             {classroom.assignments.map((assignment) => (
               <li key={assignment.id} className="py-4 first:pt-0 last:pb-0">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-text font-semibold">{assignment.title}</p>
                     <p className="text-text-faint mt-1 text-sm">
                       {assignment.chapterName ?? "Whole subject"} · {assignment.questionCount}{" "}
                       questions
+                      {assignment.sourcePool === "TEACHER_BANK" ? " · from your bank" : ""}
                       {assignment.dueAt ? ` · due ${dueLabel(assignment.dueAt)}` : ""}
                     </p>
                     <p className="text-text-soft mt-2 text-sm">
@@ -277,6 +285,7 @@ function AssignmentForm({
   const [title, setTitle] = useState("");
   const [chapterId, setChapterId] = useState("");
   const [questionCount, setQuestionCount] = useState("10");
+  const [sourcePool, setSourcePool] = useState<"SHARED" | "TEACHER_BANK">("SHARED");
   const [dueAt, setDueAt] = useState("");
   const [instructions, setInstructions] = useState("");
   const [busy, setBusy] = useState(false);
@@ -288,6 +297,7 @@ function AssignmentForm({
       instructions: instructions || undefined,
       chapterId: chapterId || null,
       questionCount: Number(questionCount),
+      sourcePool,
       dueAt: dueAt ? new Date(dueAt).toISOString() : null,
     });
     if (!parsed.success) {
@@ -316,7 +326,7 @@ function AssignmentForm({
 
   return (
     <form
-      className="border-brand-200 bg-brand-50 mt-4 grid gap-3 rounded-2xl border p-4"
+      className="border-brand-200 bg-brand-50 mt-4 grid gap-4 rounded-control border p-4 sm:p-5"
       onSubmit={(event) => {
         event.preventDefault();
         void create();
@@ -373,6 +383,26 @@ function AssignmentForm({
           />
         </Field>
       </div>
+      <Field label="Draw questions from" htmlFor={`${classroom.id}-pool`}>
+        <select
+          id={`${classroom.id}-pool`}
+          value={sourcePool}
+          onChange={(event) =>
+            setSourcePool(event.target.value === "TEACHER_BANK" ? "TEACHER_BANK" : "SHARED")
+          }
+          className={inputClass}
+        >
+          <option value="SHARED">Samjho&rsquo;s question bank</option>
+          <option value="TEACHER_BANK">My own questions</option>
+        </select>
+      </Field>
+      {sourcePool === "TEACHER_BANK" ? (
+        <p className="text-text-faint -mt-1 text-xs leading-relaxed">
+          Only questions you have imported from your own papers and set for students. Nobody outside
+          this class ever sees them.
+        </p>
+      ) : null}
+
       <Field label="A note for students (optional)" htmlFor={`${classroom.id}-instructions`}>
         <textarea
           id={`${classroom.id}-instructions`}
@@ -420,7 +450,7 @@ function Field({
 }
 
 const inputClass =
-  "border-brand-200 bg-card text-text h-11 w-full rounded-xl border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+  "border-brand-200 bg-card text-text h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {

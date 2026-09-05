@@ -53,8 +53,8 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
   const yearsBySubject = await loadYears(subjects.map((subject) => subject.id));
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
-      <header>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
+      <header className="border-line border-b pb-6">
         <Link
           href="/practice"
           className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
@@ -62,10 +62,15 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
           <ChevronLeft className="size-4" />
           Practice
         </Link>
-        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
-          Build a set
+        <p className="text-brand-700 mt-4 text-xs font-bold tracking-[0.14em] uppercase">
+          Custom practice
+        </p>
+        <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
+          Build a practice set
         </h1>
-        <p className="text-text-soft mt-1.5 text-sm">Leave anything blank to include all of it.</p>
+        <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
+          Start broad or choose a precise focus. Any filter you leave blank stays open.
+        </p>
       </header>
 
       {/*
@@ -73,15 +78,25 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
         spread: an absent query parameter parses to `undefined`, and spreading
         that over a default puts the `undefined` back.
       */}
-      <PracticeSetup
-        subjects={subjects}
-        yearsBySubject={yearsBySubject}
-        initial={{
-          ...filters,
-          unseenOnly: filters.unseenOnly ?? false,
-          ...(count === undefined ? {} : { count }),
-        }}
-      />
+      <section className="rounded-panel border-line bg-card overflow-hidden border">
+        <div className="border-line bg-raised/60 border-b px-5 py-5 sm:px-6">
+          <p className="text-text text-lg font-semibold tracking-[-0.02em]">Choose your focus</p>
+          <p className="text-text-soft mt-1 text-sm leading-relaxed">
+            You can change any of these filters before starting.
+          </p>
+        </div>
+        <div className="p-5 sm:p-6">
+          <PracticeSetup
+            subjects={subjects}
+            yearsBySubject={yearsBySubject}
+            initial={{
+              ...filters,
+              unseenOnly: filters.unseenOnly ?? false,
+              ...(count === undefined ? {} : { count }),
+            }}
+          />
+        </div>
+      </section>
     </div>
   );
 }
