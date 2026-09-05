@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/brand/logo";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 
 export const metadata: Metadata = { title: "Page not found" };
 
@@ -31,14 +33,24 @@ export default function NotFound() {
     // the route, and every layout in this app already supplies the landmark —
     // two of them on one page means a screen reader offers a choice of "main
     // content", which is not a choice anyone can make.
-    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-5 py-12 sm:px-8 sm:py-16">
-      <section className="rounded-panel border-line bg-card relative w-full overflow-hidden border px-6 py-10 text-center shadow-lift sm:px-10 sm:py-12">
-        <p
+    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-4 py-12 sm:px-8 sm:py-16">
+      <Card pad="roomy" className="shadow-lift relative w-full overflow-hidden text-center">
+        {/*
+          No giant "404" behind the words any more, and not for want of trying
+          to place it. This card is 36rem wide with every line centred in it, so
+          a 176px numeral has no corner to live in — centred it sat under the
+          wordmark, and bled into the top right it still crossed the "Samjho".
+          Two things in the same place is not a layer, it is a collision, and
+          the eyebrow directly below already says "Page not found".
+
+          What is left is the same blurred wash the error boundary carries, so
+          the two pages a student meets when something has gone wrong finally
+          look like the same object.
+        */}
+        <div
           aria-hidden="true"
-          className="text-brand-100 pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 text-[10rem] leading-none font-semibold tracking-[-0.08em] sm:text-[13rem]"
-        >
-          404
-        </p>
+          className="bg-brand-100 absolute -top-24 -right-20 size-52 rounded-full blur-3xl"
+        />
         <div className="relative flex flex-col items-center gap-6">
           <Link href="/">
             <Wordmark size="sm" tone="brand" />
@@ -46,12 +58,8 @@ export default function NotFound() {
           </Link>
 
           <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Page not found
-            </p>
-            <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.03em]">
-              This page isn&rsquo;t here
-            </h1>
+            <Eyebrow>Page not found</Eyebrow>
+            <h1 className="text-text text-notice mt-2">This page isn&rsquo;t here</h1>
             <p className="text-text-soft mt-3 leading-relaxed">
               The link may be mistyped, or the chapter may have been withdrawn while its questions
               are rewritten. Nothing is wrong with your account.
@@ -65,7 +73,7 @@ export default function NotFound() {
             </ButtonLink>
           </div>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

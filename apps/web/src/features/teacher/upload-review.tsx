@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { inputClass, selectClass } from "@/components/ui/form";
+import { Card, Chip } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 
 /**
@@ -190,34 +192,34 @@ export function UploadReview({ upload: initial }: { upload: PaperUploadDetail })
         </p>
       ) : null}
 
-      <div className="border-line bg-card rounded-panel flex flex-wrap items-center justify-between gap-4 border p-3 sm:p-4">
+      <Card className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap gap-2">
-          <Chip active={filter === "all"} onClick={() => setFilter("all")}>
+          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
             All {upload.items.length}
-          </Chip>
-          <Chip active={filter === "PROPOSED"} onClick={() => setFilter("PROPOSED")}>
+          </FilterChip>
+          <FilterChip active={filter === "PROPOSED"} onClick={() => setFilter("PROPOSED")}>
             To check {pending}
-          </Chip>
-          <Chip active={filter === "ACCEPTED"} onClick={() => setFilter("ACCEPTED")}>
+          </FilterChip>
+          <FilterChip active={filter === "ACCEPTED"} onClick={() => setFilter("ACCEPTED")}>
             Accepted {accepted}
-          </Chip>
-          <Chip active={filter === "REJECTED"} onClick={() => setFilter("REJECTED")}>
+          </FilterChip>
+          <FilterChip active={filter === "REJECTED"} onClick={() => setFilter("REJECTED")}>
             Rejected {upload.items.filter((item) => item.status === "REJECTED").length}
-          </Chip>
+          </FilterChip>
         </div>
 
-        <label className="text-text-soft flex items-center gap-2 text-sm">
+        <label className="text-text-soft flex flex-col gap-1.5 text-sm font-medium">
           Sort
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value === "paper" ? "paper" : "confidence")}
-            className="border-line bg-card text-text rounded-control min-h-11 border px-3 text-sm"
+            className={`${selectClass} w-auto`}
           >
             <option value="confidence">Least sure first</option>
             <option value="paper">Paper order</option>
           </select>
         </label>
-      </div>
+      </Card>
 
       {visible.length === 0 ? (
         <p className="text-text-soft py-8 text-center text-sm">Nothing here.</p>
@@ -258,10 +260,10 @@ function Summary({
   onImport: () => void;
 }) {
   return (
-    <section className="border-line bg-card rounded-panel border p-5 sm:p-6">
+    <Card>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 max-w-2xl">
-          <h2 className="text-text text-lg font-semibold tracking-[-0.02em]">{upload.title}</h2>
+          <h2 className="text-text text-subheading">{upload.title}</h2>
           <p className="text-text-faint mt-1 text-sm">
             {upload.subject.name} · {upload.extractedCount} questions found
             {upload.model ? ` · read by ${upload.model}` : ""}
@@ -286,7 +288,7 @@ function Summary({
           </Button>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -324,7 +326,7 @@ function ImportOutcome({ result }: { result: ImportUploadResult }) {
   }
 
   return (
-    <section className="border-brand-200 bg-brand-50 rounded-panel border p-5 sm:p-6">
+    <Card tone="brand">
       <p className="text-text font-semibold">
         {result.dryRun
           ? `${String(result.valid)} ready to import.`
@@ -337,7 +339,7 @@ function ImportOutcome({ result }: { result: ImportUploadResult }) {
             ? `${String(result.alreadyImported)} were already there and were left alone.`
             : "They are set for students and can be used in an assignment."}
       </p>
-    </section>
+    </Card>
   );
 }
 
@@ -411,9 +413,7 @@ function ReviewCard({
 
         <div className="flex shrink-0 flex-col items-end gap-2">
           {settled ? (
-            <span className="rounded-pill bg-ink-50 text-text-soft px-3 py-1.5 text-xs font-bold">
-              In your bank
-            </span>
+            <Chip tone="correct">In your bank</Chip>
           ) : (
             <div className="flex gap-2">
               <button
@@ -437,7 +437,7 @@ function ReviewCard({
                 onClick={() =>
                   onChange({ status: item.status === "REJECTED" ? "PROPOSED" : "REJECTED" })
                 }
-                className="text-text-faint hover:text-marker-700 rounded-pill min-h-11 px-3 text-sm font-semibold"
+                className="text-text-faint hover:text-marker-700 rounded-pill min-h-11 px-3 text-sm font-semibold transition-colors"
               >
                 {item.status === "REJECTED" ? "Rejected" : "Skip"}
               </button>
@@ -447,7 +447,7 @@ function ReviewCard({
           <button
             type="button"
             onClick={() => setOpen((current) => !current)}
-            className="text-brand-700 text-sm font-semibold hover:underline"
+            className="text-brand-700 inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
           >
             {open ? "Done" : "Fix details"}
           </button>
@@ -485,8 +485,8 @@ function Editor({
   onChange: (patch: Record<string, unknown>) => void;
 }) {
   return (
-    <div className="border-line bg-raised/55 mt-5 grid gap-4 rounded-control border p-4 sm:grid-cols-2">
-      <label className="text-text block text-xs font-semibold">
+    <div className="border-line bg-raised/55 rounded-control mt-5 grid gap-4 border p-4 sm:grid-cols-2">
+      <label className="text-text block text-sm font-semibold">
         Chapter
         <select
           disabled={busy}
@@ -503,7 +503,7 @@ function Editor({
         </select>
       </label>
 
-      <label className="text-text block text-xs font-semibold">
+      <label className="text-text block text-sm font-semibold">
         Difficulty
         <select
           disabled={busy}
@@ -517,7 +517,7 @@ function Editor({
         </select>
       </label>
 
-      <label className="text-text block text-xs font-semibold">
+      <label className="text-text block text-sm font-semibold">
         Marks
         <input
           disabled={busy}
@@ -533,7 +533,7 @@ function Editor({
         />
       </label>
 
-      <label className="text-text block text-xs font-semibold">
+      <label className="text-text block text-sm font-semibold">
         Type
         <select
           disabled={busy}
@@ -566,7 +566,14 @@ function Confidence({ value }: { value: number | null }) {
   );
 }
 
-function Chip({
+/**
+ * A filter that is also its own count.
+ *
+ * A button rather than the `Chip` in `ui/surface`: that one is a label, this one
+ * is pressed, and a 44px target with an `aria-pressed` state is a different
+ * object from a 24px status marker even though they share a silhouette.
+ */
+function FilterChip({
   active,
   onClick,
   children,
@@ -603,5 +610,4 @@ const QUESTION_TYPES = [
   "MATCH_FOLLOWING",
 ] as const;
 
-const editorInput =
-  "border-line bg-card text-text mt-1.5 h-11 w-full rounded-control border px-3 text-sm font-normal outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+const editorInput = `${inputClass} mt-1.5 font-normal`;

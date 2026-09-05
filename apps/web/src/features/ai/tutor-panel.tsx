@@ -5,6 +5,9 @@ import { MathText } from "@samjho/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { ChevronRight, SparkIcon } from "@/components/icons";
+import { inputClass } from "@/components/ui/form";
+import { cardClass } from "@/components/ui/surface";
+
 import { useTutor, type TutorInput, type TutorTurn } from "./use-tutor";
 
 /**
@@ -35,10 +38,7 @@ export function TutorPanel(props: TutorInput) {
   const tutor = useTutor(props);
 
   return (
-    <section
-      aria-label="AI tutor"
-      className="rounded-panel border-line bg-card overflow-hidden border"
-    >
+    <section aria-label="AI tutor" className={`${cardClass({ pad: "flush" })} overflow-hidden`}>
       <button
         type="button"
         aria-expanded={tutor.open}
@@ -48,7 +48,7 @@ export function TutorPanel(props: TutorInput) {
         className="hover:bg-raised/60 flex min-h-14 w-full items-center gap-3 px-5 text-left transition-colors sm:px-6"
       >
         <SparkIcon className="text-brand-600 size-5 shrink-0" />
-        <span className="text-text text-[0.9375rem] font-semibold">
+        <span className="text-text text-sm font-semibold">
           {props.answered ? "Ask the tutor about this" : "Stuck? Ask the tutor"}
         </span>
         <ChevronRight
@@ -122,7 +122,7 @@ function ActionLadder({
           }}
           className={[
             "rounded-pill min-h-11 border px-3.5 text-sm font-medium transition-colors",
-            "border-line-strong text-text-soft hover:border-brand-300 hover:text-text",
+            "border-line-strong text-text-soft enabled:hover:border-brand-300 enabled:hover:text-text",
             "disabled:cursor-not-allowed disabled:opacity-55",
             // The one rung that gives everything away is drawn quieter than the
             // rest, rather than being hidden. It is available; it is just not
@@ -173,7 +173,7 @@ function Transcript({ turns }: { turns: TutorTurn[] }) {
               </p>
             ) : null}
 
-            <div className="text-text font-serif text-[0.9375rem] leading-[1.7]">
+            <div className="text-text text-reading font-serif">
               {turn.content ? <MathText>{turn.content}</MathText> : null}
               {turn.streaming ? <Caret /> : null}
             </div>
@@ -238,7 +238,7 @@ function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (text: string) => voi
         onChange={(event) => {
           setText(event.target.value);
         }}
-        className="rounded-control border-line-strong bg-card text-text placeholder:text-text-faint focus:border-brand-500 min-h-11 flex-1 border px-3.5 text-sm outline-none disabled:opacity-55"
+        className={`${inputClass} flex-1`}
       />
       <button
         type="submit"

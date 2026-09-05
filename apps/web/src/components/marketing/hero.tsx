@@ -75,7 +75,7 @@ export function Hero() {
               CBSE Class 10 · Maths and Science
             </p>
 
-            <h1 className="mt-7 max-w-[10ch] text-[2.9rem] leading-[1.01] font-semibold tracking-[-0.052em] sm:text-6xl lg:text-7xl">
+            <h1 className="text-hero mt-7 max-w-[10ch]">
               <span className="line-mask">
                 <span data-hero="line" className="block">
                   Practise.
@@ -131,9 +131,7 @@ export function Hero() {
             <div className="relative z-10">
               <div className="mb-3 flex items-center justify-between px-1">
                 <p className="text-text text-sm font-semibold">A question you can answer now</p>
-                <span className="text-brand-700 text-xs font-semibold tracking-[0.08em] uppercase">
-                  Live preview
-                </span>
+                <span className="text-brand-700 text-eyebrow uppercase">Live preview</span>
               </div>
               <TryQuestion />
             </div>
@@ -152,7 +150,7 @@ export function Hero() {
                 index > 0 ? "sm:border-line sm:border-l" : "",
               ].join(" ")}
             >
-              <dd className="text-text text-3xl leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[2.5rem]">
+              <dd className="text-text text-figure tabular-nums">
                 <span data-count={fact.value}>{fact.value}</span>
                 {fact.suffix}
               </dd>

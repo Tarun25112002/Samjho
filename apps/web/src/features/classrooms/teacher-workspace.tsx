@@ -12,6 +12,9 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { inputClass, selectClass, textareaClass } from "@/components/ui/form";
+import { Eyebrow } from "@/components/ui/page";
+import { Card, flushBandClass } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 
 export function TeacherWorkspace({
@@ -25,7 +28,10 @@ export function TeacherWorkspace({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="border-line bg-card rounded-panel flex flex-wrap items-center justify-between gap-4 border px-5 py-4 sm:px-6">
+      <Card
+        pad="flush"
+        className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6"
+      >
         <div>
           <p className="text-text text-sm font-semibold">
             {classrooms.length === 0
@@ -39,7 +45,7 @@ export function TeacherWorkspace({
         <Button onClick={() => setShowCreate((open) => !open)}>
           {showCreate ? "Close setup" : "New classroom"}
         </Button>
-      </div>
+      </Card>
 
       {showCreate ? (
         <CreateClassroom subjects={subjects} onCreated={() => setShowCreate(false)} />
@@ -96,7 +102,7 @@ function CreateClassroom({
   }
 
   return (
-    <section className="border-brand-200 bg-brand-50 rounded-panel border p-5 sm:p-6">
+    <Card tone="brand">
       <form
         className="grid gap-4 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end"
         onSubmit={(event) => {
@@ -118,7 +124,7 @@ function CreateClassroom({
             id="classroom-subject"
             value={subjectId}
             onChange={(event) => setSubjectId(event.target.value)}
-            className={inputClass}
+            className={selectClass}
           >
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
@@ -139,16 +145,19 @@ function CreateClassroom({
           {message}
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
 function TeacherEmpty({ onCreate }: { onCreate: () => void }) {
   return (
-    <section className="border-line bg-card rounded-panel relative min-h-72 overflow-hidden border p-7 sm:p-9">
-      <div className="bg-brand-100 absolute -right-10 -bottom-16 size-56 rounded-full blur-2xl" />
+    <Card pad="roomy" className="relative min-h-72 overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="bg-brand-100 absolute -right-10 -bottom-16 size-56 rounded-full blur-2xl"
+      />
       <div className="relative max-w-2xl">
-        <p className="text-text text-xl font-semibold tracking-[-0.02em]">Start with one class.</p>
+        <p className="text-text text-heading">Start with one class.</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Make a classroom for a subject, share its code, and send a short chapter practice set.
           Completion becomes visible here—without turning private student work into a feed.
@@ -157,7 +166,7 @@ function TeacherEmpty({ onCreate }: { onCreate: () => void }) {
           Create your first classroom
         </Button>
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -165,16 +174,15 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <section className="border-line bg-card rounded-panel overflow-hidden border transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift">
-      <div className="border-line bg-raised/60 border-b p-5 sm:p-6">
+    <Card
+      pad="flush"
+      className="hover:border-line-strong hover:shadow-lift overflow-hidden transition-[border-color,box-shadow]"
+    >
+      <div className={`border-line bg-raised/60 border-b ${flushBandClass}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.12em] uppercase">
-              {classroom.subject.code}
-            </p>
-            <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
-              {classroom.name}
-            </h2>
+          <div className="min-w-0">
+            <Eyebrow>{classroom.subject.code}</Eyebrow>
+            <h2 className="text-text text-heading mt-1">{classroom.name}</h2>
             <p className="text-text-soft mt-1 text-sm">
               {classroom.subject.name} · {classroom.studentCount}{" "}
               {classroom.studentCount === 1 ? "student" : "students"}
@@ -197,7 +205,7 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
           <button
             type="button"
             onClick={() => setAssigning((open) => !open)}
-            className="text-brand-700 text-sm font-semibold hover:underline"
+            className="text-brand-700 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold hover:underline"
           >
             {assigning ? "Close" : "Set practice"}
           </button>
@@ -232,7 +240,7 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
                   </div>
                   <Link
                     href={`/teacher/assignments/${assignment.id}`}
-                    className="text-brand-700 rounded-pill bg-brand-50 px-3 py-2 text-sm font-semibold transition hover:bg-brand-100"
+                    className="text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-pill inline-flex min-h-11 shrink-0 items-center px-4 text-sm font-semibold transition-colors"
                   >
                     See progress
                   </Link>
@@ -242,7 +250,7 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
           </ul>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -263,13 +271,11 @@ function ClassCode({ code }: { code: string }) {
     <button
       type="button"
       onClick={() => void copy()}
-      className="border-line bg-card rounded-control min-h-11 border px-3 text-left transition hover:border-brand-400"
+      className="border-line bg-card hover:border-brand-400 rounded-control min-h-11 shrink-0 border px-3 py-1.5 text-left transition-colors"
       aria-label={`Copy class code ${code}`}
     >
-      <span className="text-text-faint block text-[0.65rem] font-bold tracking-[0.12em] uppercase">
-        {copied ? "Copied" : "Class code"}
-      </span>
-      <span className="text-text block font-mono text-sm font-bold tracking-[0.13em]">{code}</span>
+      <Eyebrow tone="muted">{copied ? "Copied" : "Class code"}</Eyebrow>
+      <span className="text-text tracking-code block font-mono text-sm font-bold">{code}</span>
     </button>
   );
 }
@@ -326,7 +332,7 @@ function AssignmentForm({
 
   return (
     <form
-      className="border-brand-200 bg-brand-50 mt-4 grid gap-4 rounded-control border p-4 sm:p-5"
+      className="border-brand-200 bg-brand-50 rounded-control mt-4 grid gap-4 border p-4 sm:p-5"
       onSubmit={(event) => {
         event.preventDefault();
         void create();
@@ -347,7 +353,7 @@ function AssignmentForm({
             id={`${classroom.id}-chapter`}
             value={chapterId}
             onChange={(event) => setChapterId(event.target.value)}
-            className={inputClass}
+            className={selectClass}
           >
             <option value="">Whole subject</option>
             {classroom.subject.chapters.map((chapter) => (
@@ -364,7 +370,7 @@ function AssignmentForm({
             id={`${classroom.id}-count`}
             value={questionCount}
             onChange={(event) => setQuestionCount(event.target.value)}
-            className={inputClass}
+            className={selectClass}
           >
             {[5, 8, 10, 15, 20, 25, 30].map((count) => (
               <option key={count} value={count}>
@@ -390,7 +396,7 @@ function AssignmentForm({
           onChange={(event) =>
             setSourcePool(event.target.value === "TEACHER_BANK" ? "TEACHER_BANK" : "SHARED")
           }
-          className={inputClass}
+          className={selectClass}
         >
           <option value="SHARED">Samjho&rsquo;s question bank</option>
           <option value="TEACHER_BANK">My own questions</option>
@@ -410,7 +416,7 @@ function AssignmentForm({
           onChange={(event) => setInstructions(event.target.value)}
           rows={2}
           placeholder="What should they pay attention to in this set?"
-          className={`${inputClass} min-h-20 py-3`}
+          className={`${textareaClass} min-h-20`}
         />
       </Field>
       <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -441,16 +447,13 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <label htmlFor={htmlFor} className="text-text mb-1.5 block text-xs font-semibold">
+      <label htmlFor={htmlFor} className="text-text mb-1.5 block text-sm font-semibold">
         {label}
       </label>
       {children}
     </div>
   );
 }
-
-const inputClass =
-  "border-brand-200 bg-card text-text h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {

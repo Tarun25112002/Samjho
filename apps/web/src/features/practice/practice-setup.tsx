@@ -15,6 +15,8 @@ import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@samjho/ui";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { selectClass } from "@/components/ui/form";
+import { Toggle } from "@/components/ui/surface";
 
 import { useStartPractice } from "./start-practice";
 
@@ -118,7 +120,7 @@ export function PracticeSetup({
               // A chapter from the old subject would silently match nothing.
               setChapterId("");
             }}
-            className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base transition-colors focus:border-brand-500"
+            className={selectClass}
           >
             <option value="">Any subject</option>
             {subjects.map((option) => (
@@ -136,7 +138,7 @@ export function PracticeSetup({
               onChange={(event) => {
                 setChapterId(event.target.value);
               }}
-              className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base transition-colors focus:border-brand-500"
+              className={selectClass}
             >
               <option value="">Any chapter</option>
               {chapters.map((chapter) => (
@@ -147,7 +149,7 @@ export function PracticeSetup({
             </select>
           </Field>
         ) : (
-          <div className="bg-raised rounded-control flex min-h-11 items-center px-3.5 text-sm text-text-faint">
+          <div className="bg-raised text-text-faint rounded-control flex min-h-11 items-center px-3.5 text-sm">
             Choose a subject to narrow to a chapter.
           </div>
         )}
@@ -199,22 +201,15 @@ export function PracticeSetup({
       <Field label="How many questions">
         <div className="flex flex-wrap gap-2">
           {COUNTS.filter((option) => option <= PRACTICE_COUNT_MAX).map((option) => (
-            <button
+            <Toggle
               key={option}
-              type="button"
-              aria-pressed={count === option}
+              selected={count === option}
               onClick={() => {
                 setCount(option);
               }}
-              className={[
-                "rounded-control min-h-11 border px-5 text-sm font-semibold transition-colors",
-                count === option
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-line-strong text-text-soft hover:border-brand-300",
-              ].join(" ")}
             >
               {option} questions
-            </button>
+            </Toggle>
           ))}
         </div>
       </Field>
@@ -284,22 +279,15 @@ function ChipGroup<T extends string | number>({
       {options.map((option) => {
         const isSelected = selected.includes(option.value);
         return (
-          <button
+          <Toggle
             key={String(option.value)}
-            type="button"
-            aria-pressed={isSelected}
+            selected={isSelected}
             onClick={() => {
               onToggle(option.value);
             }}
-            className={[
-              "rounded-pill min-h-11 border px-3.5 text-sm font-medium transition-colors",
-              isSelected
-                ? "border-brand-500 bg-brand-50 text-brand-700"
-                : "border-line-strong text-text-soft hover:border-brand-300",
-            ].join(" ")}
           >
             {option.label}
-          </button>
+          </Toggle>
         );
       })}
     </div>

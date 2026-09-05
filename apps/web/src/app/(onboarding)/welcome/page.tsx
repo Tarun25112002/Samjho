@@ -43,7 +43,9 @@ export default async function WelcomePage() {
       <div className="border-line bg-card/90 border-b backdrop-blur-sm">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center px-5 sm:px-8">
           <Wordmark size="sm" tone="brand" />
-          <p className="text-text-faint ml-auto hidden text-sm sm:block">Set up your revision space</p>
+          <p className="text-text-faint ml-auto hidden text-sm sm:block">
+            Set up your revision space
+          </p>
         </div>
       </div>
 

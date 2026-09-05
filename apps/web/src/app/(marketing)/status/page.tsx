@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { readinessResponseSchema, type ReadinessResponse } from "@samjho/contracts";
 
+import { cardClass } from "@/components/ui/surface";
 import { ApiClientError, ApiParseError, apiFetch } from "@/lib/api-client";
 
 /**
@@ -74,12 +75,8 @@ export default async function StatusPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
       <header className="border-line grid gap-7 border-b pb-9 md:grid-cols-[minmax(0,1fr)_20rem] md:items-end md:gap-12 lg:pb-12">
         <div>
-          <p className="text-brand-700 text-xs font-semibold tracking-[0.13em] uppercase">
-            Service health
-          </p>
-          <h1 className="text-text mt-3 text-[2.25rem] leading-[1.04] font-semibold tracking-[-0.04em] sm:text-5xl">
-            System status
-          </h1>
+          <p className="text-brand-700 text-eyebrow uppercase">Service health</p>
+          <h1 className="text-text text-title mt-3">System status</h1>
           <p className="text-text-soft mt-4 max-w-[48ch] leading-relaxed">
             Live health of the API and its database. This page checks the service again whenever it
             opens, so it never reports a cached result.
@@ -93,16 +90,14 @@ export default async function StatusPage() {
             operational ? "border-tick-200 bg-tick-50" : "border-marker-200 bg-marker-50",
           ].join(" ")}
         >
-          <p className="text-sand-600 text-xs font-semibold tracking-[0.11em] uppercase">
-            Overall
-          </p>
+          <p className="text-sand-600 text-eyebrow uppercase">Overall</p>
           <div className="mt-3 flex items-start gap-3">
             <span
               aria-hidden="true"
               className={`mt-1.5 size-2.5 shrink-0 rounded-full ${operational ? "bg-tick-600" : "bg-marker-600"}`}
             />
             <div>
-              <p className="text-sand-900 text-lg font-semibold tracking-[-0.02em]">
+              <p className="text-sand-900 text-subheading">
                 {operational ? "All systems operational" : "Service needs attention"}
               </p>
               <p className="text-sand-600 mt-1 text-sm leading-relaxed">
@@ -118,14 +113,16 @@ export default async function StatusPage() {
       <div className="mt-8 grid gap-5 lg:mt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.8fr)] lg:gap-6">
         <section
           aria-labelledby="status-heading"
-          className="rounded-panel border-line bg-card overflow-hidden border"
+          className={`${cardClass({ pad: "flush" })} overflow-hidden`}
         >
           <div className="border-line flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 sm:px-6">
             <div>
               <h2 id="status-heading" className="text-text text-base font-semibold">
                 Live checks
               </h2>
-              <p className="text-text-faint mt-0.5 text-sm">Each check comes directly from the service.</p>
+              <p className="text-text-faint mt-0.5 text-sm">
+                Each check comes directly from the service.
+              </p>
             </div>
             <StatusPill ok={operational} label={operational ? "Ready" : "Needs attention"} />
           </div>
@@ -165,16 +162,12 @@ export default async function StatusPage() {
           )}
         </section>
 
-        <aside className="rounded-panel border-line bg-raised border p-5 sm:p-6">
-          <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">
-            What this checks
-          </p>
-          <h2 className="text-text mt-3 text-xl font-semibold tracking-[-0.025em]">
-            A short, honest signal
-          </h2>
+        <aside className={cardClass({ tone: "raised" })}>
+          <p className="text-brand-700 text-eyebrow uppercase">What this checks</p>
+          <h2 className="text-text text-heading mt-3">A short, honest signal</h2>
           <p className="text-text-soft mt-3 text-sm leading-relaxed">
-            The status page confirms that the web app can reach Samjho&apos;s API and that the API can
-            reach its required services. It does not inspect your account or practice data.
+            The status page confirms that the web app can reach Samjho&apos;s API and that the API
+            can reach its required services. It does not inspect your account or practice data.
           </p>
           <div className="border-line mt-6 border-t pt-5">
             <p className="text-text text-sm font-semibold">Need support?</p>
@@ -201,7 +194,10 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
         ok ? "bg-tick-100 text-sand-900" : "bg-marker-100 text-sand-900",
       ].join(" ")}
     >
-      <span aria-hidden="true" className={`size-1.5 rounded-full ${ok ? "bg-tick-600" : "bg-marker-600"}`} />
+      <span
+        aria-hidden="true"
+        className={`size-1.5 rounded-full ${ok ? "bg-tick-600" : "bg-marker-600"}`}
+      />
       {label}
     </span>
   );

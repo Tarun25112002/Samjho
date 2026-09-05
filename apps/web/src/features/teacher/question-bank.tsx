@@ -10,6 +10,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { selectClass } from "@/components/ui/form";
+import { Eyebrow } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 
 /**
@@ -61,14 +64,14 @@ export function QuestionBank({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="border-line bg-card rounded-panel flex flex-col gap-4 border p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="text-text-soft flex items-center gap-2 text-sm">
+      <Card className="flex flex-col gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <label className="text-text-soft flex flex-col gap-1.5 text-sm font-medium">
             Subject
             <select
               value={params.get("subjectId") ?? ""}
               onChange={(event) => setParam("subjectId", event.target.value || null)}
-              className={filterInput}
+              className={selectClass}
             >
               <option value="">All subjects</option>
               {subjects.map((subject) => (
@@ -79,12 +82,12 @@ export function QuestionBank({
             </select>
           </label>
 
-          <label className="text-text-soft flex items-center gap-2 text-sm">
+          <label className="text-text-soft flex flex-col gap-1.5 text-sm font-medium">
             Chapter
             <select
               value={activeChapter ?? ""}
               onChange={(event) => setParam("chapterId", event.target.value || null)}
-              className={filterInput}
+              className={selectClass}
             >
               <option value="">All chapters</option>
               {chapters.map((chapter) => {
@@ -101,12 +104,12 @@ export function QuestionBank({
             </select>
           </label>
 
-          <label className="text-text-soft flex items-center gap-2 text-sm">
+          <label className="text-text-soft flex flex-col gap-1.5 text-sm font-medium">
             Status
             <select
               value={params.get("status") ?? ""}
               onChange={(event) => setParam("status", event.target.value || null)}
-              className={filterInput}
+              className={selectClass}
             >
               <option value="">Any</option>
               <option value="PUBLISHED">Set for students</option>
@@ -117,14 +120,15 @@ export function QuestionBank({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-text-faint text-xs font-bold tracking-[0.1em] uppercase">
-            Difficulty
-          </span>
-          <Chip active={activeDifficulty === null} onClick={() => setParam("difficulty", null)}>
+          <Eyebrow tone="muted">Difficulty</Eyebrow>
+          <FilterChip
+            active={activeDifficulty === null}
+            onClick={() => setParam("difficulty", null)}
+          >
             Any {data.facets.total}
-          </Chip>
+          </FilterChip>
           {data.facets.byDifficulty.map((facet) => (
-            <Chip
+            <FilterChip
               key={facet.difficulty}
               active={activeDifficulty === facet.difficulty}
               onClick={() =>
@@ -135,20 +139,18 @@ export function QuestionBank({
               }
             >
               {LABELS[facet.difficulty]} {facet.count}
-            </Chip>
+            </FilterChip>
           ))}
         </div>
 
         {data.facets.byMarks.length > 1 ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-text-faint text-xs font-bold tracking-[0.1em] uppercase">
-              Marks
-            </span>
-            <Chip active={activeMarks === null} onClick={() => setParam("marks", null)}>
+            <Eyebrow tone="muted">Marks</Eyebrow>
+            <FilterChip active={activeMarks === null} onClick={() => setParam("marks", null)}>
               Any
-            </Chip>
+            </FilterChip>
             {data.facets.byMarks.map((facet) => (
-              <Chip
+              <FilterChip
                 key={facet.marks}
                 active={activeMarks === String(facet.marks)}
                 onClick={() =>
@@ -159,11 +161,11 @@ export function QuestionBank({
                 }
               >
                 {facet.marks} {facet.count > 0 ? `· ${String(facet.count)}` : ""}
-              </Chip>
+              </FilterChip>
             ))}
           </div>
         ) : null}
-      </div>
+      </Card>
 
       {data.items.length === 0 ? (
         <Empty filtered={params.toString().length > 0} />
@@ -215,7 +217,7 @@ function QuestionRow({ question }: { question: TeacherBankQuestion }) {
   }
 
   return (
-    <li className="border-line bg-card rounded-panel border p-5">
+    <Card as="li">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="text-text-faint flex flex-wrap items-center gap-2 text-xs font-semibold">
@@ -247,14 +249,14 @@ function QuestionRow({ question }: { question: TeacherBankQuestion }) {
         <div className="flex shrink-0 flex-col items-end gap-2">
           {question.status === "PUBLISHED" ? (
             <>
-              <span className="rounded-pill bg-brand-100 text-brand-700 px-3 py-1.5 text-xs font-bold">
+              <span className="rounded-pill bg-brand-100 text-brand-700 px-2.5 py-1 text-xs font-semibold">
                 Set for students
               </span>
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => void setStatus("DRAFT")}
-                className="text-text-faint hover:text-text text-sm font-semibold"
+                className="text-text-faint hover:text-text inline-flex min-h-11 items-center text-sm font-semibold transition-colors"
               >
                 Withdraw
               </button>
@@ -277,13 +279,13 @@ function QuestionRow({ question }: { question: TeacherBankQuestion }) {
           {error}
         </p>
       ) : null}
-    </li>
+    </Card>
   );
 }
 
 function Empty({ filtered }: { filtered: boolean }) {
   return (
-    <section className="border-line bg-card rounded-panel border p-7 text-center">
+    <Card pad="roomy" className="text-center">
       <p className="text-text font-semibold">
         {filtered ? "Nothing matches those filters." : "Your bank is empty."}
       </p>
@@ -292,11 +294,18 @@ function Empty({ filtered }: { filtered: boolean }) {
           ? "Widen the filters, or upload another paper to fill the gap."
           : "Upload a question paper and Samjho pulls the questions out of it, sorted by chapter and difficulty."}
       </p>
-    </section>
+    </Card>
   );
 }
 
-function Chip({
+/**
+ * A filter that is also its own count.
+ *
+ * A button rather than the `Chip` in `ui/surface`: that one is a label, this one
+ * is pressed, and a 44px target with an `aria-pressed` state is a different
+ * object from a 24px status marker even though they share a silhouette.
+ */
+function FilterChip({
   active,
   onClick,
   children,
@@ -327,6 +336,3 @@ const DIFFICULTY_TONE = {
   MEDIUM: "text-text-soft",
   HARD: "text-marker-700",
 } as const;
-
-const filterInput =
-  "border-line bg-card text-text rounded-control min-h-11 border px-3 text-sm outline-none focus:border-brand-500";

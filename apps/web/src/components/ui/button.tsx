@@ -40,12 +40,12 @@ const SIZES: Record<Size, string> = {
   // Every size clears 44px, which is the one rule applied to every control in
   // this product without exception — the audience is phone-first.
   sm: "min-h-11 px-4 text-sm",
-  md: "min-h-12 px-5 text-[0.9375rem]",
+  md: "min-h-12 px-5 text-ui",
   lg: "min-h-14 px-7 text-base",
 };
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold tracking-[-0.01em] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55";
+  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold tracking-control transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55";
 
 function classes(variant: Variant, size: Size, full: boolean, extra?: string): string {
   return [BASE, VARIANTS[variant], SIZES[size], full ? "w-full" : "", extra]

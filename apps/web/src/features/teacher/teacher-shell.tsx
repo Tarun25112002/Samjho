@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { PageHeader, PageShell } from "@/components/ui/page";
+
 /**
  * The tab strip across the teacher workspace.
  *
@@ -43,21 +45,21 @@ export function TeacherShell({
       : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
 
   return (
-    <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
-      <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
-        <div className="min-w-0 max-w-3xl">
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Teaching space
-          </p>
-          <h1 className="text-text mt-2 text-[2rem] leading-[1.08] font-semibold tracking-[-0.04em] sm:text-4xl">
-            {title}
-          </h1>
-          <p className="text-text-soft mt-3 max-w-2xl text-sm leading-relaxed">{blurb}</p>
-        </div>
-        {action}
-      </header>
+    <PageShell width="wide">
+      {/*
+        No rule under this header: the tab strip immediately below draws its
+        own, and two hairlines an inch apart read as a mistake rather than as
+        structure. It is one of the two stated exceptions on `PageHeader`.
+      */}
+      <PageHeader
+        eyebrow="Teaching space"
+        title={title}
+        lede={blurb}
+        rule={false}
+        action={action}
+      />
 
-      <nav aria-label="Teaching" className="border-line -mx-1 overflow-x-auto border-b px-1">
+      <nav aria-label="Teaching" className="border-line -mx-1 -mt-1 overflow-x-auto border-b px-1">
         <ul className="flex min-w-max gap-1">
           {TABS.map((tab) => {
             const active = isActive(tab);
@@ -82,6 +84,6 @@ export function TeacherShell({
       </nav>
 
       {children}
-    </div>
+    </PageShell>
   );
 }

@@ -2,6 +2,8 @@ import type { PastPaperCoverage, PastPaperYearCoverage } from "@samjho/contracts
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
+import { Card, Meter } from "@/components/ui/surface";
 import { loadAdminSubjects } from "@/lib/admin";
 import { loadPastPaperCoverage } from "@/lib/past-papers";
 
@@ -48,51 +50,46 @@ export default async function PastPapersPage({
 
   if (!selected) {
     return (
-      <main className="mx-auto w-full max-w-[90rem] px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
-        <h1 className="text-text text-2xl font-semibold tracking-tight">Previous-year papers</h1>
-        <p className="text-text-soft mt-2 text-sm">No active subjects yet.</p>
-      </main>
+      <PageShell as="main" width="wide">
+        <PageHeader
+          eyebrow="Content coverage"
+          title="Previous-year papers"
+          lede="No active subjects yet."
+        />
+      </PageShell>
     );
   }
 
   const coverage = await loadPastPaperCoverage(selected.id);
 
   return (
-    <main className="mx-auto flex w-full max-w-[90rem] flex-col gap-7 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
-      <header className="border-line bg-card rounded-panel space-y-3 border p-6 sm:p-8">
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-          Content coverage
-        </p>
-        <h1 className="text-text text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-          Previous-year papers
-        </h1>
-        <p className="text-text-soft max-w-3xl text-sm leading-relaxed">
-          {coverage.papersWithQuestions} of {coverage.totalPapers} registered papers have questions
-          against them — {coverage.importedQuestions} in total.
-        </p>
-      </header>
+    <PageShell as="main" width="wide">
+      <PageHeader
+        eyebrow="Content coverage"
+        title="Previous-year papers"
+        lede={`${String(coverage.papersWithQuestions)} of ${String(coverage.totalPapers)} registered papers have questions against them — ${String(coverage.importedQuestions)} in total.`}
+      />
 
       {subjects.length > 1 ? (
-        <nav
-          aria-label="Subject"
-          className="border-line bg-card rounded-panel flex flex-wrap gap-2 border p-3"
-        >
-          {subjects.map((subject) => (
-            <Link
-              key={subject.id}
-              href={`/admin/past-papers?subjectId=${subject.id}`}
-              aria-current={subject.id === selected.id ? "page" : undefined}
-              className={[
-                "rounded-pill min-h-11 border px-4 text-sm font-semibold transition-colors",
-                subject.id === selected.id
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-line-strong text-text-soft hover:border-brand-300",
-              ].join(" ")}
-            >
-              {subject.name}
-            </Link>
-          ))}
-        </nav>
+        <Card as="div" pad="flush" className="flex flex-wrap gap-2 p-3">
+          <nav aria-label="Subject" className="flex flex-wrap gap-2">
+            {subjects.map((subject) => (
+              <Link
+                key={subject.id}
+                href={`/admin/past-papers?subjectId=${subject.id}`}
+                aria-current={subject.id === selected.id ? "page" : undefined}
+                className={[
+                  "rounded-pill min-h-11 border px-4 text-sm font-semibold transition-colors",
+                  subject.id === selected.id
+                    ? "border-brand-500 bg-brand-50 text-brand-700"
+                    : "border-line-strong text-text-soft hover:border-brand-300",
+                ].join(" ")}
+              >
+                {subject.name}
+              </Link>
+            ))}
+          </nav>
+        </Card>
       ) : null}
 
       {coverage.years.length === 0 ? (
@@ -100,29 +97,25 @@ export default async function PastPapersPage({
           No sittings registered for {coverage.subjectName} yet. Run the seed to register 2001–2026.
         </p>
       ) : (
-        <section aria-labelledby="years-heading" className="space-y-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Coverage by year
-            </p>
-            <h2
-              id="years-heading"
-              className="text-text mt-1 text-xl font-semibold tracking-[-0.025em]"
-            >
-              {coverage.subjectName}
-            </h2>
-          </div>
+        <section aria-labelledby="years-heading" className="flex flex-col gap-4">
+          <SectionHeading
+            id="years-heading"
+            eyebrow="Coverage by year"
+            title={coverage.subjectName}
+          />
 
-          <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
-            {coverage.years.map((year) => (
-              <YearRow key={year.year} year={year} subjectId={coverage.subjectId} />
-            ))}
-          </ul>
+          <Card pad="flush" className="overflow-hidden">
+            <ul className="divide-line divide-y">
+              {coverage.years.map((year) => (
+                <YearRow key={year.year} year={year} subjectId={coverage.subjectId} />
+              ))}
+            </ul>
+          </Card>
         </section>
       )}
 
       <Footnote coverage={coverage} />
-    </main>
+    </PageShell>
   );
 }
 
@@ -134,24 +127,17 @@ function YearRow({ year, subjectId }: { year: PastPaperYearCoverage; subjectId: 
       : Math.min(1, year.importedQuestions / year.printedQuestions);
 
   return (
-    <li className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-raised/60 sm:px-6">
+    <li className="hover:bg-raised/60 flex items-center gap-4 px-5 py-4 transition-colors sm:px-6">
       <span className="text-text w-14 shrink-0 font-semibold tabular-nums">{year.year}</span>
 
       <div className="min-w-0 flex-1">
-        <div className="bg-raised h-1.5 w-full overflow-hidden rounded-full">
-          {/*
-            No bar at all when the denominator is unknown, rather than a bar at
-            zero. "We hold 12 questions and don't know how many the paper had"
-            is a different state from "we hold nothing", and a bar cannot show
-            the difference.
-          */}
-          {fraction === null ? null : (
-            <div
-              className="bg-brand-500 h-full rounded-full"
-              style={{ width: `${String(Math.round(fraction * 100))}%` }}
-            />
-          )}
-        </div>
+        {/*
+          No bar at all when the denominator is unknown, rather than a bar at
+          zero. "We hold 12 questions and don't know how many the paper had" is
+          a different state from "we hold nothing", and a bar cannot show the
+          difference — so the track is drawn and left empty.
+        */}
+        <Meter percent={fraction === null ? 0 : fraction * 100} size="slim" />
 
         <p className="text-text-soft mt-1 text-xs">
           {cancelled
@@ -179,7 +165,7 @@ function Footnote({ coverage }: { coverage: PastPaperCoverage }) {
   const uncounted = coverage.years.filter((year) => year.printedQuestions === null).length;
 
   return (
-    <p className="border-line bg-raised rounded-panel border p-4 text-xs leading-relaxed text-text-faint sm:p-5">
+    <p className="border-line bg-raised text-text-faint rounded-panel border p-4 text-xs leading-relaxed sm:p-5">
       Papers are loaded from files with{" "}
       <code className="text-text-soft">pnpm --filter @samjho/api ingest:paper &lt;file&gt;</code> —
       see <code className="text-text-soft">content/past-papers/README.md</code>. Nothing on this

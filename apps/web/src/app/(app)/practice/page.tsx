@@ -12,6 +12,8 @@ import {
   StackIcon,
 } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
+import { Card, cardClass, IconTile, Meter, PanelOrbit } from "@/components/ui/surface";
 import { StartPractice } from "@/features/practice/start-practice";
 import { requireOnboarded } from "@/lib/me";
 import { loadSessions } from "@/lib/practice";
@@ -43,46 +45,39 @@ export default async function PracticeHubPage() {
 
   const resume = inProgress.items[0];
   const subjects = me.profile?.subjects ?? [];
+  const resumePercent =
+    resume === undefined
+      ? 0
+      : Math.round((resume.totals.answered / Math.max(resume.totals.totalQuestions, 1)) * 100);
 
   return (
-    <div className="mx-auto flex w-full max-w-[96rem] flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10 2xl:px-16">
-      <header className="border-line flex flex-wrap items-end justify-between gap-5 border-b pb-6">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Practice space
-          </p>
-          <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-            Practice with purpose.
-          </h1>
-          <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-            Build fluency, understand the answer, and return to the questions that still need work.
-          </p>
-        </div>
-        <Link
-          href="/practice/new"
-          className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
-        >
-          Build a set <ChevronRight className="size-4" />
-        </Link>
-      </header>
+    <PageShell width="wide">
+      <PageHeader
+        eyebrow="Practice space"
+        title="Practice with purpose."
+        lede="Build fluency, understand the answer, and return to the questions that still need work."
+        action={
+          <Link
+            href="/practice/new"
+            className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+          >
+            Build a set <ChevronRight className="size-4" />
+          </Link>
+        }
+      />
 
       {resume ? (
-        <section
+        <Card
+          tone="brand"
           aria-labelledby="continue-heading"
-          className="rounded-panel border-brand-200 bg-brand-50 relative grid gap-5 overflow-hidden border p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
+          className="relative grid gap-5 overflow-hidden lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
         >
-          <div
-            aria-hidden="true"
-            className="border-brand-200/70 absolute -top-20 -right-16 size-52 rounded-full border-[18px]"
-          />
+          <PanelOrbit />
           <div className="relative min-w-0">
-            <p className="text-brand-700 flex items-center gap-2 text-xs font-bold tracking-[0.14em] uppercase">
+            <Eyebrow className="flex items-center gap-2">
               <span className="bg-brand-500 size-2 rounded-full" /> Ready when you are
-            </p>
-            <h2
-              id="continue-heading"
-              className="text-text mt-3 truncate text-2xl font-semibold tracking-[-0.028em]"
-            >
+            </Eyebrow>
+            <h2 id="continue-heading" className="text-text text-heading mt-3 truncate">
               {resume.focus ?? PRACTICE_MODE_LABELS[resume.mode]}
             </h2>
             <div className="mt-4 max-w-2xl">
@@ -90,25 +85,9 @@ export default async function PracticeHubPage() {
                 <span>
                   {resume.totals.answered} of {resume.totals.totalQuestions} answered
                 </span>
-                <span className="tabular-nums">
-                  {Math.round(
-                    (resume.totals.answered / Math.max(resume.totals.totalQuestions, 1)) * 100,
-                  )}
-                  %
-                </span>
+                <span className="tabular-nums">{resumePercent}%</span>
               </div>
-              <div className="bg-brand-200 mt-2 h-2 overflow-hidden rounded-full">
-                <div
-                  className="bg-brand-500 h-full rounded-full"
-                  style={{
-                    width: `${String(
-                      Math.round(
-                        (resume.totals.answered / Math.max(resume.totals.totalQuestions, 1)) * 100,
-                      ),
-                    )}%`,
-                  }}
-                />
-              </div>
+              <Meter percent={resumePercent} className="bg-brand-200 mt-2" />
             </div>
           </div>
 
@@ -118,21 +97,15 @@ export default async function PracticeHubPage() {
           >
             Resume
           </ButtonLink>
-        </section>
+        </Card>
       ) : null}
 
       <section aria-labelledby="start-heading" className="flex flex-col gap-4">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Choose your route
-          </p>
-          <h2
-            id="start-heading"
-            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-          >
-            Start where it helps most
-          </h2>
-        </div>
+        <SectionHeading
+          id="start-heading"
+          eyebrow="Choose your route"
+          title="Start where it helps most"
+        />
 
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Preset
@@ -170,11 +143,14 @@ export default async function PracticeHubPage() {
 
         <Link
           href="/practice/new"
-          className="rounded-panel border-line bg-card hover:border-brand-300 hover:shadow-lift group flex items-center gap-4 border p-5 transition-all sm:p-6"
+          className={`${cardClass({ interactive: true })} group flex items-center gap-4`}
         >
-          <span className="bg-raised text-text-soft grid size-11 shrink-0 place-items-center rounded-xl group-hover:bg-brand-50 group-hover:text-brand-700 transition-colors">
+          <IconTile
+            size="large"
+            className="group-hover:bg-brand-50 group-hover:text-brand-700 transition-colors"
+          >
             <SlidersIcon className="size-5" />
-          </span>
+          </IconTile>
           <span className="min-w-0 flex-1">
             <span className="text-text block font-semibold">Build a custom set</span>
             <span className="text-text-soft mt-0.5 block text-sm">
@@ -187,24 +163,18 @@ export default async function PracticeHubPage() {
 
       {subjects.length > 0 ? (
         <section aria-labelledby="subjects-heading" className="flex flex-col gap-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Your syllabus
-            </p>
-            <h2
-              id="subjects-heading"
-              className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-            >
-              Practise by subject
-            </h2>
-          </div>
+          <SectionHeading
+            id="subjects-heading"
+            eyebrow="Your syllabus"
+            title="Practise by subject"
+          />
 
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {subjects.map((subject) => (
               <li key={subject.id}>
                 <Link
                   href={`/subjects/${subject.slug}`}
-                  className="rounded-panel border-line bg-card hover:border-brand-300 hover:shadow-lift group flex h-full min-h-36 flex-col border p-5 transition-all"
+                  className={`${cardClass({ interactive: true })} group flex h-full min-h-36 flex-col`}
                 >
                   <p className="text-text font-semibold">{subject.name}</p>
                   <p className="text-text-soft mt-1 text-sm">
@@ -222,51 +192,43 @@ export default async function PracticeHubPage() {
       ) : null}
 
       <section aria-labelledby="recent-heading" className="flex flex-col gap-4">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Your activity
-          </p>
-          <h2
-            id="recent-heading"
-            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-          >
-            Recent practice
-          </h2>
-        </div>
+        <SectionHeading id="recent-heading" eyebrow="Your activity" title="Recent practice" />
 
         {recent.items.length === 0 ? (
-          <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm">
-            Nothing yet. Your first set will appear here.
-          </p>
+          <Card pad="roomy">
+            <p className="text-text-soft text-sm">Nothing yet. Your first set will appear here.</p>
+          </Card>
         ) : (
-          <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
-            {recent.items.map((session) => (
-              <li key={session.id}>
-                <Link
-                  href={
-                    session.status === "IN_PROGRESS"
-                      ? `/practice/sessions/${session.id}`
-                      : `/practice/sessions/${session.id}/result`
-                  }
-                  className="hover:bg-raised flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-4 transition-colors"
-                >
-                  <span className="text-text font-medium">
-                    {session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
-                  </span>
-                  <span className="text-text-soft text-sm">{describeScore(session.totals)}</span>
-                  <span className="text-text-faint ml-auto text-sm">
-                    {session.status === "IN_PROGRESS"
-                      ? "In progress"
-                      : formatDuration(session.totals.timeSpentMs)}
-                  </span>
-                  <ChevronRight className="text-text-faint size-4 shrink-0" />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <Card pad="flush" className="overflow-hidden">
+            <ul className="divide-line divide-y">
+              {recent.items.map((session) => (
+                <li key={session.id}>
+                  <Link
+                    href={
+                      session.status === "IN_PROGRESS"
+                        ? `/practice/sessions/${session.id}`
+                        : `/practice/sessions/${session.id}/result`
+                    }
+                    className="hover:bg-raised flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 px-5 py-4 transition-colors sm:px-6"
+                  >
+                    <span className="text-text font-medium">
+                      {session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
+                    </span>
+                    <span className="text-text-soft text-sm">{describeScore(session.totals)}</span>
+                    <span className="text-text-faint ml-auto text-sm">
+                      {session.status === "IN_PROGRESS"
+                        ? "In progress"
+                        : formatDuration(session.totals.timeSpentMs)}
+                    </span>
+                    <ChevronRight className="text-text-faint size-4 shrink-0" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }
 
@@ -289,15 +251,15 @@ function Preset({
   children: React.ReactNode;
 }) {
   return (
-    <li className="rounded-panel border-line bg-card hover:border-brand-300 hover:shadow-lift flex min-h-[16rem] flex-col gap-5 border p-5 transition-all">
+    <Card as="li" interactive className="flex min-h-64 flex-col gap-5">
       <div>
-        <span className="bg-raised text-text-soft mb-4 grid size-11 place-items-center rounded-xl">
+        <IconTile size="large" className="mb-4">
           <Icon className="size-5" />
-        </span>
-        <h3 className="text-text text-lg font-semibold tracking-[-0.015em]">{title}</h3>
+        </IconTile>
+        <h3 className="text-text text-subheading">{title}</h3>
         <p className="text-text-soft mt-1 text-sm leading-relaxed">{body}</p>
       </div>
       <div className="mt-auto">{children}</div>
-    </li>
+    </Card>
   );
 }

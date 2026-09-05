@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { ChevronRight } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
+import { PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
 import { ApiClientError } from "@/lib/api-client";
 import { groupChaptersByDomain, loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
@@ -52,28 +53,19 @@ export default async function SubjectPage({ params }: PageProps) {
   const groups = groupChaptersByDomain(subject.chapters, subject.domains);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
-      <header className="border-line border-b pb-6">
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-          Subject guide
-        </p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <h1 className="text-text text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-              {subject.name}
-            </h1>
-            <p className="text-text-soft mt-2 text-sm leading-relaxed">
-              Class {subject.classLevel} {subject.board} · {subject.theoryMarks}-mark theory paper
-            </p>
-          </div>
-
-          {subject.counts.total > 0 ? (
+    <PageShell>
+      <PageHeader
+        eyebrow="Subject guide"
+        title={subject.name}
+        lede={`Class ${String(subject.classLevel)} ${subject.board} · ${String(subject.theoryMarks)}-mark theory paper`}
+        action={
+          subject.counts.total > 0 ? (
             <ButtonLink href={practiceHref({ unseenOnly: false, subjectId: subject.id })}>
               Practise this subject
             </ButtonLink>
-          ) : null}
-        </div>
-
+          ) : undefined
+        }
+      >
         <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <div className="inline-flex items-baseline gap-2">
             <dd className="text-text text-lg font-semibold tabular-nums">
@@ -86,7 +78,7 @@ export default async function SubjectPage({ params }: PageProps) {
             <dt className="text-text-soft">questions available</dt>
           </div>
         </dl>
-      </header>
+      </PageHeader>
 
       <DataState
         data={groups}
@@ -102,14 +94,10 @@ export default async function SubjectPage({ params }: PageProps) {
           <div className="flex flex-col gap-8">
             {sections.map((group) => (
               <section key={group.domain ?? "all"} className="flex flex-col gap-4">
-                <div>
-                  <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-                    {group.domain ?? "Course contents"}
-                  </p>
-                  <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
-                    {group.domain ? `${group.domain} chapters` : "Choose a chapter"}
-                  </h2>
-                </div>
+                <SectionHeading
+                  eyebrow={group.domain ?? "Course contents"}
+                  title={group.domain ? `${group.domain} chapters` : "Choose a chapter"}
+                />
 
                 <ul className="grid gap-3 md:grid-cols-2">
                   {group.chapters.map((chapter) => {
@@ -127,7 +115,7 @@ export default async function SubjectPage({ params }: PageProps) {
                               counter. */}
                           <span
                             className={[
-                              "grid size-10 shrink-0 place-items-center rounded-xl text-sm font-semibold tabular-nums",
+                              "rounded-control grid size-10 shrink-0 place-items-center text-sm font-semibold tabular-nums",
                               empty ? "bg-raised text-text-faint" : "bg-brand-50 text-brand-700",
                             ].join(" ")}
                           >
@@ -169,7 +157,7 @@ export default async function SubjectPage({ params }: PageProps) {
           </div>
         )}
       </DataState>
-    </div>
+    </PageShell>
   );
 }
 

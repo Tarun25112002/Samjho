@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { inputClass, selectClass, textareaClass } from "@/components/ui/form";
+import { Card } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 
 /**
@@ -143,7 +145,7 @@ export function UploadForm({
   }
 
   return (
-    <section className="border-brand-200 bg-brand-50 rounded-panel border p-5 sm:p-6">
+    <Card tone="brand">
       <form
         className="grid gap-5"
         onSubmit={(event) => {
@@ -151,7 +153,7 @@ export function UploadForm({
           void submit();
         }}
       >
-        <div className="border-brand-200/70 bg-card/70 flex w-fit flex-wrap gap-1 rounded-pill border p-1">
+        <div className="border-brand-200/70 bg-card/70 rounded-pill flex w-fit flex-wrap gap-1 border p-1">
           <ModeTab active={mode === "file"} onClick={() => setMode("file")}>
             Upload a file
           </ModeTab>
@@ -166,7 +168,7 @@ export function UploadForm({
               id="upload-subject"
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
-              className={inputClass}
+              className={selectClass}
             >
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
@@ -195,7 +197,7 @@ export function UploadForm({
               type="file"
               accept={UPLOAD_ACCEPT_ATTRIBUTE}
               onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
-              className="border-brand-200 bg-card text-text-soft file:text-on-brand file:bg-brand-500 w-full rounded-control border px-3 py-3 text-sm file:mr-3 file:rounded-pill file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
+              className={`${inputClass} text-text-soft file:text-on-brand file:bg-brand-500 file:rounded-pill py-2 file:mr-3 file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold`}
             />
             <p className="text-text-faint mt-1.5 text-xs">
               A PDF or a clear photo, up to {formatBytes(MAX_UPLOAD_BYTES)}. Scans are fine — the
@@ -210,7 +212,7 @@ export function UploadForm({
               onChange={(event) => setText(event.target.value)}
               rows={8}
               placeholder="Paste the questions here, exactly as printed…"
-              className={`${inputClass} h-auto min-h-40 py-3 font-mono text-xs`}
+              className={`${textareaClass} min-h-40 font-mono text-sm`}
             />
           </Field>
         )}
@@ -243,7 +245,7 @@ export function UploadForm({
           </p>
         ) : null}
       </form>
-    </section>
+    </Card>
   );
 }
 
@@ -262,7 +264,7 @@ function ModeTab({
       onClick={onClick}
       aria-pressed={active}
       className={[
-        "rounded-pill min-h-10 px-4 text-sm font-semibold transition-colors",
+        "rounded-pill min-h-11 px-4 text-sm font-semibold transition-colors",
         active ? "bg-brand-500 text-on-brand" : "bg-card text-text-soft hover:text-text",
       ].join(" ")}
     >
@@ -282,7 +284,7 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <label htmlFor={htmlFor} className="text-text mb-1.5 block text-xs font-semibold">
+      <label htmlFor={htmlFor} className="text-text mb-1.5 block text-sm font-semibold">
         {label}
       </label>
       {children}
@@ -315,6 +317,3 @@ function formatBytes(bytes: number): string {
   const mb = bytes / (1024 * 1024);
   return mb >= 1 ? `${mb.toFixed(1)}MB` : `${String(Math.round(bytes / 1024))}KB`;
 }
-
-const inputClass =
-  "border-brand-200 bg-card text-text h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";

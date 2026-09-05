@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/ui/page";
 import { TeacherShell } from "@/features/teacher/teacher-shell";
 import { UploadReview } from "@/features/teacher/upload-review";
 import { ApiClientError } from "@/lib/api-client";
@@ -29,14 +29,7 @@ export default async function UploadReviewPage({ params }: { params: Promise<{ i
     <TeacherShell
       title="Check what was read."
       blurb="The questions Samjho was least sure about come first. Nothing reaches your bank until you accept it."
-      action={
-        <Link
-          href="/teacher/uploads"
-          className="text-text-soft hover:text-text text-sm font-semibold"
-        >
-          ← All papers
-        </Link>
-      }
+      action={<BackLink href="/teacher/uploads">All papers</BackLink>}
     >
       <UploadReview upload={upload} />
     </TeacherShell>

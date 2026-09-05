@@ -11,6 +11,7 @@ import {
 import { formatMarks, MathText } from "@samjho/ui";
 
 import { Check, Cross, HalfMark } from "@/components/icons";
+import { Card, Chip, Toggle } from "@/components/ui/surface";
 import { formatMarksValue } from "@/lib/practice-format";
 
 /**
@@ -64,10 +65,7 @@ export function FeedbackPanel({
   );
 
   return (
-    <section
-      aria-label="Feedback"
-      className="rounded-panel border-line bg-card divide-line flex flex-col divide-y border"
-    >
+    <Card aria-label="Feedback" pad="flush" className="divide-line flex flex-col divide-y">
       {item.attempts.map((attempt) => (
         <AttemptFeedback
           key={attempt.id}
@@ -79,7 +77,7 @@ export function FeedbackPanel({
           onSetMistakeReason={onSetMistakeReason}
         />
       ))}
-    </section>
+    </Card>
   );
 }
 
@@ -104,11 +102,7 @@ function AttemptFeedback({
   return (
     <article className="flex flex-col gap-4 p-5 sm:p-6">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        {label ? (
-          <span className="bg-raised text-text-soft rounded-pill px-2.5 py-1 text-xs font-semibold">
-            {label}
-          </span>
-        ) : null}
+        {label ? <Chip>{label}</Chip> : null}
         <Verdict attempt={attempt} />
         <span className="marks-margin text-text-soft ml-auto text-sm font-medium">
           {formatMarksValue(attempt.marksAwarded)} / {formatMarksValue(attempt.marksPossible)}
@@ -126,7 +120,7 @@ function AttemptFeedback({
       {key ? (
         <div>
           <h4 className="text-text text-sm font-semibold">Solution</h4>
-          <div className="text-text-soft mt-1.5 font-serif text-[0.9375rem] leading-[1.7]">
+          <div className="text-text-soft text-reading mt-1.5 font-serif">
             <MathText>{key.solution}</MathText>
             {key.explanation ? <MathText>{key.explanation}</MathText> : null}
           </div>
@@ -249,7 +243,7 @@ function SelfEvaluation({
             onClick={() => {
               onSelfEvaluate(attempt.id, marks);
             }}
-            className="rounded-control border-line-strong bg-card text-text hover:border-brand-500 min-h-11 border px-4 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="rounded-control border-line-strong bg-card text-text enabled:hover:border-brand-500 min-h-11 border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-55"
           >
             {marks === 0 ? "No marks" : formatMarks(marks)}
           </button>
@@ -277,7 +271,7 @@ function MarkingScheme({
       <ol className="divide-line mt-1.5 flex flex-col divide-y">
         {steps.map((step, position) => (
           <li key={position} className="flex items-start gap-4 py-2.5">
-            <span className="text-text-soft font-serif text-[0.9375rem] leading-[1.6]">
+            <span className="text-text-soft text-reading font-serif">
               <MathText inline>{step.step}</MathText>
             </span>
             <span className="marks-margin text-text ml-auto shrink-0 text-sm font-semibold">
@@ -313,22 +307,15 @@ function MistakeReasons({
         {REASONS.map((reason) => {
           const selected = attempt.mistakeReason === reason;
           return (
-            <button
+            <Toggle
               key={reason}
-              type="button"
-              aria-pressed={selected}
+              selected={selected}
               onClick={() => {
                 onSetMistakeReason(attempt.id, selected ? null : reason);
               }}
-              className={[
-                "rounded-pill min-h-11 border px-3.5 text-sm font-medium transition-colors",
-                selected
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-line-strong text-text-soft hover:border-brand-300",
-              ].join(" ")}
             >
               {MISTAKE_REASON_LABELS[reason]}
-            </button>
+            </Toggle>
           );
         })}
       </div>

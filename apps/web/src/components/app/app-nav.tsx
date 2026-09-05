@@ -91,7 +91,7 @@ export function SideNav({ role }: { role: "STUDENT" | "TEACHER" | "CONTENT_EDITO
             href={destination.href}
             aria-current={active ? "page" : undefined}
             className={[
-              "rounded-control flex min-h-11 items-center gap-3 px-3 text-[0.9375rem] font-medium transition-colors",
+              "rounded-control text-ui flex min-h-11 items-center gap-3 px-3 font-medium transition-colors",
               active
                 ? "bg-brand-50 text-brand-700"
                 : "text-text-soft hover:bg-raised hover:text-text",

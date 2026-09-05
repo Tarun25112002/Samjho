@@ -3,10 +3,10 @@
 import type { StudentProfile, SubjectSummary } from "@samjho/contracts";
 import { useMemo } from "react";
 
-import { suggestBoardSessions } from "@/features/onboarding/board-sessions";
-
 import { Button } from "@/components/ui/button";
-import { ChoiceCard, FieldError, inputClass, Label } from "@/components/ui/form";
+import { ChoiceCard, FieldError, inputClass, Label, selectClass } from "@/components/ui/form";
+import { cardClass } from "@/components/ui/surface";
+import { suggestBoardSessions } from "@/features/onboarding/board-sessions";
 
 import { useProfileForm } from "./use-profile-form";
 
@@ -51,7 +51,7 @@ export function ProfileForm({
 
   return (
     <form
-      className="rounded-panel border-line bg-card flex flex-col gap-7 border p-5 sm:p-6"
+      className={`${cardClass()} flex flex-col gap-7`}
       onSubmit={(event) => {
         event.preventDefault();
         void form.save();
@@ -82,7 +82,7 @@ export function ProfileForm({
                 preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
               });
             }}
-            className={inputClass}
+            className={selectClass}
           >
             <option value="ENGLISH">English</option>
             <option value="HINDI">Hindi</option>

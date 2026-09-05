@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Check, Cross } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
+import { cardClass } from "@/components/ui/surface";
 
 /**
  * The hero: a question you can actually answer.
@@ -49,7 +50,7 @@ export function TryQuestion() {
   const right = chosen === "a";
 
   return (
-    <div className="rounded-panel border-line bg-card shadow-pop overflow-hidden border text-left">
+    <div className={`${cardClass({ pad: "flush" })} shadow-pop overflow-hidden text-left`}>
       <header className="border-line flex items-center gap-3 border-b px-5 py-3.5">
         <span className="text-text text-sm font-semibold">Question 7</span>
         <span className="bg-raised text-text-soft rounded-pill px-2.5 py-1 text-xs font-medium">
@@ -59,7 +60,7 @@ export function TryQuestion() {
       </header>
 
       <div className="flex flex-col gap-4 px-5 py-5">
-        <p className="text-text font-serif text-[1.0625rem] leading-[1.65]">
+        <p className="text-text text-prose font-serif">
           Given that HCF(96, 404) = 4, the LCM of 96 and 404 is:
         </p>
 
@@ -116,9 +117,7 @@ export function TryQuestion() {
                   </span>
                 </p>
 
-                <p className="text-text-soft font-serif text-[0.9375rem] leading-[1.6]">
-                  {WHY[chosen]}
-                </p>
+                <p className="text-text-soft text-reading font-serif">{WHY[chosen]}</p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <ButtonLink href="/sign-up" size="sm">

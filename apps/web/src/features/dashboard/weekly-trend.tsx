@@ -24,13 +24,19 @@ export function WeeklyTrend({ days }: { days: ActivityDay[] }) {
     activeDay.answered === 0 ? null : Math.round((activeDay.correct / activeDay.answered) * 100);
 
   return (
-    <figure className="min-w-0" aria-label="Questions attempted and correct answers over the last seven days">
+    <figure
+      className="min-w-0"
+      aria-label="Questions attempted and correct answers over the last seven days"
+    >
       <div className="flex flex-wrap items-end justify-between gap-x-5 gap-y-1.5">
         <div>
           <p className="text-text text-sm font-semibold">{activeDay.label}</p>
           <p className="text-text-faint mt-0.5 text-xs">Hover or focus a day to inspect it</p>
         </div>
-        <div aria-live="polite" className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm tabular-nums">
+        <div
+          aria-live="polite"
+          className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm tabular-nums"
+        >
           <span className="text-text font-semibold">{String(activeDay.answered)} attempted</span>
           <span className="text-tick-700 font-semibold">{String(activeDay.correct)} correct</span>
           {accuracy !== null ? <span className="text-text-soft">{String(accuracy)}%</span> : null}
