@@ -50,7 +50,7 @@ export function SiteFooter() {
               >
                 System status
               </Link>
-              <a href="#parents" className="w-fit text-white/75 transition-colors hover:text-white">
+              <a href="/#parents" className="w-fit text-white/75 transition-colors hover:text-white">
                 For parents
               </a>
             </nav>

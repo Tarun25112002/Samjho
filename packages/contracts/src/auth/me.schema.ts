@@ -3,6 +3,7 @@ import { z } from "zod";
 import { subjectSummarySchema } from "../catalog/subject.schema.js";
 import { boardSchema, classLevelSchema } from "../question/question-enums.js";
 import { examPhaseSchema, languageSchema, roleSchema, userStatusSchema } from "./auth-enums.js";
+import { teacherProfileSchema } from "./teacher.schema.js";
 
 /**
  * `GET /api/v1/me` — the one call the web app makes to learn who it is talking
@@ -81,12 +82,25 @@ export const meResponseSchema = z.object({
   profile: studentProfileSchema.nullable(),
 
   /**
+   * The teacher half, null for everyone who is not one.
+   *
+   * A second nullable field rather than a union with `profile`, because a union
+   * would make every consumer narrow before reading either — and the two are
+   * genuinely independent facts about an account, not two spellings of one.
+   */
+  teacherProfile: teacherProfileSchema.nullable(),
+
+  /**
    * Derived server-side from `profile.onboardedAt`, not left to each caller.
    *
    * Route guards, the onboarding wizard and the app shell all need this answer,
    * and three independent re-derivations of "are they onboarded" is three chances
    * to disagree — which shows up as a redirect loop between `/welcome` and
    * `/home`.
+   *
+   * It means different things per role and the server owns which: a student
+   * needs a `StudentProfile`, a teacher a `TeacherProfile`, and an admin needs
+   * neither because there is no wizard that would have anything to ask them.
    */
   onboarded: z.boolean(),
 });

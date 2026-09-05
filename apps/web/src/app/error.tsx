@@ -45,32 +45,45 @@ export default function GlobalError({
     // the route, and every layout in this app already supplies the landmark —
     // two of them on one page means a screen reader offers a choice of "main
     // content", which is not a choice anyone can make.
-    <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center gap-6 px-5 py-16 text-center">
-      <Wordmark size="sm" tone="brand" />
+    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-5 py-12 sm:px-8 sm:py-16">
+      <section className="rounded-panel border-line bg-card relative w-full overflow-hidden border px-6 py-10 text-center shadow-lift sm:px-10 sm:py-12">
+        <div
+          aria-hidden="true"
+          className="bg-brand-50 absolute -top-20 -right-20 size-48 rounded-full"
+        />
+        <div className="relative flex flex-col items-center gap-6">
+          <span className="border-brand-200 bg-brand-50 grid size-14 place-items-center rounded-2xl border text-brand-700">
+            <span className="text-xl font-semibold">!</span>
+          </span>
+          <Wordmark size="sm" tone="brand" />
 
-      <div>
-        <h1 className="text-text text-3xl font-semibold tracking-[-0.025em]">
-          That didn&rsquo;t load
-        </h1>
-        <p className="text-text-soft mt-3 leading-relaxed">
-          Usually this is the connection rather than your account — nothing you have practised is
-          affected. Try again, and if it keeps happening the reference below tells us exactly what
-          went wrong.
-        </p>
-      </div>
+          <div>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Temporary problem
+            </p>
+            <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.03em]">
+              That didn&rsquo;t load
+            </h1>
+            <p className="text-text-soft mt-3 leading-relaxed">
+              This is usually a connection problem, not your account. Your practice is safe—try
+              again, and use the reference below if it keeps happening.
+            </p>
+          </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <Button onClick={reset}>Try again</Button>
-        <ButtonLink href="/home" variant="secondary">
-          Your dashboard
-        </ButtonLink>
-      </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={reset}>Try again</Button>
+            <ButtonLink href="/home" variant="secondary">
+              Your dashboard
+            </ButtonLink>
+          </div>
 
-      {error.digest === undefined ? null : (
-        <p className="text-text-faint text-xs">
-          Reference: <code className="font-mono">{error.digest}</code>
-        </p>
-      )}
+          {error.digest === undefined ? null : (
+            <p className="text-text-faint text-xs">
+              Reference: <code className="font-mono">{error.digest}</code>
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

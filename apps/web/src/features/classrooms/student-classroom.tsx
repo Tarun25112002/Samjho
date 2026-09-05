@@ -18,15 +18,18 @@ export function StudentClassroom({ classrooms }: { classrooms: StudentClassroom[
   const [joinOpen, setJoinOpen] = useState(classrooms.length === 0);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto flex w-full max-w-[96rem] flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10 2xl:px-16">
+      <header className="border-line flex flex-wrap items-end justify-between gap-5 border-b pb-6">
         <div>
-          <p className="text-brand-700 text-sm font-semibold">Your classroom</p>
-          <h1 className="text-text mt-1 text-[1.9rem] leading-tight font-semibold tracking-[-0.035em] sm:text-4xl">
-            Work that has a purpose.
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Teacher workspace
+          </p>
+          <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
+            Your classroom
           </h1>
-          <p className="text-text-soft mt-2 max-w-xl text-sm leading-relaxed">
-            Your teacher can set a focused practice brief. Your answers and feedback stay yours.
+          <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
+            See assigned practice, due dates, and your feedback in one place. Your personal practice
+            stays separate.
           </p>
         </div>
         <Button variant="secondary" onClick={() => setJoinOpen((open) => !open)}>
@@ -38,7 +41,7 @@ export function StudentClassroom({ classrooms }: { classrooms: StudentClassroom[
 
       {classrooms.length === 0 ? <EmptyClassroom onJoin={() => setJoinOpen(true)} /> : null}
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {classrooms.map((classroom) => (
           <ClassroomCard key={classroom.id} classroom={classroom} />
         ))}
@@ -80,7 +83,13 @@ function JoinClassroom({ onJoined }: { onJoined: () => void }) {
   }
 
   return (
-    <section className="border-brand-200 bg-brand-50 rounded-panel border p-5 sm:p-6">
+    <section className="rounded-panel border-brand-200 bg-brand-50 border p-5 sm:p-6">
+      <div className="mb-5">
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Join a class</p>
+        <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
+          Enter your class code
+        </h2>
+      </div>
       <form
         className="flex flex-col gap-4 sm:flex-row sm:items-end"
         onSubmit={(event) => {
@@ -124,7 +133,10 @@ function EmptyClassroom({ onJoin }: { onJoin: () => void }) {
     <section className="border-line bg-card rounded-panel relative overflow-hidden border p-7 sm:p-9">
       <div className="bg-brand-100 absolute -top-16 -right-12 size-44 rounded-full blur-2xl" />
       <div className="relative max-w-xl">
-        <p className="text-text text-lg font-semibold">No classes yet</p>
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+          Your classroom is ready
+        </p>
+        <p className="text-text mt-2 text-xl font-semibold tracking-[-0.02em]">No classes yet</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Join with a code and any practice your teacher assigns will appear here. Personal practice
           stays completely separate in your own account.
@@ -139,7 +151,7 @@ function EmptyClassroom({ onJoin }: { onJoin: () => void }) {
 
 function ClassroomCard({ classroom }: { classroom: StudentClassroom }) {
   return (
-    <section className="border-line bg-card rounded-panel overflow-hidden border">
+    <section className="rounded-panel border-line bg-card flex h-full flex-col overflow-hidden border">
       <div className="border-line bg-raised/60 border-b px-5 py-4 sm:px-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -157,16 +169,19 @@ function ClassroomCard({ classroom }: { classroom: StudentClassroom }) {
         </p>
       </div>
 
-      <div className="p-5 sm:p-6">
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
         {classroom.assignments.length === 0 ? (
           <p className="text-text-soft text-sm leading-relaxed">
             Nothing assigned right now. When your teacher sends a practice brief, it will show up
             here.
           </p>
         ) : (
-          <ul className="divide-line divide-y">
+          <ul className="grid gap-3">
             {classroom.assignments.map((assignment) => (
-              <li key={assignment.id} className="py-4 first:pt-0 last:pb-0">
+              <li
+                key={assignment.id}
+                className="rounded-control border-line bg-raised/45 border p-4"
+              >
                 <AssignmentCard assignment={assignment} />
               </li>
             ))}
@@ -276,7 +291,7 @@ function ProgressPill({ progress }: { progress: StudentAssignment["progress"] })
   const labels = {
     NOT_STARTED: "Not started",
     IN_PROGRESS: "In progress",
-    COMPLETED: "Complete",
+    COMPLETED: "Completed",
     LATE: "Completed late",
   } as const;
 

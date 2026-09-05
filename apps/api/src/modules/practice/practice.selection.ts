@@ -4,7 +4,10 @@ import type { Difficulty, PracticeFilters, PracticeMode, QuestionType } from "@s
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";
 import { randomInt, shuffle } from "../../lib/random.js";
-import { STUDENT_VISIBLE_TOP_LEVEL } from "../questions/question.visibility.js";
+import {
+  STUDENT_VISIBLE_TOP_LEVEL,
+  teacherVisibleQuestion,
+} from "../questions/question.visibility.js";
 
 /**
  * Choosing which questions go into a set.
@@ -45,6 +48,16 @@ export interface SelectionRequest {
   mode: PracticeMode;
   filters: PracticeFilters;
   count: number;
+  /**
+   * Draw from one teacher's own bank instead of the shared one.
+   *
+   * Set only by `classroomService.startAssignment`, for an assignment whose
+   * `sourcePool` is `TEACHER_BANK`, and only ever to the id of the teacher who
+   * owns that classroom. There is no student-reachable path that sets it: a
+   * student cannot ask for another teacher's questions because a student never
+   * supplies this value at all.
+   */
+  ownerTeacherId?: string;
 }
 
 /**
@@ -56,8 +69,19 @@ export interface SelectionRequest {
  * into a set would show a student "Calculate the current" with no circuit
  * described, because the stimulus lives on the parent.
  */
-function toWhere(filters: PracticeFilters, mode: PracticeMode): Prisma.QuestionWhereInput {
-  const where: Prisma.QuestionWhereInput = { ...STUDENT_VISIBLE_TOP_LEVEL };
+function toWhere(
+  filters: PracticeFilters,
+  mode: PracticeMode,
+  ownerTeacherId: string | undefined,
+): Prisma.QuestionWhereInput {
+  // The two banks are mutually exclusive by construction — `ownerTeacherId` is
+  // either null or one id, never both — so this is a swap rather than a widening.
+  // An assignment drawn from a teacher's bank contains only their questions;
+  // one drawn from the shared bank contains none of them.
+  const where: Prisma.QuestionWhereInput =
+    ownerTeacherId === undefined
+      ? { ...STUDENT_VISIBLE_TOP_LEVEL }
+      : { ...teacherVisibleQuestion(ownerTeacherId), parentId: null };
 
   if (filters.subjectId) where.subjectId = filters.subjectId;
   if (filters.chapterId) where.chapterId = filters.chapterId;
@@ -125,7 +149,7 @@ export const practiceSelection = {
  * `id: { in: [] }`, which Postgres will happily plan and scan for nothing.
  */
 async function candidatePool(request: SelectionRequest): Promise<Candidate[] | null> {
-  const where = toWhere(request.filters, request.mode);
+  const where = toWhere(request.filters, request.mode, request.ownerTeacherId);
 
   const personal = await personalPool(request);
   if (personal !== undefined) {

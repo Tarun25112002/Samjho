@@ -51,6 +51,7 @@ export const classroomService = {
             id: true,
             title: true,
             questionCount: true,
+            sourcePool: true,
             dueAt: true,
             chapter: { select: { name: true } },
             submissions: { select: { session: { select: { status: true } } } },
@@ -71,6 +72,7 @@ export const classroomService = {
           title: assignment.title,
           chapterName: assignment.chapter?.name ?? null,
           questionCount: assignment.questionCount,
+          sourcePool: assignment.sourcePool,
           dueAt: iso(assignment.dueAt),
           startedCount: assignment.submissions.length,
           completedCount: assignment.submissions.filter(
@@ -156,11 +158,15 @@ export const classroomService = {
     teacherId: string,
     input: CreateClassroomInput,
   ): Promise<{ classroomId: string }> {
+    // Any active CBSE subject, not only Class 10. The class level was pinned
+    // here when Class 10 was the only seeded catalog; leaving it pinned would
+    // mean the day Class 12 content lands, teacher classrooms silently do not
+    // support it and the failure reads as "subject not found".
     const subject = await prisma.subject.findFirst({
-      where: { id: input.subjectId, isActive: true, board: "CBSE", classLevel: 10 },
+      where: { id: input.subjectId, isActive: true, board: "CBSE" },
       select: { id: true },
     });
-    if (!subject) throw new NotFoundError("Class 10 CBSE subject");
+    if (!subject) throw new NotFoundError("CBSE subject");
 
     const classroom = await prisma.classroom.create({
       data: {
@@ -224,6 +230,35 @@ export const classroomService = {
       ]);
     }
 
+    const sourcePool = input.sourcePool ?? "SHARED";
+
+    if (sourcePool === "TEACHER_BANK") {
+      // Checked here rather than discovered at start time, because the failure
+      // would otherwise land on a student: they tap "start", the selector finds
+      // nothing in an empty teacher bank, and they are told their teacher has
+      // not published anything — in front of the whole class. The teacher finds
+      // out now, while they are still on the form.
+      const owned = await prisma.question.count({
+        where: {
+          ownerTeacherId: teacherId,
+          subjectId: classroom.subjectId,
+          status: "PUBLISHED",
+          parentId: null,
+          ...(input.chapterId ? { chapterId: input.chapterId } : {}),
+        },
+      });
+
+      if (owned === 0) {
+        throw new ValidationError("Request validation failed", [
+          {
+            path: "body.sourcePool",
+            message:
+              "you have no published questions for this yet — import a paper and publish it first",
+          },
+        ]);
+      }
+    }
+
     const assignment = await prisma.classroomAssignment.create({
       data: {
         classroomId: classroom.id,
@@ -231,6 +266,7 @@ export const classroomService = {
         instructions: input.instructions?.trim() || null,
         chapterId: input.chapterId ?? null,
         questionCount: input.questionCount,
+        sourcePool,
         dueAt,
       },
       select: { id: true },
@@ -249,7 +285,8 @@ export const classroomService = {
         id: true,
         chapterId: true,
         questionCount: true,
-        classroom: { select: { subjectId: true } },
+        sourcePool: true,
+        classroom: { select: { subjectId: true, teacherId: true } },
       },
     });
     if (!assignment) throw new NotFoundError("Assignment");
@@ -263,15 +300,24 @@ export const classroomService = {
     // The exact question ids are chosen and frozen by the same service that
     // builds personal practice. An assignment cannot leak a key by carrying a
     // hand-made question payload through a teacher endpoint.
-    const session = await practiceService.create(studentId, {
-      mode: assignment.chapterId ? "CHAPTER" : "CUSTOM",
-      filters: {
-        subjectId: assignment.classroom.subjectId,
-        ...(assignment.chapterId ? { chapterId: assignment.chapterId } : {}),
-        unseenOnly: false,
+    const session = await practiceService.create(
+      studentId,
+      {
+        mode: assignment.chapterId ? "CHAPTER" : "CUSTOM",
+        filters: {
+          subjectId: assignment.classroom.subjectId,
+          ...(assignment.chapterId ? { chapterId: assignment.chapterId } : {}),
+          unseenOnly: false,
+        },
+        count: assignment.questionCount,
       },
-      count: assignment.questionCount,
-    });
+      // The teacher id comes from the classroom, never from the request. A
+      // student cannot name a bank; they can only start an assignment, and the
+      // assignment already knows whose class it belongs to.
+      assignment.sourcePool === "TEACHER_BANK"
+        ? { ownerTeacherId: assignment.classroom.teacherId }
+        : {},
+    );
 
     try {
       await prisma.assignmentSubmission.create({

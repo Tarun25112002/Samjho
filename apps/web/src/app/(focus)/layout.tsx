@@ -15,5 +15,5 @@ import { requireOnboarded } from "@/lib/me";
 export default async function FocusLayout({ children }: { children: React.ReactNode }) {
   await requireOnboarded();
 
-  return <div className="min-h-screen">{children}</div>;
+  return <div className="min-h-dvh bg-page">{children}</div>;
 }

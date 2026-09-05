@@ -36,7 +36,40 @@ export const STUDENT_VISIBLE_QUESTION: Prisma.QuestionWhereInput = {
   status: "PUBLISHED",
   NOT: { source: { licenceStatus: "RESTRICTED" } },
   chapter: { isActive: true, subject: { isActive: true } },
+  // 4. **It belongs to the shared bank, not to one teacher.**
+  //
+  //    A teacher's uploaded paper produces real questions, published into their
+  //    own bank and drawn for their own classroom's assignments. They have not
+  //    been through editorial review, their licensing has not been decided by
+  //    anyone whose job that is, and they were transcribed from a scan by a
+  //    model. Any one of those is a reason to keep them off open practice; the
+  //    three together are the reason this clause is in the shared predicate
+  //    rather than added to the practice selector — a question bank that leaks
+  //    one classroom's homework to every student in the country is the failure
+  //    that would be found last and cost most.
+  ownerTeacherId: null,
 };
+
+/**
+ * The same rules, for questions one teacher owns.
+ *
+ * Everything `STUDENT_VISIBLE_QUESTION` requires still applies — published,
+ * licence-clear, in an active chapter — because a teacher's draft is as
+ * half-written as an editor's, and an assignment that materialised one would
+ * put it in front of a class.
+ *
+ * Written as a function rather than a constant, since the owner is a parameter.
+ * That is also what makes it impossible to use by accident: there is no value
+ * to spread in without saying whose bank you meant.
+ */
+export function teacherVisibleQuestion(teacherId: string): Prisma.QuestionWhereInput {
+  return {
+    status: "PUBLISHED",
+    NOT: { source: { licenceStatus: "RESTRICTED" } },
+    chapter: { isActive: true, subject: { isActive: true } },
+    ownerTeacherId: teacherId,
+  };
+}
 
 /**
  * Student-visible *and* top-level.

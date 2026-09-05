@@ -25,6 +25,13 @@ export const ERROR_CODES = {
   // 500 / 503
   INTERNAL_ERROR: "INTERNAL_ERROR",
   SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+  /**
+   * Every provider in the AI fallback chain failed *and* the question had no
+   * stored solution to degrade to. Distinct from SERVICE_UNAVAILABLE because
+   * what the client should do differs: this is "the tutor is out, the rest of
+   * the app is fine", not "come back later".
+   */
+  AI_UNAVAILABLE: "AI_UNAVAILABLE",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

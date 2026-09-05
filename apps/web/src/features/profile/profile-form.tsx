@@ -51,44 +51,46 @@ export function ProfileForm({
 
   return (
     <form
-      className="border-line bg-card rounded-panel flex flex-col gap-7 border p-6"
+      className="rounded-panel border-line bg-card flex flex-col gap-7 border p-5 sm:p-6"
       onSubmit={(event) => {
         event.preventDefault();
         void form.save();
       }}
     >
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="school">School</Label>
-        <input
-          id="school"
-          value={form.draft.school}
-          onChange={(event) => {
-            form.update({ school: event.target.value });
-          }}
-          aria-invalid={Boolean(form.errors["school"])}
-          className={inputClass}
-        />
-        <FieldError message={form.errors["school"]} />
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="school">School</Label>
+          <input
+            id="school"
+            value={form.draft.school}
+            onChange={(event) => {
+              form.update({ school: event.target.value });
+            }}
+            aria-invalid={Boolean(form.errors["school"])}
+            className={inputClass}
+          />
+          <FieldError message={form.errors["school"]} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="preferredLanguage">Preferred language</Label>
+          <select
+            id="preferredLanguage"
+            value={form.draft.preferredLanguage}
+            onChange={(event) => {
+              form.update({
+                preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
+              });
+            }}
+            className={inputClass}
+          >
+            <option value="ENGLISH">English</option>
+            <option value="HINDI">Hindi</option>
+          </select>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="preferredLanguage">Preferred language</Label>
-        <select
-          id="preferredLanguage"
-          value={form.draft.preferredLanguage}
-          onChange={(event) => {
-            form.update({
-              preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
-            });
-          }}
-          className={inputClass}
-        >
-          <option value="ENGLISH">English</option>
-          <option value="HINDI">Hindi</option>
-        </select>
-      </div>
-
-      <fieldset className="flex flex-col gap-3">
+      <fieldset className="border-line flex flex-col gap-3 border-t pt-7">
         <legend className="text-text text-sm font-semibold">Subjects</legend>
         <ul className="grid gap-2 sm:grid-cols-2">
           {subjectOptions.map((subject) => (
@@ -116,9 +118,9 @@ export function ProfileForm({
         </p>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
+      <fieldset className="border-line flex flex-col gap-3 border-t pt-7">
         <legend className="text-text text-sm font-semibold">Target sitting</legend>
-        <ul className="space-y-2">
+        <ul className="grid gap-2 sm:grid-cols-2">
           {sessionOptions.map((option) => (
             <li key={`${option.session}-${option.phase}`}>
               <ChoiceCard
@@ -145,7 +147,7 @@ export function ProfileForm({
         </ul>
       </fieldset>
 
-      <div className="flex flex-col gap-2">
+      <div className="border-line flex flex-col gap-2 border-t pt-7">
         <Label htmlFor="parentEmail">Parent or guardian&rsquo;s email</Label>
         <input
           id="parentEmail"

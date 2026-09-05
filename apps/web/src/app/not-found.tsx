@@ -31,29 +31,41 @@ export default function NotFound() {
     // the route, and every layout in this app already supplies the landmark —
     // two of them on one page means a screen reader offers a choice of "main
     // content", which is not a choice anyone can make.
-    <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center gap-6 px-5 py-16 text-center">
-      <Link href="/">
-        <Wordmark size="sm" tone="brand" />
-        <span className="sr-only">Samjho home</span>
-      </Link>
-
-      <div>
-        <p className="text-brand-700 text-sm font-semibold">404</p>
-        <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.025em]">
-          This page isn&rsquo;t here
-        </h1>
-        <p className="text-text-soft mt-3 leading-relaxed">
-          The link may be mistyped, or the chapter it pointed at may have been withdrawn while its
-          questions are rewritten. Nothing is wrong with your account.
+    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-5 py-12 sm:px-8 sm:py-16">
+      <section className="rounded-panel border-line bg-card relative w-full overflow-hidden border px-6 py-10 text-center shadow-lift sm:px-10 sm:py-12">
+        <p
+          aria-hidden="true"
+          className="text-brand-100 pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 text-[10rem] leading-none font-semibold tracking-[-0.08em] sm:text-[13rem]"
+        >
+          404
         </p>
-      </div>
+        <div className="relative flex flex-col items-center gap-6">
+          <Link href="/">
+            <Wordmark size="sm" tone="brand" />
+            <span className="sr-only">Samjho home</span>
+          </Link>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <ButtonLink href="/practice">Go to practice</ButtonLink>
-        <ButtonLink href="/home" variant="secondary">
-          Your dashboard
-        </ButtonLink>
-      </div>
+          <div>
+            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+              Page not found
+            </p>
+            <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.03em]">
+              This page isn&rsquo;t here
+            </h1>
+            <p className="text-text-soft mt-3 leading-relaxed">
+              The link may be mistyped, or the chapter may have been withdrawn while its questions
+              are rewritten. Nothing is wrong with your account.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <ButtonLink href="/practice">Go to practice</ButtonLink>
+            <ButtonLink href="/home" variant="secondary">
+              Your dashboard
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

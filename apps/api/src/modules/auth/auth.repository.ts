@@ -29,6 +29,11 @@ export const authUserSelect = {
   status: true,
   lastSeenAt: true,
   studentProfile: { select: { onboardedAt: true } },
+  // Two `onboardedAt` timestamps rather than one shared column, because a
+  // teacher and a student answer different questions to earn theirs. Both are
+  // on the per-request slice for the same reason the student one is: the app
+  // shell's redirect decision cannot wait for a second query.
+  teacherProfile: { select: { onboardedAt: true } },
 } satisfies Prisma.UserSelect;
 
 export type AuthUserRow = Prisma.UserGetPayload<{ select: typeof authUserSelect }>;
@@ -63,9 +68,32 @@ export const meSelect = {
       },
     },
   },
+  teacherProfile: {
+    select: {
+      school: true,
+      subjectsTaught: true,
+      onboardedAt: true,
+      verifiedAt: true,
+      termsAcceptedAt: true,
+      termsAcceptedVersion: true,
+    },
+  },
 } satisfies Prisma.UserSelect;
 
 export type MeRow = Prisma.UserGetPayload<{ select: typeof meSelect }>;
+
+export interface TeacherOnboardingWrite {
+  userId: string;
+  school: string | null;
+  subjectsTaught: string | null;
+  termsVersion: string;
+}
+
+export interface TeacherProfileWrite {
+  userId: string;
+  school?: string | null;
+  subjectsTaught?: string | null;
+}
 
 export interface OnboardingWrite {
   userId: string;
@@ -239,6 +267,92 @@ export const authRepository = {
       await reconcileTargetExam(tx, profile.id, input.targetExam);
       await reconcileEnrolments(tx, profile.id, input.subjectIds);
     });
+  },
+
+  /**
+   * Elevate an account to TEACHER and give it a profile, in one transaction.
+   *
+   * The role write and the profile write must not be separable. A user with
+   * `role: TEACHER` and no `TeacherProfile` is `onboarded: false` forever — the
+   * shell sends them to a setup page whose submission is a no-op because they
+   * are already a teacher — and a profile with no role is invisible to every
+   * authorization check. Both halves or neither.
+   *
+   * Idempotent: re-submitting the form updates the description and leaves
+   * `onboardedAt` where it was, exactly as student onboarding does.
+   */
+  async completeTeacherOnboarding(input: TeacherOnboardingWrite): Promise<void> {
+    const now = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.teacherProfile.findUnique({
+        where: { userId: input.userId },
+        select: { onboardedAt: true },
+      });
+
+      await tx.teacherProfile.upsert({
+        where: { userId: input.userId },
+        create: {
+          userId: input.userId,
+          school: input.school,
+          subjectsTaught: input.subjectsTaught,
+          onboardedAt: now,
+          termsAcceptedAt: now,
+          termsAcceptedVersion: input.termsVersion,
+        },
+        update: {
+          school: input.school,
+          subjectsTaught: input.subjectsTaught,
+          // Preserved, not refreshed — "when did this teacher join" has one
+          // true answer, and a re-submitted form is not a new one.
+          onboardedAt: existing?.onboardedAt ?? now,
+          termsAcceptedAt: now,
+          termsAcceptedVersion: input.termsVersion,
+        },
+      });
+
+      await tx.user.update({ where: { id: input.userId }, data: { role: "TEACHER" } });
+    });
+  },
+
+  /** Partial teacher profile edit. Only the fields present are touched. */
+  async updateTeacherProfile(input: TeacherProfileWrite): Promise<void> {
+    const data: Prisma.TeacherProfileUpdateInput = {};
+    if (input.school !== undefined) data.school = input.school;
+    if (input.subjectsTaught !== undefined) data.subjectsTaught = input.subjectsTaught;
+    if (Object.keys(data).length === 0) return;
+
+    await prisma.teacherProfile.updateMany({ where: { userId: input.userId }, data });
+  },
+
+  /**
+   * Everything that would make elevating this account to TEACHER a mistake.
+   *
+   * A teacher account has no practice history, no bookmarks and no mistakes —
+   * the teacher surfaces do not render any of it, so a student who converts
+   * would not lose the data but would lose every screen that displays it. That
+   * is a support ticket, not a feature, so the elevation refuses rather than
+   * silently orphaning a term's work.
+   *
+   * Counted in one round trip rather than three, because this runs on a form
+   * submission a person is waiting on.
+   */
+  async findConversionBlockers(userId: string): Promise<{
+    onboardedStudent: boolean;
+    practiceSessions: number;
+  }> {
+    const [profile, practiceSessions] = await Promise.all([
+      prisma.studentProfile.findUnique({
+        where: { userId },
+        select: { onboardedAt: true },
+      }),
+      prisma.practiceSession.count({ where: { userId } }),
+    ]);
+
+    return {
+      onboardedStudent: profile?.onboardedAt != null,
+      practiceSessions,
+    };
   },
 
   /** Partial profile edit. Only the fields present are touched. */

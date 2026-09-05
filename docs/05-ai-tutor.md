@@ -6,39 +6,51 @@
 
 ## 1. Provider abstraction
 
-The brief asks for swappable providers. The mistake to avoid is abstracting at the wrong level: a lowest-common-denominator wrapper that reduces every provider to `sendText(string): string` throws away streaming, tool use, prompt caching, and structured output — the things that actually matter.
+The brief asks for swappable providers. The mistake to avoid is abstracting at the wrong level: a lowest-common-denominator wrapper that reduces every provider to `sendText(string): string` throws away streaming, structured output and multimodal input — the things that actually differ between vendors, and the things the callers need.
 
 **Abstract at the capability level, not the HTTP level:**
 
 ```ts
 // apps/api/src/modules/ai/provider/types.ts
+export type ModelTier = "strong" | "fast";
+
 export interface AIProvider {
-  readonly id: string; // 'anthropic' | 'openai' | ...
-  readonly defaultModel: string;
-  streamChat(req: ChatRequest): AsyncIterable<ChatChunk>;
-  countTokens(messages: ChatMessage[]): Promise<number>;
-  capabilities: { streaming: boolean; systemPrompt: boolean; promptCaching: boolean };
-}
+  readonly id: AIProviderId; // 'openrouter' | 'gemini' | 'grok'
+  readonly capabilities: { structuredOutput: boolean; images: boolean; documents: boolean };
 
-export interface ChatRequest {
-  model?: string;
-  system: string;
-  messages: ChatMessage[];
-  maxTokens: number;
-  temperature?: number;
-  cacheableSystemPrefix?: boolean; // providers that support it use it; others ignore it
-  signal?: AbortSignal;
+  /** The tutor's path: token by token, failed over only before the first one. */
+  streamChat(request: ChatRequest): AsyncIterable<ChatChunk>;
+  /** The extractor's path: one request, one JSON document, no partial output. */
+  complete(request: ChatRequest): Promise<CompletionResponse>;
+  countTokens(
+    request: Pick<ChatRequest, "system" | "messages" | "tier" | "model">,
+  ): Promise<number>;
 }
-
-export type ChatChunk =
-  | { type: "text"; delta: string }
-  | { type: "done"; usage: { promptTokens: number; completionTokens: number }; stopReason: string }
-  | { type: "error"; code: string; retryable: boolean };
 ```
 
-`AnthropicProvider` implements it first (default model: `claude-sonnet-5` — the right balance of tutoring quality and cost for high-volume per-question help; `claude-haiku-4-5` is the fallback for cheap actions like "simpler language"). `OpenAIProvider` can be added later without touching a single service.
+`tier` rather than a model id: `"the good one"` is what a service knows, and which model that is belongs in config so changing it is an environment change rather than a deploy.
 
-`getProvider()` reads config; providers are selected per-_action_, not globally, so an expensive step-by-step solution and a cheap rephrase need not use the same model. Model ids live in config, never inline in service code.
+### The three providers, and why these three
+
+- **OpenRouter** (`openai-compatible.ts`) — one key, many upstream models, with its own failover between hosts of the same model. First in the chain because it is the broadest single point of access and it reads PDFs.
+- **Google Gemini, direct** (`gemini.ts`) — deliberately _not_ through OpenRouter. A chain whose every hop runs through one vendor's gateway fails as a unit the moment that gateway does, which is precisely the failure a chain exists to survive.
+- **xAI Grok** (`openai-compatible.ts`, same dialect as OpenRouter) — a third vendor on a third network path. It reads images but has no document input, declared honestly in `capabilities` so the router never sends it a PDF and receives a confident answer about a file it could not see.
+
+### The fallback chain
+
+`FallbackChainProvider` tries them in `AI_PROVIDER_CHAIN` order. One rule shapes everything else:
+
+**Failover ends at the first token.** Once a character has reached the student's screen, switching providers is no longer transparent — the alternatives are to abandon the text already shown or to splice a second model's continuation onto a first model's half-sentence, and both are worse than surfacing the error. Before that instant, any failure moves to the next candidate and the student sees nothing.
+
+Which is why there are two deadlines, not one. `AI_FIRST_TOKEN_TIMEOUT_MS` (12s) is short and governs failover; `AI_REQUEST_TIMEOUT_MS` (45s) only starts mattering once text is flowing, where a long answer is not a stalled one. Waiting out a full request timeout on each of three providers would turn one slow provider into a two-minute page — the chain adding latency in exactly the situation it exists to remove it from.
+
+A failed provider is demoted for a cooling-off period that doubles per consecutive failure (`AI_PROVIDER_COOLDOWN_MS`, capped at 8×, and a `Retry-After` wins over the curve). It is never removed outright: a chain that has excluded every provider must still ask one, because "cooling down" and "broken" are not the same thing and the only way to tell is to ask.
+
+Non-streaming completions (`completeWithChain`, used by paper extraction) fail over on _every_ failure right to the end of the chain — a single JSON document has no instant at which something has been shown to anybody, so there is nothing to commit to.
+
+A provider with no API key is dropped at startup with a warning rather than failing the boot: an instance with no keys must still serve every other endpoint, and the features that need a model decline and say so.
+
+Providers are selected per-_action_, not globally (`ai.models.ts`), so an expensive step-by-step solution and a cheap rephrase need not use the same model. Model ids live in config, never inline in service code.
 
 ---
 
@@ -105,18 +117,25 @@ Client (practice runner)
 Next.js BFF route handler  — same-origin, attaches Clerk token, streams through
   │
   ▼
-Express  POST /api/v1/ai/conversations/:id/messages
+Express  POST /api/v1/ai/conversations/:id/messages/stream
   ├─ requireAuth
-  ├─ ownership check: conversation.userId === req.user.id
-  ├─ exam guard: reject if question is in a live exam attempt
-  ├─ rate limit: 10 msg / 5 min per user (sliding window, Redis or Postgres)
-  ├─ quota check: AIUsageLedger — daily message + token cap
-  ├─ assemble grounded context from DB
-  ├─ persist the user message
-  ├─ provider.streamChat(...)  →  SSE  →  BFF  →  client (token-by-token)
-  ├─ on completion: persist assistant message + token usage + latency
+  ├─ ownership: scoped by userId in the WHERE, not fetched then checked
+  ├─ rate limit: 10 msg / 5 min per user (in-process sliding window)
+  ├─ exam guard: reject if the question is in a live exam attempt
+  ├─ action guard: WHY_WRONG needs a wrong attempt, SIMPLER needs a prior reply
+  ├─ assemble grounded context from DB  (never from the request body)
+  ├─ SIMILAR: search the bank first, and skip the model entirely on a hit
+  ├─ quota check: AIUsageLedger — degrade to the stored solution if spent
+  ├─ chain.streamChat(...)  →  SSE  →  BFF  →  client (token-by-token)
+  ├─ persist both turns in one transaction + usage + latency
   └─ increment AIUsageLedger atomically
 ```
+
+`POST …/messages` (no `/stream`) is the same turn, buffered. It exists because SSE is not universally survivable — some proxies and carriers buffer `text/event-stream` until the response closes — and a client that detects this falls back to it and gets the identical answer from the identical service.
+
+**Why both turns are written together, after the reply:** a half-written exchange is worse than none. A user message with no reply reappears in the next request's history as an unanswered question, and the model dutifully answers it a second time.
+
+**Why the guards throw but the outages do not:** an exam in progress or an unearned action means answering would be _wrong_, so those are 4xx. Every provider being down, or the daily quota being spent, only means answering _expensively_ is impossible — and there is a human-written solution already stored against the question. See §5.6.
 
 **Why stream:** a step-by-step solution is 400–800 tokens, ~6–10 seconds of wall clock. A spinner for ten seconds reads as broken; streaming text reads as a tutor thinking. This is the difference between the feature being used and being ignored.
 
@@ -128,17 +147,19 @@ Express  POST /api/v1/ai/conversations/:id/messages
 
 ## 5. Cost control
 
-Unit economics decide whether this feature survives contact with real usage. Concretely: at roughly 1,500 prompt + 600 completion tokens per interaction and 15 interactions per active student per month, per-student monthly AI cost sits in the low tens of rupees at current Sonnet-class pricing — sustainable, but only with the controls below in place from day one, not retrofitted after a bill arrives.
+Unit economics decide whether this feature survives contact with real usage. Concretely: at roughly 1,500 prompt + 600 completion tokens per interaction and 15 interactions per active student per month, per-student monthly AI cost sits in the low tens of rupees at the mid-tier pricing of the three providers in the chain — sustainable, but only with the controls below in place from day one, not retrofitted after a bill arrives.
 
-1. **Per-user daily quota** (`AIUsageLedger`), e.g. 30 messages/day free tier. Enforced before the provider call. Remaining quota is visible in `/profile` — surprise limits feel punitive; visible ones feel fair.
-2. **Rate limiting** — 10 messages / 5 minutes, on top of quotas, to stop runaway loops and scripted abuse.
-3. **Prompt caching** — the system prompt and pedagogy rules are identical across all requests and account for a large share of prompt tokens. Marking them cacheable cuts input cost substantially on providers that support it.
-4. **Model routing by action** — cheap model for "simpler language" and hints; stronger model for step-by-step and mistake analysis.
-5. **Explanation cache** — "explain the concept" for a given topic is nearly identical across students. Cache by `(action, topicId, questionId)` with a TTL and serve the cached response. Expected to remove a meaningful share of calls.
-6. **Hard monthly ceiling** with alerting at 50/80/100%. At 100%, AI degrades to serving the stored explanation with a clear notice — the product keeps working, because every question already has a human-written solution. **This is the reason grounding data is mandatory: it is also the fallback.**
-7. **Token budget per request** — history trimmed to a fixed budget; `maxTokens` capped per action.
+1. **Per-user daily quota** — `AIUsageLedger`, 30 messages and 120k tokens per UTC day (`AI_DAILY_*`). Checked before the provider call; billed _after_ the reply rather than reserved before it, so a request that fails over three providers and returns nothing is not charged for. The cost of that choice is that a student can exceed by exactly one message, which is the error that runs in their favour. Remaining quota is on `/ai/status` and every reply — surprise limits feel punitive; visible ones feel fair. ✅
+2. **Rate limiting** — 10 messages / 5 minutes, sliding window, on top of quotas. Unlike the quota this _is_ an error: ten messages in five minutes is faster than anyone reads a tutor's reply, so it means a script or a stuck client. Currently per-process and in memory; the daily quota in Postgres is the global backstop, so the worst case behind two instances is a faster burst, still capped in total. ✅
+3. **Model routing by action** — `ACTION_PROFILES` gives each of the six actions its own tier, `maxTokens` and temperature. A hint gets the fast model and 300 tokens; a worked solution gets the strong model, 900 tokens and near-zero temperature. Tight ceilings are pedagogy as well as cost: a model given room to ramble will use it, and the student who wanted one nudge gets six paragraphs. ✅
+4. **Token budget per request** — history trimmed to `HISTORY_TOKEN_BUDGET` (1,200), oldest first, and `maxTokens` capped per action. The budget is set against what we are willing to pay per turn, not against any provider's context limit — every model in the chain would hold far more. ✅
+5. **Bank-first SIMILAR** — "give me a similar question" searches the question bank on primary topic, type and marks before any model is asked, and skips the call entirely on a hit. Not only cheaper: a bank question has been through editorial review and carries a verified answer, where a generated one is unverified by construction. The better artefact and the cheaper one are the same artefact. ✅
+6. **Degradation instead of failure** — when every provider is down, or the daily quota is spent, or no API key is configured at all, the tutor serves the stored human-written solution with `degraded: true` and a clear notice. The product keeps working. **This is the reason grounding data is mandatory: it is also the fallback.** ✅
+7. **Prompt caching** — the system prompt and pedagogy rules are identical across requests and are a large share of prompt tokens. `ACTION_PROFILES.cacheable` marks which actions may use it; no provider-level cache-control is wired up yet. ⛔ Not built.
+8. **Explanation cache** — "explain the concept" is near-identical across students, so it caches on `(action, questionId)`. Anything that reads the student's own attempt does not — a cached "explain my mistake" would explain somebody else's. ⛔ Not built; `cacheable` is the flag it will read.
+9. **Hard monthly ceiling** with alerting at 50/80/100%. ⛔ Not built. `AIUsageLedger.estimatedCostPaise` is populated to make it possible, from rough per-provider rates — the number's job is to catch a runaway before the invoice does, not to reconcile one.
 
-Every AI response records `promptTokens`, `completionTokens`, `model` and `latencyMs` on `AIMessage`, so cost per student, per subject, and per action is queryable rather than guessed.
+Every AI response records `promptTokens`, `completionTokens`, `model` and `latencyMs` on `AIMessage`, so cost per student, per subject and per action is queryable rather than guessed. `model` is stored as `"<provider>:<model>"` — with a chain in play, "which model answered" is only half the question anyone actually has.
 
 ---
 

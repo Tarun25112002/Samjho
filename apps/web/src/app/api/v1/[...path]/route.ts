@@ -167,14 +167,30 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
     return fail(503, "SERVICE_UNAVAILABLE", "Samjho is temporarily unavailable.");
   }
 
+  const contentType = response.headers.get("content-type") ?? "application/json";
+
   // Status and body pass through untouched, so the client's single error handler
   // sees exactly what Express said — including the requestId a student can quote.
+  //
+  // `response.body` is a stream and is forwarded as one rather than awaited into
+  // a string. That is what makes the AI tutor work at all: buffering here would
+  // hold every token until the last one arrived, and the student would watch a
+  // blank panel for eight seconds and then see a finished answer appear — which
+  // is precisely the experience streaming exists to prevent.
+  const streaming = contentType.startsWith("text/event-stream");
+
   return new NextResponse(response.body, {
     status: response.status,
     headers: {
-      "content-type": response.headers.get("content-type") ?? "application/json",
+      "content-type": contentType,
       ...(response.headers.get("x-request-id")
         ? { "x-request-id": response.headers.get("x-request-id") as string }
+        : {}),
+      // A reverse proxy in front of *this* app buffers by default too, and it
+      // has no way to know the body is an event stream unless told. Nginx reads
+      // the first; `no-transform` stops the second-guessing of the rest.
+      ...(streaming
+        ? { "x-accel-buffering": "no", "cache-control": "no-cache, no-transform" }
         : {}),
     },
   });

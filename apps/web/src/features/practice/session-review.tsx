@@ -3,6 +3,7 @@
 import { EMPTY_ANSWER, type PracticeSession } from "@samjho/contracts";
 import { QuestionRenderer } from "@samjho/ui";
 
+import { TutorPanel } from "@/features/ai/tutor-panel";
 import { markingFrom } from "@/lib/practice-format";
 
 import { FeedbackPanel } from "./feedback-panel";
@@ -58,14 +59,28 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
             {item.attempts.length === 0 ? (
               <p className="text-text-faint text-sm">You didn&rsquo;t reach this one.</p>
             ) : (
-              <FeedbackPanel
-                item={item}
-                busy={runner.busy}
-                onSelfEvaluate={(attemptId, marks) => void runner.selfEvaluate(attemptId, marks)}
-                onSetMistakeReason={(attemptId, reason) =>
-                  void runner.setMistakeReason(attemptId, reason)
-                }
-              />
+              <>
+                <FeedbackPanel
+                  item={item}
+                  busy={runner.busy}
+                  onSelfEvaluate={(attemptId, marks) => void runner.selfEvaluate(attemptId, marks)}
+                  onSetMistakeReason={(attemptId, reason) =>
+                    void runner.setMistakeReason(attemptId, reason)
+                  }
+                />
+
+                {/* The review is where "explain my mistake" earns its place: the
+                    student is looking at a wrong answer they have had time to
+                    think about, rather than one they submitted ten seconds ago.
+                    Each panel is closed and inert until tapped, so a set of ten
+                    costs nothing to render. */}
+                <TutorPanel
+                  questionId={item.question.id}
+                  answered
+                  answeredWrong={item.attempts.some((attempt) => attempt.isCorrect === false)}
+                  attemptId={item.attempts[0]?.id}
+                />
+              </>
             )}
           </li>
         );

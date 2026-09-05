@@ -42,13 +42,18 @@ export default async function AdminQuestionPage({ params }: PageProps) {
   ]);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
-      <header className="space-y-1">
+    <main className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
+      <header className="border-line bg-card rounded-panel space-y-2 border p-6 sm:p-8">
         <Link href="/admin/questions" className="text-text-soft hover:text-text text-sm">
           ← Questions
         </Link>
-        <h1 className="text-text text-2xl font-semibold tracking-tight">Edit question</h1>
-        <p className="text-text-soft text-sm">
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+          Question bank
+        </p>
+        <h1 className="text-text text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+          Edit question
+        </h1>
+        <p className="text-text-soft text-sm leading-relaxed">
           {question.chapter.name} · version {question.version}
           {question.authorName ? ` · written by ${question.authorName}` : ""}
         </p>
@@ -66,10 +71,18 @@ export default async function AdminQuestionPage({ params }: PageProps) {
         question={question}
       />
 
-      <section aria-labelledby="revisions-heading" className="space-y-3">
-        <h2 id="revisions-heading" className="text-text text-sm font-semibold">
-          What has changed
-        </h2>
+      <section
+        aria-labelledby="revisions-heading"
+        className="border-line bg-card rounded-panel space-y-4 border p-5 sm:p-6"
+      >
+        <div>
+          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+            Activity log
+          </p>
+          <h2 id="revisions-heading" className="text-text mt-1 font-semibold tracking-[-0.02em]">
+            What changed
+          </h2>
+        </div>
 
         {revisions.length === 0 ? (
           <p className="text-text-soft text-sm">Nothing has changed since it was written.</p>

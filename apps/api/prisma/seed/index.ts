@@ -10,7 +10,7 @@ import { seedPastPapers } from "./past-papers.js";
 import { class10MathsQuestions } from "./questions/maths.js";
 import { class10ScienceQuestions } from "./questions/science.js";
 import type { SeedChapter, SeedQuestion } from "./types.js";
-import { enrolStudents, seedPracticeHistory, seedUsers } from "./users.js";
+import { enrolStudents, seedClassroom, seedPracticeHistory, seedUsers } from "./users.js";
 
 /**
  * Development seed. Idempotent by construction — every write is an upsert
@@ -210,8 +210,8 @@ async function main(): Promise<void> {
 
   log("Seeding Samjho development data…\n");
 
-  const { adminId, studentIds } = await seedUsers(prisma);
-  log(`  users              1 admin, ${String(studentIds.length)} demo students`);
+  const { adminId, teacherId, studentIds } = await seedUsers(prisma);
+  log(`  users              1 admin, 1 teacher, ${String(studentIds.length)} demo students`);
 
   const subjectIdByCode = new Map<string, string>();
   for (const spec of CLASS_10_SUBJECTS) {
@@ -253,6 +253,22 @@ async function main(): Promise<void> {
     }
   }
   log("  progress           practice history, mastery rollups, mistakes and bookmarks");
+
+  const scienceId = subjectIdByCode.get("SCI");
+  if (scienceId) {
+    const firstChapter = await prisma.chapter.findFirst({
+      where: { subjectId: scienceId, isActive: true },
+      orderBy: { orderIndex: "asc" },
+      select: { id: true },
+    });
+
+    await seedClassroom(prisma, {
+      teacherId,
+      subjectId: scienceId,
+      chapterId: firstChapter?.id ?? null,
+    });
+    log("  classroom          10B Science, code SAMJHO, both students joined, 1 assignment set");
+  }
 
   log(`\nDone in ${String(Date.now() - startedAt)} ms.`);
 }

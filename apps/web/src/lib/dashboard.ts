@@ -3,21 +3,19 @@ import type { PracticeSessionSummary, TargetExam } from "@samjho/contracts";
 /**
  * The dashboard's arithmetic.
  *
- * ## Why this is derived rather than fetched
+ * ## Why the weekly view is derived rather than fetched
  *
- * The API maintains `TopicMastery` and `SubjectProgress` rollups on every
- * finalised attempt, but nothing reads them back yet — there is no progress
- * endpoint, and inventing one is not this branch's job. Everything on the
- * dashboard is therefore computed from the session summaries the history
- * endpoint already returns, which is fifty rows and a few additions.
+ * The API exposes mastery rollups for the dedicated Progress page. This view
+ * intentionally derives the last seven days from session summaries instead:
+ * it answers an immediate history question, rather than reusing the
+ * recency-weighted, cross-session score used for subject recommendations.
  *
- * That constrains what the dashboard is allowed to claim, and the constraint is
- * a good one. "Sixty-two questions this week, forty-eight right" is true and
- * checkable. "You have mastered 34% of Electricity" would need the rollups, and
- * a mastery percentage invented in the browser is exactly the number a student
- * would take seriously and should not.
+ * "Sixty-two questions this week, forty-eight right" is true and checkable;
+ * mastery is deliberately left to the rollup-backed surface that can speak
+ * accurately about it.
  *
- * When the progress endpoint lands, these functions are the ones to delete.
+ * These functions are therefore a complementary view, not a temporary copy of
+ * the progress endpoint.
  *
  * ## Days are Indian days
  *
@@ -119,7 +117,11 @@ export interface ActivityDay {
   initial: string;
   /** Full weekday plus date, for the screen-reader label and the tooltip. */
   label: string;
+  /** Compact weekday/date label for the chart axis, e.g. "Fri 5". */
+  shortLabel: string;
   answered: number;
+  /** Correct answers on the day — shares the same scale as `answered`. */
+  correct: number;
   isToday: boolean;
 }
 
@@ -130,13 +132,22 @@ const longDayFormat = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
   month: "short",
 });
+const shortDayFormat = new Intl.DateTimeFormat("en-IN", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  day: "numeric",
+});
 
 /** The last seven days, oldest first, with how much was answered on each. */
 export function activityStrip(sessions: PracticeSessionSummary[], now = new Date()): ActivityDay[] {
-  const answeredByDay = new Map<string, number>();
+  const totalsByDay = new Map<string, { answered: number; correct: number }>();
   for (const session of sessions) {
     const key = dayKey(new Date(session.startedAt));
-    answeredByDay.set(key, (answeredByDay.get(key) ?? 0) + session.totals.answered);
+    const current = totalsByDay.get(key) ?? { answered: 0, correct: 0 };
+    totalsByDay.set(key, {
+      answered: current.answered + session.totals.answered,
+      correct: current.correct + session.totals.correct,
+    });
   }
 
   const today = dayKey(now);
@@ -144,11 +155,14 @@ export function activityStrip(sessions: PracticeSessionSummary[], now = new Date
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(now, index - 6);
     const key = dayKey(date);
+    const totals = totalsByDay.get(key) ?? { answered: 0, correct: 0 };
     return {
       key,
       initial: weekdayFormat.format(date).slice(0, 1),
       label: longDayFormat.format(date),
-      answered: answeredByDay.get(key) ?? 0,
+      shortLabel: shortDayFormat.format(date),
+      answered: totals.answered,
+      correct: totals.correct,
       isToday: key === today,
     };
   });

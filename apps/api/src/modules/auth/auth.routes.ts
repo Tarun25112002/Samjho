@@ -1,4 +1,9 @@
-import { onboardingInputSchema, profileUpdateInputSchema } from "@samjho/contracts";
+import {
+  onboardingInputSchema,
+  profileUpdateInputSchema,
+  teacherOnboardingInputSchema,
+  teacherProfileUpdateInputSchema,
+} from "@samjho/contracts";
 import { Router } from "express";
 
 import { authenticated, getAuthUser } from "../../middleware/auth.js";
@@ -44,6 +49,40 @@ export function buildMeRouter(verifyToken: TokenVerifier): Router {
     const data = await authService.updateProfile(user, parseBody(req, profileUpdateInputSchema));
     res.json({ data });
   });
+
+  /**
+   * Finish teacher setup — and, as a consequence, become a teacher.
+   *
+   * A sibling of `/onboarding` rather than a `role` field on it. Two forms that
+   * ask different questions and grant different access should be two endpoints:
+   * folding them together would mean one request body in which `role` is a
+   * client-supplied value, which is the exact shape `User.role` exists to avoid.
+   */
+  router.post(
+    "/teacher-onboarding",
+    validate({ body: teacherOnboardingInputSchema }),
+    async (req, res) => {
+      const user = getAuthUser(req);
+      const data = await authService.completeTeacherOnboarding(
+        user,
+        parseBody(req, teacherOnboardingInputSchema),
+      );
+      res.status(200).json({ data });
+    },
+  );
+
+  router.patch(
+    "/teacher-profile",
+    validate({ body: teacherProfileUpdateInputSchema }),
+    async (req, res) => {
+      const user = getAuthUser(req);
+      const data = await authService.updateTeacherProfile(
+        user,
+        parseBody(req, teacherProfileUpdateInputSchema),
+      );
+      res.json({ data });
+    },
+  );
 
   return router;
 }

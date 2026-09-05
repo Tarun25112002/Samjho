@@ -63,19 +63,35 @@ import { practiceSelection } from "./practice.selection.js";
  */
 
 export const practiceService = {
-  async create(userId: string, input: CreatePracticeSessionInput): Promise<PracticeSession> {
+  /**
+   * `options.ownerTeacherId` draws from one teacher's own bank instead of the
+   * shared one. It is not reachable from any student route — the practice
+   * router does not parse it, and the only caller that supplies it is
+   * `classroomService.startAssignment`, which reads it from the classroom the
+   * assignment belongs to rather than from the request.
+   */
+  async create(
+    userId: string,
+    input: CreatePracticeSessionInput,
+    options: { ownerTeacherId?: string } = {},
+  ): Promise<PracticeSession> {
     const questionIds = await practiceSelection.pick({
       userId,
       mode: input.mode,
       filters: input.filters,
       count: input.count,
+      ...(options.ownerTeacherId === undefined ? {} : { ownerTeacherId: options.ownerTeacherId }),
     });
 
     if (questionIds.length === 0) {
       // A 404 would be wrong — the filters are fine, the bank is empty. The web
       // app shows this message next to a "widen your filters" prompt, so the
       // wording is a student-facing string rather than a diagnostic.
-      throw new NotFoundError("No questions match those filters yet — Samjho's bank");
+      throw new NotFoundError(
+        options.ownerTeacherId === undefined
+          ? "No questions match those filters yet — Samjho's bank"
+          : "Your teacher has not published questions for this yet — their question bank",
+      );
     }
 
     const marksPossible = await sumGradableMarks(questionIds);

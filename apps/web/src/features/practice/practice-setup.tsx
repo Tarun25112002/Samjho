@@ -85,7 +85,7 @@ export function PracticeSetup({
 
   return (
     <form
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-7"
       onSubmit={(event) => {
         event.preventDefault();
         void start({
@@ -109,43 +109,49 @@ export function PracticeSetup({
         });
       }}
     >
-      <Field label="Subject">
-        <select
-          value={subjectId}
-          onChange={(event) => {
-            setSubjectId(event.target.value);
-            // A chapter from the old subject would silently match nothing.
-            setChapterId("");
-          }}
-          className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base"
-        >
-          <option value="">Any subject</option>
-          {subjects.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      {chapters.length > 0 ? (
-        <Field label="Chapter">
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field label="Subject">
           <select
-            value={chapterId}
+            value={subjectId}
             onChange={(event) => {
-              setChapterId(event.target.value);
+              setSubjectId(event.target.value);
+              // A chapter from the old subject would silently match nothing.
+              setChapterId("");
             }}
-            className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base"
+            className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base transition-colors focus:border-brand-500"
           >
-            <option value="">Any chapter</option>
-            {chapters.map((chapter) => (
-              <option key={chapter.id} value={chapter.id} disabled={chapter.questionCount === 0}>
-                {chapter.name} ({chapter.questionCount})
+            <option value="">Any subject</option>
+            {subjects.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
               </option>
             ))}
           </select>
         </Field>
-      ) : null}
+
+        {chapters.length > 0 ? (
+          <Field label="Chapter">
+            <select
+              value={chapterId}
+              onChange={(event) => {
+                setChapterId(event.target.value);
+              }}
+              className="border-line-strong bg-card text-text rounded-control min-h-11 w-full border px-3.5 text-base transition-colors focus:border-brand-500"
+            >
+              <option value="">Any chapter</option>
+              {chapters.map((chapter) => (
+                <option key={chapter.id} value={chapter.id} disabled={chapter.questionCount === 0}>
+                  {chapter.name} ({chapter.questionCount})
+                </option>
+              ))}
+            </select>
+          </Field>
+        ) : (
+          <div className="bg-raised rounded-control flex min-h-11 items-center px-3.5 text-sm text-text-faint">
+            Choose a subject to narrow to a chapter.
+          </div>
+        )}
+      </div>
 
       {yearOptions.length > 0 ? (
         <Field label="Previous-year papers">
@@ -163,30 +169,32 @@ export function PracticeSetup({
         </Field>
       ) : null}
 
-      <Field label="Question types">
-        <ChipGroup
-          options={TYPES.map((type) => ({ value: type, label: QUESTION_TYPE_LABELS[type] }))}
-          selected={types}
-          onToggle={(value) => {
-            setTypes(toggle(types, value));
-          }}
-          emptyHint="Any type"
-        />
-      </Field>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Field label="Question types">
+          <ChipGroup
+            options={TYPES.map((type) => ({ value: type, label: QUESTION_TYPE_LABELS[type] }))}
+            selected={types}
+            onToggle={(value) => {
+              setTypes(toggle(types, value));
+            }}
+            emptyHint="All types"
+          />
+        </Field>
 
-      <Field label="Difficulty">
-        <ChipGroup
-          options={DIFFICULTIES.map((level) => ({
-            value: level,
-            label: DIFFICULTY_LABELS[level],
-          }))}
-          selected={difficulties}
-          onToggle={(value) => {
-            setDifficulties(toggle(difficulties, value));
-          }}
-          emptyHint="Any difficulty"
-        />
-      </Field>
+        <Field label="Difficulty">
+          <ChipGroup
+            options={DIFFICULTIES.map((level) => ({
+              value: level,
+              label: DIFFICULTY_LABELS[level],
+            }))}
+            selected={difficulties}
+            onToggle={(value) => {
+              setDifficulties(toggle(difficulties, value));
+            }}
+            emptyHint="All levels"
+          />
+        </Field>
+      </div>
 
       <Field label="How many questions">
         <div className="flex flex-wrap gap-2">
@@ -205,13 +213,13 @@ export function PracticeSetup({
                   : "border-line-strong text-text-soft hover:border-brand-300",
               ].join(" ")}
             >
-              {option}
+              {option} questions
             </button>
           ))}
         </div>
       </Field>
 
-      <label className="rounded-control border-line bg-card flex cursor-pointer items-start gap-3 border p-4 text-sm">
+      <label className="rounded-control border-line bg-raised/55 hover:border-brand-300 flex cursor-pointer items-start gap-3 border p-4 text-sm transition-colors">
         <input
           type="checkbox"
           checked={unseenOnly}
@@ -221,14 +229,16 @@ export function PracticeSetup({
           className="accent-brand-500 mt-0.5 size-4"
         />
         <span>
-          <span className="text-text block font-medium">Only questions I haven&rsquo;t seen</span>
+          <span className="text-text block font-medium">
+            Prioritise questions I haven&rsquo;t seen
+          </span>
           <span className="text-text-soft mt-0.5 block text-xs leading-relaxed">
             Off by default — meeting a question again after getting it wrong is how it sticks.
           </span>
         </span>
       </label>
 
-      <div>
+      <div className="border-line flex flex-wrap items-center gap-3 border-t pt-6">
         <Button type="submit" size="lg" disabled={busy}>
           {busy ? "Building your set…" : "Start practising"}
         </Button>
@@ -265,7 +275,11 @@ function ChipGroup<T extends string | number>({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {selected.length === 0 ? <span className="text-text-faint text-xs">{emptyHint}</span> : null}
+      {selected.length === 0 ? (
+        <span className="bg-raised text-text-faint rounded-pill px-3 py-1.5 text-xs font-medium">
+          {emptyHint}
+        </span>
+      ) : null}
 
       {options.map((option) => {
         const isSelected = selected.includes(option.value);

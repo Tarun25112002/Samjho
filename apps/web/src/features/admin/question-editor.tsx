@@ -84,7 +84,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
   const topics = chapter?.topics ?? [];
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] xl:gap-8">
       <form
         className="space-y-6"
         onSubmit={(event) => {
@@ -425,7 +425,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
 
             <button
               type="button"
-              className="border-line-strong min-h-11 rounded-lg border px-4 text-sm"
+              className="border-line-strong bg-card text-text min-h-11 rounded-pill border px-4 text-sm font-semibold transition-colors hover:border-brand-500 hover:bg-brand-50"
               onClick={editor.addSubPart}
             >
               Add a sub-part
@@ -626,7 +626,10 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         </Fieldset>
 
         {editor.failure ? (
-          <div role="alert" className="border-marker-500 space-y-1 rounded-xl border p-4 text-sm">
+          <div
+            role="alert"
+            className="border-marker-500 bg-marker-50 space-y-1 rounded-control border p-4 text-sm"
+          >
             <p className="text-text">{editor.failure.message}</p>
             {editor.failure.requestId ? (
               <p className="text-text-soft text-xs">
@@ -640,7 +643,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
           <button
             type="submit"
             disabled={editor.saving}
-            className="bg-brand-500 min-h-11 rounded-lg px-5 text-sm font-medium text-white disabled:opacity-60"
+            className="bg-brand-500 text-on-brand shadow-brand min-h-11 rounded-pill px-5 text-sm font-semibold transition-colors hover:bg-brand-400 disabled:opacity-60"
           >
             {editor.saving ? "Saving…" : question ? "Save changes" : "Save draft"}
           </button>
@@ -652,7 +655,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
               onClick={() => {
                 void editor.submit("saved-and-next");
               }}
-              className="border-line-strong min-h-11 rounded-lg border px-5 text-sm disabled:opacity-60"
+              className="border-line-strong bg-card text-text min-h-11 rounded-pill border px-5 text-sm font-semibold transition-colors hover:border-brand-500 hover:bg-brand-50 disabled:opacity-60"
             >
               Save and add another
             </button>
@@ -672,7 +675,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         </div>
       </form>
 
-      <aside className="space-y-3">
+      <aside className="border-line bg-card rounded-panel space-y-3 border p-4 sm:p-5 xl:sticky xl:top-6 xl:self-start">
         <div className="flex items-center justify-between">
           <h2 className="text-text text-sm font-semibold">Preview, as a student sees it</h2>
           <button

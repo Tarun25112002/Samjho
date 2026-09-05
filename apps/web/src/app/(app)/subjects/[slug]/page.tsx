@@ -52,29 +52,40 @@ export default async function SubjectPage({ params }: PageProps) {
   const groups = groupChaptersByDomain(subject.chapters, subject.domains);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
-      <header>
-        <p className="text-text-soft text-sm font-medium">
-          Class {subject.classLevel} {subject.board}
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
+      <header className="border-line border-b pb-6">
+        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+          Subject guide
         </p>
-        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-4xl">
-          {subject.name}
-        </h1>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <h1 className="text-text text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
+              {subject.name}
+            </h1>
+            <p className="text-text-soft mt-2 text-sm leading-relaxed">
+              Class {subject.classLevel} {subject.board} · {subject.theoryMarks}-mark theory paper
+            </p>
+          </div>
 
-        <p className="text-text-soft mt-2 text-sm">
-          {/* Never "out of 100": 80 for Class 10, 70 for Class 12 Physics. */}
-          {subject.theoryMarks}-mark theory paper · {subject.chapters.length} chapters ·{" "}
-          {subject.counts.total} questions available
-        </p>
+          {subject.counts.total > 0 ? (
+            <ButtonLink href={practiceHref({ unseenOnly: false, subjectId: subject.id })}>
+              Practise this subject
+            </ButtonLink>
+          ) : null}
+        </div>
 
-        {subject.counts.total > 0 ? (
-          <ButtonLink
-            href={practiceHref({ unseenOnly: false, subjectId: subject.id })}
-            className="mt-5"
-          >
-            Practise {subject.name}
-          </ButtonLink>
-        ) : null}
+        <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <div className="inline-flex items-baseline gap-2">
+            <dd className="text-text text-lg font-semibold tabular-nums">
+              {subject.chapters.length}
+            </dd>
+            <dt className="text-text-soft">chapters</dt>
+          </div>
+          <div className="inline-flex items-baseline gap-2">
+            <dd className="text-text text-lg font-semibold tabular-nums">{subject.counts.total}</dd>
+            <dt className="text-text-soft">questions available</dt>
+          </div>
+        </dl>
       </header>
 
       <DataState
@@ -90,12 +101,17 @@ export default async function SubjectPage({ params }: PageProps) {
         {(sections) => (
           <div className="flex flex-col gap-8">
             {sections.map((group) => (
-              <section key={group.domain ?? "all"} className="flex flex-col gap-3">
-                {group.domain ? (
-                  <h2 className="text-text text-lg font-semibold">{group.domain}</h2>
-                ) : null}
+              <section key={group.domain ?? "all"} className="flex flex-col gap-4">
+                <div>
+                  <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
+                    {group.domain ?? "Course contents"}
+                  </p>
+                  <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
+                    {group.domain ? `${group.domain} chapters` : "Choose a chapter"}
+                  </h2>
+                </div>
 
-                <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
+                <ul className="grid gap-3 md:grid-cols-2">
                   {group.chapters.map((chapter) => {
                     const empty = chapter.questionCount === 0;
 
@@ -103,7 +119,7 @@ export default async function SubjectPage({ params }: PageProps) {
                       <li key={chapter.id}>
                         <Link
                           href={`/chapters/${chapter.id}`}
-                          className="hover:bg-raised flex items-center gap-4 px-5 py-4 transition-colors"
+                          className="rounded-control border-line bg-card hover:border-brand-300 hover:shadow-lift group flex min-h-[5.75rem] items-center gap-4 border p-4 transition-all"
                         >
                           {/* NCERT numbers chapters, and students refer to them
                               by number constantly — "chapter 6, Life Processes".
@@ -111,7 +127,7 @@ export default async function SubjectPage({ params }: PageProps) {
                               counter. */}
                           <span
                             className={[
-                              "grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                              "grid size-10 shrink-0 place-items-center rounded-xl text-sm font-semibold tabular-nums",
                               empty ? "bg-raised text-text-faint" : "bg-brand-50 text-brand-700",
                             ].join(" ")}
                           >
@@ -134,7 +150,7 @@ export default async function SubjectPage({ params }: PageProps) {
 
                           <span
                             className={[
-                              "marks-margin shrink-0 text-sm",
+                              "marks-margin shrink-0 text-right text-sm",
                               empty ? "text-text-faint" : "text-text-soft",
                             ].join(" ")}
                           >
@@ -142,7 +158,7 @@ export default async function SubjectPage({ params }: PageProps) {
                             {chapter.questionCount === 1 ? "question" : "questions"}
                           </span>
 
-                          <ChevronRight className="text-text-faint size-4 shrink-0" />
+                          <ChevronRight className="text-text-faint group-hover:text-brand-700 size-4 shrink-0 transition-colors" />
                         </Link>
                       </li>
                     );

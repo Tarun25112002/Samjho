@@ -14,6 +14,11 @@ Practise questions, understand your mistakes, and rehearse the full 3-hour board
 > mistake capture, bookmarks, and progress rollups. A student can sign up,
 > onboard, practise, find out why they were wrong, and come back to it;
 > an editor can write the bank they are practising.
+>
+> Plus the **teacher workspace**: sign up as a teacher, run classrooms, and
+> upload a question paper that a model reads into structured questions — filed
+> by chapter, tagged by difficulty, and reviewed by the teacher before any of it
+> is saved. See [Teachers](#teachers) below.
 > Specification and architecture live in [`docs/`](./docs/README.md).
 
 ---
@@ -96,13 +101,18 @@ apps/
   web/        Next.js 16 · App Router · React 19 · Tailwind 4
     src/proxy.ts   Next 16's middleware — signed-in/out redirects only, UX not security
     src/app/api/   BFF route handlers: attach the Clerk token server-side and forward
-    src/features/  feature-first: onboarding/, profile/, admin/, practice/ —
-                   logic in hooks, not components
+    src/features/  feature-first: onboarding/, profile/, admin/, practice/,
+                   classrooms/, teacher/ — logic in hooks, not components
     src/app/(focus)/  the practice runner's shell: no nav, nothing to click away to
   api/        Express 5 · Prisma 7 · Postgres
     src/middleware/auth.ts   requireAuth → loadUser → requireRole
     src/lib/token-verifier.ts  RS256 + JWKS verification; the security boundary
     src/modules/practice/grading.ts  pure; no Prisma, no clock, no Express
+    src/modules/questions/question.visibility.ts  the one definition of "a
+                   question a student may see" — including the owner clause that
+                   keeps a teacher's uploads out of everyone else's practice
+    src/modules/ai/provider/  the OpenRouter → Gemini → Grok fallback chain
+    src/modules/teacher/  uploads, AI extraction, review, and the teacher's bank
 packages/
   contracts/       Zod schemas shared by both apps — the single source of truth
                    for everything crossing the network boundary
@@ -118,6 +128,54 @@ docs/              Product spec, architecture, data model, exam engine, roadmap
 in services and knows nothing about HTTP, which is what makes it testable
 without spinning up a server. Only the API talks to the database — `apps/web`
 has no Prisma dependency at all.
+
+## Teachers
+
+A teacher account is chosen at signup — the first screen of `/welcome` asks
+whether you are studying or teaching — and it is a different account, not a mode.
+A teacher has no practice history and no progress of their own; a student cannot
+set homework. The choice is one-directional and cannot be undone from the
+product, which is why the screen says so before you make it.
+
+`User.role` is still never read from a request body. The teacher form posts a
+school and a sentence about what you teach; the role is the server's conclusion
+from the fact that a fresh account submitted it (see
+`packages/contracts/src/auth/teacher.schema.ts`).
+
+**What a teacher gets**
+
+| Surface               | What it does                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `/teacher`            | Overview: what is overdue, what needs reviewing, what is in the bank                 |
+| `/teacher/classrooms` | Create a classroom, share its code, set practice, watch completion                   |
+| `/teacher/uploads`    | Upload a paper (PDF, photo, or pasted text) and review what the model read out of it |
+| `/teacher/questions`  | The teacher's own bank, filtered by chapter, difficulty, marks and type              |
+
+**The upload pipeline** is `upload → review → import`, and the middle step is the
+point. A model transcribes a paper well and _guesses_ the two fields the product
+runs on — which chapter a question belongs to, and how hard it is. So it
+proposes, the teacher disposes, and only accepted rows are written. A teacher who
+uploads a paper and never opens the review screen has imported nothing, which is
+correct rather than a missing feature. Import validates every row against
+`writeQuestionInputSchema` — the same schema an editor's hand-typed question
+faces — and writes all of them or none.
+
+**Where those questions live.** Imported questions carry
+`Question.ownerTeacherId`, and `STUDENT_VISIBLE_QUESTION` filters on that being
+null. They are drawn for that teacher's own assignments (set the assignment's
+source to "my own questions") and are invisible to open practice and to every
+other classroom. One teacher's unreviewed OCR reaching every student on the
+platform is the failure that would be found last and cost most, so it is a clause
+in the shared predicate rather than a check each query remembers.
+
+**Without an AI key** the workspace still works — classrooms, assignments,
+reports, the bank. Only the upload screen changes, and it says plainly that
+reading papers is not switched on rather than offering a button that fails. See
+the AI section of `apps/api/.env.example`.
+
+Demo data: `pnpm --filter @samjho/api db:seed` creates the teacher
+`meera.demo@samjho.test` with a Class 10 Science classroom (join code `SAMJHO`)
+that both demo students are already in.
 
 ## Stack notes
 

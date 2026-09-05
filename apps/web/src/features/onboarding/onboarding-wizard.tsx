@@ -48,7 +48,7 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
 
   return (
     <form
-      className="flex flex-col gap-8"
+      className="rounded-panel border-line bg-card flex flex-col gap-7 border p-5 shadow-lift sm:p-8"
       onSubmit={(event) => {
         event.preventDefault();
         if (wizard.isLastStep) {
@@ -99,7 +99,7 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
         <p className="text-text-soft mt-2 text-sm leading-relaxed">{stepMeta?.blurb}</p>
       </header>
 
-      <div className="min-h-64">
+      <div>
         {wizard.step === "class" ? <ClassStep wizard={wizard} /> : null}
         {wizard.step === "subjects" ? (
           <SubjectsStep wizard={wizard} subjectsByClass={subjectsByClass} />
@@ -117,7 +117,7 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
         </p>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="border-line flex items-center gap-3 border-t pt-5">
         {wizard.stepIndex > 0 ? (
           <Button type="button" variant="secondary" onClick={wizard.back}>
             Back
@@ -213,8 +213,7 @@ function SubjectsStep({
     return (
       <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm leading-relaxed">
         No subjects are available for Class {wizard.draft.classLevel} yet. Samjho currently covers
-        Class 10 Mathematics and Science — go back and choose Class 10, or check again once more
-        subjects are added.
+        Class 10 Mathematics and Science. Go back to choose Class 10.
       </p>
     );
   }
@@ -359,9 +358,9 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
         product should not imply otherwise to the person making it.
       */}
       <Hint>
-        Samjho is in a closed pilot. We record that you have declared a guardian permits this
-        account; we do not yet ask your guardian to confirm it directly. Samjho contains no
-        advertising and no behavioural-tracking scripts.
+        Samjho is in a closed pilot. We record your declaration that a guardian permits you to use
+        this account; we do not yet ask your guardian to confirm it directly. Samjho contains no
+        advertising or behavioural-tracking scripts.
       </Hint>
     </fieldset>
   );

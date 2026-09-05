@@ -54,7 +54,7 @@ export function Field({ label, hint, error, children }: FieldProps) {
 }
 
 export const inputClass =
-  "border-line-strong w-full rounded-lg border bg-transparent px-3 py-2 text-sm";
+  "border-line-strong bg-card text-text min-h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
 
 export function Fieldset({
   legend,
@@ -66,9 +66,13 @@ export function Fieldset({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="border-line space-y-4 rounded-xl border p-4">
-      <legend className="text-text px-1 text-sm font-semibold">{legend}</legend>
-      {description ? <p className="text-text-soft -mt-2 text-xs">{description}</p> : null}
+    <fieldset className="border-line bg-card rounded-panel space-y-5 border p-5 sm:p-6">
+      <legend className="text-text px-1 text-base font-semibold tracking-[-0.02em]">
+        {legend}
+      </legend>
+      {description ? (
+        <p className="text-text-soft -mt-2 max-w-3xl text-xs leading-relaxed">{description}</p>
+      ) : null}
       {children}
     </fieldset>
   );

@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { CURRENT_TERMS_VERSION } from "@samjho/contracts";
+
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { seedId } from "./helpers.js";
 
@@ -53,8 +55,29 @@ function stableUnitValue(...parts: string[]): number {
   return digest.readUInt32BE(0) / 0x1_0000_0000;
 }
 
+/**
+ * One demo teacher, with a classroom both demo students are in.
+ *
+ * Seeded for the same reason the students have practice history: the teacher
+ * dashboard's every screen is about a class that exists, and a dashboard only
+ * ever seen in its empty state is one whose real bugs are undiscovered. This
+ * gives the assignment report rows to show, the completion counters something
+ * to count, and the join-code flow a code that already works.
+ */
+const DEMO_TEACHER = {
+  key: "meera",
+  clerkId: "user_seed_meera_demo",
+  email: "meera.demo@samjho.test",
+  name: "Meera Iyer",
+  school: "Delhi Public School, Bengaluru",
+  subjectsTaught: "Class 10 Science and Mathematics",
+  /** Fixed rather than generated, so the code in a screenshot stays valid. */
+  joinCode: "SAMJHO",
+} as const;
+
 export interface SeededUsers {
   adminId: string;
+  teacherId: string;
   studentIds: string[];
 }
 
@@ -71,6 +94,38 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeededUsers> {
     where: { id: adminId },
     create: { id: adminId, ...admin },
     update: admin,
+  });
+
+  const teacherId = seedId("user", DEMO_TEACHER.key);
+  const teacher = {
+    clerkId: DEMO_TEACHER.clerkId,
+    email: DEMO_TEACHER.email,
+    name: DEMO_TEACHER.name,
+    role: "TEACHER" as const,
+    status: "ACTIVE" as const,
+  };
+  await prisma.user.upsert({
+    where: { id: teacherId },
+    create: { id: teacherId, ...teacher },
+    update: teacher,
+  });
+
+  const teacherProfileId = seedId("teacher-profile", DEMO_TEACHER.key);
+  const teacherProfile = {
+    userId: teacherId,
+    school: DEMO_TEACHER.school,
+    subjectsTaught: DEMO_TEACHER.subjectsTaught,
+    // Set, because a teacher without it is bounced to the setup wizard on every
+    // request — which is the exact state the migration's backfill exists to
+    // prevent, and the seed must not recreate it.
+    onboardedAt: new Date("2026-07-01T00:00:00.000Z"),
+    termsAcceptedAt: new Date("2026-07-01T00:00:00.000Z"),
+    termsAcceptedVersion: CURRENT_TERMS_VERSION,
+  };
+  await prisma.teacherProfile.upsert({
+    where: { id: teacherProfileId },
+    create: { id: teacherProfileId, ...teacherProfile },
+    update: teacherProfile,
   });
 
   const studentIds: string[] = [];
@@ -128,7 +183,68 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeededUsers> {
     studentIds.push(userId);
   }
 
-  return { adminId, studentIds };
+  return { adminId, teacherId, studentIds };
+}
+
+/**
+ * The demo teacher's classroom, its members, and one assignment.
+ *
+ * Called after subjects exist, because a classroom is scoped to one. The
+ * assignment is deliberately left unstarted: `AssignmentSubmission` rows point
+ * at real practice sessions, and fabricating those here would mean inventing
+ * attempt rows that the rollups would then have to be recomputed from — a
+ * second, parallel copy of `seedPracticeHistory` maintained for one demo row.
+ * "Nobody has started this yet" is also the state a teacher most needs the
+ * screen to render honestly.
+ */
+export async function seedClassroom(
+  prisma: PrismaClient,
+  input: { teacherId: string; subjectId: string; chapterId: string | null },
+): Promise<void> {
+  const classroomId = seedId("classroom", DEMO_TEACHER.key);
+  const classroom = {
+    teacherId: input.teacherId,
+    subjectId: input.subjectId,
+    name: "10B Science",
+    joinCode: DEMO_TEACHER.joinCode,
+    isArchived: false,
+  };
+
+  await prisma.classroom.upsert({
+    where: { id: classroomId },
+    create: { id: classroomId, ...classroom },
+    update: classroom,
+  });
+
+  for (const student of DEMO_STUDENTS) {
+    const membershipId = seedId("membership", DEMO_TEACHER.key, student.key);
+    const membership = { classroomId, studentId: seedId("user", student.key) };
+    await prisma.classroomMembership.upsert({
+      where: { id: membershipId },
+      create: { id: membershipId, ...membership },
+      update: membership,
+    });
+  }
+
+  const assignmentId = seedId("assignment", DEMO_TEACHER.key);
+  const assignment = {
+    classroomId,
+    title: "Warm-up before Friday",
+    instructions: "Ten questions. Look at the ones you get wrong before we go over them in class.",
+    chapterId: input.chapterId,
+    questionCount: 10,
+    sourcePool: "SHARED" as const,
+    // A fixed date rather than "a week from now": a seed that produces a
+    // different database each day makes every screenshot and test expectation
+    // built on it quietly wrong.
+    dueAt: new Date("2027-01-16T10:00:00.000Z"),
+  };
+
+  await prisma.classroomAssignment.upsert({
+    where: { id: assignmentId },
+    create: { id: assignmentId, ...assignment },
+    update: assignment,
+  });
 }
 
 export async function enrolStudents(prisma: PrismaClient, subjectIds: string[]): Promise<void> {

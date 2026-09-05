@@ -43,13 +43,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </a>
 
       {/* ── The rail ─────────────────────────────────────────────────────── */}
-      <div className="border-line bg-card fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r px-4 py-6 lg:flex">
+      <div className="border-line bg-card fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r px-5 py-7 lg:flex">
         <Link href="/home" className="px-3">
           <Wordmark size="sm" />
           <span className="sr-only">Samjho home</span>
         </Link>
 
-        <div className="mt-8 flex-1">
+        <div className="mt-10 flex-1">
           <SideNav role={me.user.role} />
         </div>
 
@@ -73,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <main id="content" className="pb-24 lg:pb-0 lg:pl-60">
+      <main id="content" className="min-w-0 overflow-x-clip pb-24 lg:pb-0 lg:pl-64">
         {children}
       </main>
 
