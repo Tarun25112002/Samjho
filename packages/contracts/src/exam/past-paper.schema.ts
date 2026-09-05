@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { importRowErrorSchema } from "../question/import.schema.js";
 import { licenceStatusSchema, questionStatusSchema } from "../question/question-enums.js";
-import { multiValue } from "../question/question.schema.js";
+import { booleanFlag, pastPaperYearSchema } from "../question/question.schema.js";
 
 /**
  * Previous-year papers: the registry, and the pipeline that fills it.
@@ -29,8 +29,6 @@ import { multiValue } from "../question/question.schema.js";
  * it is in, which is the class of error the provenance fields exist to prevent
  * (docs/07 R2). A row carrying its own `source` is rejected rather than merged.
  */
-
-export const pastPaperYearSchema = z.int().min(1990).max(2100);
 
 /**
  * How a paper's content is being reproduced, and therefore what `SourceType`
@@ -153,15 +151,9 @@ export const listPastPapersQuerySchema = z.object({
   yearFrom: z.coerce.number().int().min(1990).max(2100).optional(),
   yearTo: z.coerce.number().int().min(1990).max(2100).optional(),
   /** Papers still short of their printed count — the work queue. */
-  incompleteOnly: z
-    .enum(["true", "false"])
-    .transform((value) => value === "true")
-    .optional(),
+  incompleteOnly: booleanFlag().optional(),
   /** Cancelled sittings are hidden by default; they are not work to be done. */
-  includeNotHeld: z
-    .enum(["true", "false"])
-    .transform((value) => value === "true")
-    .optional(),
+  includeNotHeld: booleanFlag().optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
@@ -317,28 +309,6 @@ export const ingestPastPaperResultSchema = z.object({
 
 export type IngestPastPaperResult = z.infer<typeof ingestPastPaperResultSchema>;
 
-// ── Student-facing filter values ─────────────────────────────────────────────
-
-/**
- * Years as they arrive on a query string: `years=2024,2023`.
- *
- * The `multiValue` pattern rather than an array in a body, because a
- * "Practise 2024" chip is a link, and a link is a query string.
- */
-export const yearsQuerySchema = multiValue(
-  // `.transform(Number)` rather than `z.coerce.number()`: a coerced schema
-  // declares its input as `unknown`, and `multiValue` requires an item that
-  // genuinely accepts a `string` — otherwise nothing stops it being handed a
-  // parsed body. The regex does the rejecting the coercion would have done
-  // silently, and does it with a message worth reading, since `Number("")` is 0
-  // and `Number("20x4")` is NaN.
-  z
-    .string()
-    .regex(/^\d{4}$/, "must be a four-digit year")
-    .transform(Number)
-    .pipe(z.int().min(1990).max(2100)),
-);
-
 /**
  * The label a paper is shown under, built in one place.
  *
@@ -355,8 +325,15 @@ export function pastPaperLabel(paper: {
   region?: string | null;
 }): string {
   const parts = [`CBSE ${String(paper.year)}`, paper.examSession];
-  if (paper.paperCode) parts.push(paper.paperCode);
-  if (paper.setCode) parts.push(`Set ${paper.setCode}`);
+
+  // The code and the set are one identifier printed on one line of the paper —
+  // "30/1/1 Set 1" — so they stay together rather than being separated by the
+  // same dot that divides year from session.
+  const code = [paper.paperCode, paper.setCode ? `Set ${paper.setCode}` : null]
+    .filter(Boolean)
+    .join(" ");
+  if (code) parts.push(code);
+
   if (paper.region) parts.push(paper.region);
   return parts.join(" · ");
 }

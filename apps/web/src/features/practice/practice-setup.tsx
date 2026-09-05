@@ -6,6 +6,7 @@ import {
   questionTypeSchema,
   type ChapterSummary,
   type Difficulty,
+  type PastPaperYearOption,
   type PracticeFilters,
   type QuestionType,
   type SubjectDetail,
@@ -34,6 +35,20 @@ import { useStartPractice } from "./start-practice";
  * most of the time. Showing the count next to each chapter is the difference
  * between "the app is broken" and "that chapter hasn't been written yet" — the
  * student finds out before they press the button rather than after.
+ *
+ * ## Why picking a year changes the mode
+ *
+ * The year chips are labelled "previous-year papers", so a student picking 2024
+ * is asking for what the board actually set that year — not for anything that
+ * happens to carry a 2024 date, which is what a bare year filter means and would
+ * include questions adapted from a paper rather than taken from one. So a
+ * selected year submits as `PREVIOUS_YEAR` rather than `CUSTOM`, and the year
+ * narrows that pool instead of replacing its definition.
+ *
+ * The row is absent entirely for a subject with no board questions yet. A chip
+ * that produces an empty set reads as a broken feature rather than as a bank
+ * that has not reached 2009 — which is why the years come from the API with
+ * their counts, rather than being generated from a range here.
  */
 
 const TYPES = questionTypeSchema.options;
@@ -42,9 +57,12 @@ const COUNTS = [5, 10, 20, 30];
 
 export function PracticeSetup({
   subjects,
+  yearsBySubject,
   initial,
 }: {
   subjects: SubjectDetail[];
+  /** Previous-year options per subject id, loaded server-side with the subjects. */
+  yearsBySubject: Record<string, PastPaperYearOption[]>;
   initial: PracticeFilters & { count?: number };
 }) {
   const { start, busy, message } = useStartPractice();
@@ -53,6 +71,7 @@ export function PracticeSetup({
   const [chapterId, setChapterId] = useState(initial.chapterId ?? "");
   const [types, setTypes] = useState<QuestionType[]>(initial.types ?? []);
   const [difficulties, setDifficulties] = useState<Difficulty[]>(initial.difficulties ?? []);
+  const [years, setYears] = useState<number[]>(initial.years ?? []);
   const [unseenOnly, setUnseenOnly] = useState(initial.unseenOnly);
   const [count, setCount] = useState(initial.count ?? 10);
 
@@ -62,6 +81,7 @@ export function PracticeSetup({
   );
 
   const chapters: ChapterSummary[] = subject?.chapters ?? [];
+  const yearOptions = yearsBySubject[subjectId] ?? [];
 
   return (
     <form
@@ -69,7 +89,9 @@ export function PracticeSetup({
       onSubmit={(event) => {
         event.preventDefault();
         void start({
-          mode: "CUSTOM",
+          // See the note above: a chosen year means "what the board set", which
+          // is the previous-year pool narrowed, not a date filter over the bank.
+          mode: years.length > 0 ? "PREVIOUS_YEAR" : "CUSTOM",
           count,
           filters: {
             unseenOnly,
@@ -77,6 +99,7 @@ export function PracticeSetup({
             ...(chapterId ? { chapterId } : {}),
             ...(types.length ? { types } : {}),
             ...(difficulties.length ? { difficulties } : {}),
+            ...(years.length ? { years } : {}),
             // The topic filter is deliberately absent from this form. A student
             // choosing a topic already came from a chapter page, and that link
             // carries `topicId` in the query string — a topic dropdown here
@@ -121,6 +144,22 @@ export function PracticeSetup({
               </option>
             ))}
           </select>
+        </Field>
+      ) : null}
+
+      {yearOptions.length > 0 ? (
+        <Field label="Previous-year papers">
+          <ChipGroup
+            options={yearOptions.map((option) => ({
+              value: option.year,
+              label: `${String(option.year)} (${String(option.questionCount)})`,
+            }))}
+            selected={years}
+            onToggle={(value) => {
+              setYears(toggle(years, value));
+            }}
+            emptyHint="Any year"
+          />
         </Field>
       ) : null}
 
@@ -213,7 +252,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ChipGroup<T extends string>({
+function ChipGroup<T extends string | number>({
   options,
   selected,
   onToggle,
@@ -232,7 +271,7 @@ function ChipGroup<T extends string>({
         const isSelected = selected.includes(option.value);
         return (
           <button
-            key={option.value}
+            key={String(option.value)}
             type="button"
             aria-pressed={isSelected}
             onClick={() => {

@@ -6,6 +6,7 @@ import { PrismaClient } from "../../src/generated/prisma/client.js";
 import { class10MathsChapters } from "./curriculum/maths.js";
 import { class10ScienceChapters } from "./curriculum/science.js";
 import { seedId, upsertQuestion, type CurriculumIndex } from "./helpers.js";
+import { seedPastPapers } from "./past-papers.js";
 import { class10MathsQuestions } from "./questions/maths.js";
 import { class10ScienceQuestions } from "./questions/science.js";
 import type { SeedChapter, SeedQuestion } from "./types.js";
@@ -228,6 +229,14 @@ async function main(): Promise<void> {
         (domains > 0 ? `, ${String(domains)} domains` : ""),
     );
   }
+
+  let sittings = 0;
+  for (const [code, subjectId] of subjectIdByCode) {
+    sittings += await seedPastPapers(prisma, { id: subjectId, code });
+  }
+  log(
+    `  past papers        ${String(sittings)} sittings registered, 2001-2026, no papers sourced yet`,
+  );
 
   const blueprintCount = await seedBlueprints(subjectIdByCode);
   log(

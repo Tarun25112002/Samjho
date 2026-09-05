@@ -414,7 +414,9 @@
     height: 31rem;
     border: 1px solid oklch(1 0 0 / 0.15);
     border-radius: 999px;
-    box-shadow: 0 0 0 3.5rem oklch(1 0 0 / 0.035), 0 0 0 7rem oklch(1 0 0 / 0.025);
+    box-shadow:
+      0 0 0 3.5rem oklch(1 0 0 / 0.035),
+      0 0 0 7rem oklch(1 0 0 / 0.025);
   }
 
   /* The illustration gets its own quiet frame at wide desktop sizes. It is a

@@ -1,3 +1,4 @@
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
 import type { Difficulty, PracticeFilters, PracticeMode, QuestionType } from "@samjho/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -55,7 +56,7 @@ export interface SelectionRequest {
  * into a set would show a student "Calculate the current" with no circuit
  * described, because the stimulus lives on the parent.
  */
-function toWhere(filters: PracticeFilters): Prisma.QuestionWhereInput {
+function toWhere(filters: PracticeFilters, mode: PracticeMode): Prisma.QuestionWhereInput {
   const where: Prisma.QuestionWhereInput = { ...STUDENT_VISIBLE_TOP_LEVEL };
 
   if (filters.subjectId) where.subjectId = filters.subjectId;
@@ -75,6 +76,23 @@ function toWhere(filters: PracticeFilters): Prisma.QuestionWhereInput {
       { subParts: { some: { topics: { some: { topicId: filters.topicId } } } } },
     ];
   }
+
+  // Every provenance restriction is assembled into one clause, which is why the
+  // mode is passed in rather than applied by the caller afterwards. `source` is
+  // a single relation filter: a second assignment replaces the first, so
+  // "board questions from 2024" would quietly become "anything from 2024" the
+  // moment the year filter and the PREVIOUS_YEAR mode were used together — and
+  // together is exactly how a student uses them.
+  const source: Prisma.QuestionSourceWhereInput = {};
+
+  // A previous-year question is a question with a source, not a separate content
+  // universe (docs/01 §2) — which is why this is a clause here rather than a
+  // flag on the question table.
+  if (mode === "PREVIOUS_YEAR") source.sourceType = { in: [...PREVIOUS_YEAR_SOURCE_TYPES] };
+  if (filters.years?.length) source.year = { in: filters.years };
+  if (filters.pastPaperId) source.pastPaperId = filters.pastPaperId;
+
+  if (Object.keys(source).length > 0) where.source = source;
 
   return where;
 }
@@ -107,19 +125,12 @@ export const practiceSelection = {
  * `id: { in: [] }`, which Postgres will happily plan and scan for nothing.
  */
 async function candidatePool(request: SelectionRequest): Promise<Candidate[] | null> {
-  const where = toWhere(request.filters);
+  const where = toWhere(request.filters, request.mode);
 
   const personal = await personalPool(request);
   if (personal !== undefined) {
     if (personal.length === 0) return null;
     where.id = { in: personal };
-  }
-
-  if (request.mode === "PREVIOUS_YEAR") {
-    // A previous-year question is a question with a source, not a separate
-    // content universe (docs/01 §2) — which is why this is a clause here rather
-    // than a flag on the question table.
-    where.source = { sourceType: { in: ["CBSE_BOARD_PAPER", "CBSE_SAMPLE_PAPER"] } };
   }
 
   if (request.filters.unseenOnly) {

@@ -1,3 +1,4 @@
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
 import type { Difficulty, ListQuestionsQuery, QuestionType } from "@samjho/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -110,6 +111,23 @@ function toFilters(query: ListQuestionsQuery): Prisma.QuestionWhereInput {
   if (query.search) {
     where.body = { contains: query.search, mode: "insensitive" };
   }
+
+  // Provenance filters are assembled into one clause rather than assigned one
+  // at a time. `where.source` is a single relation filter, so a second
+  // assignment silently replaces the first — "board questions from 2024" would
+  // quietly become "anything from 2024". Building the object first makes that
+  // shape impossible rather than a rule to remember.
+  //
+  // Note also that a non-null `source` filter *requires* the relation to exist,
+  // which is correct here: a question with no recorded provenance did not come
+  // from a paper, so it cannot match a paper filter.
+  const source: Prisma.QuestionSourceWhereInput = {};
+
+  if (query.previousYearOnly) source.sourceType = { in: [...PREVIOUS_YEAR_SOURCE_TYPES] };
+  if (query.years?.length) source.year = { in: query.years };
+  if (query.pastPaperId) source.pastPaperId = query.pastPaperId;
+
+  if (Object.keys(source).length > 0) where.source = source;
 
   return where;
 }

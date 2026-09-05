@@ -1,4 +1,8 @@
-import { practiceFiltersQuerySchema, type SubjectDetail } from "@samjho/contracts";
+import {
+  practiceFiltersQuerySchema,
+  type PastPaperYearOption,
+  type SubjectDetail,
+} from "@samjho/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,6 +10,7 @@ import { ChevronLeft } from "@/components/icons";
 import { PracticeSetup } from "@/features/practice/practice-setup";
 import { loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
+import { loadPastPaperYears } from "@/lib/past-papers";
 
 export const metadata: Metadata = { title: "Build a practice set" };
 export const dynamic = "force-dynamic";
@@ -42,6 +47,11 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
     (me.profile?.subjects ?? []).map((subject) => subject.slug),
   );
 
+  // Loaded here rather than fetched when the subject dropdown changes, for the
+  // same reason the chapters are: a student has one or two subjects, so this is
+  // one or two calls at render instead of a spinner on every dropdown change.
+  const yearsBySubject = await loadYears(subjects.map((subject) => subject.id));
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
       <header>
@@ -65,6 +75,7 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
       */}
       <PracticeSetup
         subjects={subjects}
+        yearsBySubject={yearsBySubject}
         initial={{
           ...filters,
           unseenOnly: filters.unseenOnly ?? false,
@@ -73,6 +84,21 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
       />
     </div>
   );
+}
+
+/**
+ * The previous-year chips for every enrolled subject, keyed by subject id.
+ *
+ * `loadPastPaperYears` swallows its own failures and returns `[]`, so a subject
+ * whose years cannot be loaded costs the student one optional row rather than
+ * the page they were about to build a set on.
+ */
+async function loadYears(subjectIds: string[]): Promise<Record<string, PastPaperYearOption[]>> {
+  const loaded = await Promise.all(
+    subjectIds.map(async (id) => [id, await loadPastPaperYears(id)] as const),
+  );
+
+  return Object.fromEntries(loaded);
 }
 
 /**

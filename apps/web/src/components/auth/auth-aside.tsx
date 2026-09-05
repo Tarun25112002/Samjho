@@ -65,16 +65,22 @@ export function AuthAside({
       </div>
 
       <div className="auth-aside-copy relative z-10 my-auto max-w-[31rem]">
-        <p className="text-brand-200 mb-4 text-xs font-semibold tracking-[0.14em] uppercase">{eyebrow}</p>
+        <p className="text-brand-200 mb-4 text-xs font-semibold tracking-[0.14em] uppercase">
+          {eyebrow}
+        </p>
         <h2 className="max-w-[28rem] text-[2.45rem] leading-[1.06] font-semibold tracking-[-0.045em] xl:text-[3.25rem]">
           {headline}
         </h2>
-        <p className="auth-aside-note mt-5 max-w-md text-sm leading-relaxed text-sand-200">{note}</p>
+        <p className="auth-aside-note mt-5 max-w-md text-sm leading-relaxed text-sand-200">
+          {note}
+        </p>
 
         <MarkedQuestion />
       </div>
 
-      <p className="relative z-10 text-xs leading-relaxed text-sand-300">A small review now makes the next answer easier.</p>
+      <p className="relative z-10 text-xs leading-relaxed text-sand-300">
+        A small review now makes the next answer easier.
+      </p>
     </aside>
   );
 }
@@ -115,11 +121,18 @@ function MarkedQuestion() {
 
         <ul className="flex flex-col gap-2">
           <Option state="wrong" label="A" text="30 cm behind the mirror" verdict="Your answer" />
-          <Option state="right" label="B" text="30 cm in front of the mirror" verdict="Correct answer" />
+          <Option
+            state="right"
+            label="B"
+            text="30 cm in front of the mirror"
+            verdict="Correct answer"
+          />
         </ul>
 
         <div className="auth-aside-question-explanation rounded-control bg-brand-50 px-3.5 py-3">
-          <p className="text-brand-800 text-xs font-bold tracking-[0.08em] uppercase">Why it works</p>
+          <p className="text-brand-800 text-xs font-bold tracking-[0.08em] uppercase">
+            Why it works
+          </p>
           <p className="text-text-soft mt-1 font-serif text-sm leading-[1.5]">
             A real image forms on the same side as the object, so it is in front of the mirror.
           </p>

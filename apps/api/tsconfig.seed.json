@@ -1,8 +1,13 @@
 {
-  // The seed lives outside src/, so the main project cannot compile it: a
-  // composite project's rootDir is src/, and widening that would drag prisma/
-  // into dist/. It still has to be type-checked — it is the code most likely to
-  // silently drift from the schema — so it gets its own no-emit project.
+  // The seed and the content scripts live outside src/, so the main project
+  // cannot compile them: a composite project's rootDir is src/, and widening
+  // that would drag prisma/ and scripts/ into dist/. They still have to be
+  // type-checked — this is the code most likely to silently drift from the
+  // schema — so they get their own no-emit project.
+  //
+  // src/ is included as well, because the ingest script imports the service it
+  // wraps. Excluding it would leave those imports unresolved and the script
+  // effectively unchecked, which is the opposite of the point.
   "extends": "@samjho/config/tsconfig/node.json",
   "compilerOptions": {
     "noEmit": true,
@@ -11,6 +16,6 @@
     "declarationMap": false,
     "types": ["node"]
   },
-  "include": ["prisma/**/*.ts", "src/generated/**/*.ts"],
+  "include": ["prisma/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
