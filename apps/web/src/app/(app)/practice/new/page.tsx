@@ -4,9 +4,9 @@ import {
   type SubjectDetail,
 } from "@samjho/contracts";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { ChevronLeft } from "@/components/icons";
+import { PageHeader, PageShell } from "@/components/ui/page";
+import { Card, flushBandClass } from "@/components/ui/surface";
 import { PracticeSetup } from "@/features/practice/practice-setup";
 import { loadSubject } from "@/lib/catalog";
 import { requireOnboarded } from "@/lib/me";
@@ -53,34 +53,22 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
   const yearsBySubject = await loadYears(subjects.map((subject) => subject.id));
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
-      <header className="border-line border-b pb-6">
-        <Link
-          href="/practice"
-          className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
-        >
-          <ChevronLeft className="size-4" />
-          Practice
-        </Link>
-        <p className="text-brand-700 mt-4 text-xs font-bold tracking-[0.14em] uppercase">
-          Custom practice
-        </p>
-        <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-          Build a practice set
-        </h1>
-        <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-          Start broad or choose a precise focus. Any filter you leave blank stays open.
-        </p>
-      </header>
+    <PageShell width="narrow">
+      <PageHeader
+        back={{ href: "/practice", label: "Practice" }}
+        eyebrow="Custom practice"
+        title="Build a practice set"
+        lede="Start broad or choose a precise focus. Any filter you leave blank stays open."
+      />
 
       {/*
         `unseenOnly` is spread separately rather than defaulted before the
         spread: an absent query parameter parses to `undefined`, and spreading
         that over a default puts the `undefined` back.
       */}
-      <section className="rounded-panel border-line bg-card overflow-hidden border">
-        <div className="border-line bg-raised/60 border-b px-5 py-5 sm:px-6">
-          <p className="text-text text-lg font-semibold tracking-[-0.02em]">Choose your focus</p>
+      <Card pad="flush" className="overflow-hidden">
+        <div className={`border-line bg-raised/60 border-b ${flushBandClass}`}>
+          <p className="text-text text-subheading">Choose your focus</p>
           <p className="text-text-soft mt-1 text-sm leading-relaxed">
             You can change any of these filters before starting.
           </p>
@@ -96,8 +84,8 @@ export default async function PracticeSetupPage({ searchParams }: PageProps) {
             }}
           />
         </div>
-      </section>
-    </div>
+      </Card>
+    </PageShell>
   );
 }
 

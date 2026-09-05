@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ChoiceCard as CheckCard, inputClass, Label } from "@/components/ui/form";
+import { Card } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 
 /**
@@ -45,9 +47,7 @@ export function AccountTypeChooser({ onChooseStudent }: { onChooseStudent: () =>
   return (
     <div>
       <p className="text-brand-700 text-sm font-semibold">Welcome to Samjho</p>
-      <h1 className="text-text mt-1 text-[1.9rem] leading-tight font-semibold tracking-[-0.035em] sm:text-4xl">
-        How will you use Samjho?
-      </h1>
+      <h1 className="text-text text-title mt-1">How will you use Samjho?</h1>
       <p className="text-text-soft mt-2 text-sm leading-relaxed">
         This sets up your account. It cannot be changed later, so pick the one that matches what you
         are here to do.
@@ -87,14 +87,14 @@ function ChoiceCard({
   onClick: () => void;
 }) {
   return (
-    <section className="border-line bg-card rounded-panel flex flex-col border p-5 sm:p-6">
-      <h2 className="text-text text-lg font-semibold tracking-[-0.02em]">{title}</h2>
+    <Card className="flex flex-col">
+      <h2 className="text-text text-subheading">{title}</h2>
       <p className="text-text-soft mt-2 flex-1 text-sm leading-relaxed">{blurb}</p>
       <p className="text-text-faint mt-3 text-xs leading-relaxed">{note}</p>
       <Button className="mt-5" variant="secondary" fullWidth onClick={onClick}>
         {cta}
       </Button>
-    </section>
+    </Card>
   );
 }
 
@@ -158,14 +158,12 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
       <button
         type="button"
         onClick={onBack}
-        className="text-text-soft hover:text-text text-sm font-medium"
+        className="text-text-soft hover:text-text inline-flex min-h-11 items-center text-sm font-medium transition-colors"
       >
         ← Not a teacher?
       </button>
 
-      <h1 className="text-text mt-3 text-[1.7rem] leading-tight font-semibold tracking-[-0.035em] sm:text-3xl">
-        Set up your teaching account
-      </h1>
+      <h1 className="text-text text-title mt-2">Set up your teaching account</h1>
       <p className="text-text-soft mt-2 text-sm leading-relaxed">
         Two optional details and one box to tick. You can change the details later from your
         profile.
@@ -178,10 +176,10 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
           void submit();
         }}
       >
-        <div>
-          <label htmlFor="teacher-school" className="text-text mb-1.5 block text-sm font-semibold">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="teacher-school">
             School <span className="text-text-faint font-normal">(optional)</span>
-          </label>
+          </Label>
           <input
             id="teacher-school"
             value={draft.school ?? ""}
@@ -193,13 +191,10 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="teacher-subjects"
-            className="text-text mb-1.5 block text-sm font-semibold"
-          >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="teacher-subjects">
             What do you teach? <span className="text-text-faint font-normal">(optional)</span>
-          </label>
+          </Label>
           <input
             id="teacher-subjects"
             value={draft.subjectsTaught ?? ""}
@@ -209,13 +204,13 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
             placeholder="e.g. Class 10 Science and Maths"
             className={inputClass}
           />
-          <p className="text-text-faint mt-1.5 text-xs">
+          <p className="text-text-faint text-xs leading-relaxed">
             Shown to students on your classroom card. The subjects you actually set work for come
             from your classrooms.
           </p>
         </div>
 
-        <label className="border-line bg-card rounded-panel flex cursor-pointer items-start gap-3 border p-4">
+        <CheckCard selected={draft.termsAccepted === true}>
           <input
             type="checkbox"
             checked={draft.termsAccepted === true}
@@ -231,7 +226,7 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
             I accept the terms of use and privacy policy, and I confirm I am a teacher setting up an
             account for my own classes.
           </span>
-        </label>
+        </CheckCard>
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={busy}>
@@ -251,6 +246,3 @@ function TeacherSetup({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
-
-const inputClass =
-  "border-line bg-card text-text h-12 w-full rounded-xl border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";

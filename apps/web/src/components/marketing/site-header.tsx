@@ -46,7 +46,7 @@ export async function SiteHeader() {
             <a
               key={link.href}
               href={link.href}
-              className="text-text-soft hover:text-text text-[0.9375rem] font-medium transition-colors"
+              className="text-text-soft hover:text-text text-ui font-medium transition-colors"
             >
               {link.label}
             </a>

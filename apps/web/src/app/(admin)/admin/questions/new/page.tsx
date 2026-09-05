@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PageHeader, PageShell } from "@/components/ui/page";
 import { QuestionEditor } from "@/features/admin/question-editor";
 import { emptyDraft } from "@/features/admin/use-question-editor";
 import { loadAdminChapters, loadAdminSubjects } from "@/lib/admin";
@@ -26,17 +26,14 @@ export default async function NewQuestionPage({ searchParams }: PageProps) {
 
   if (!chapter) {
     return (
-      <main className="mx-auto w-full max-w-[90rem] px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
-        <h1 className="text-text text-2xl font-semibold tracking-tight">
-          {subject.name} has no chapters yet
-        </h1>
-        <p className="text-text-soft mt-2 text-sm">
-          A question belongs to a chapter, so the syllabus has to exist first.
-        </p>
-        <Link href="/admin" className="text-text mt-4 inline-block underline">
-          Back to the dashboard
-        </Link>
-      </main>
+      <PageShell as="main" width="wide">
+        <PageHeader
+          back={{ href: "/admin", label: "Dashboard" }}
+          eyebrow="Question bank"
+          title={`${subject.name} has no chapters yet`}
+          lede="A question belongs to a chapter, so the syllabus has to exist first."
+        />
+      </PageShell>
     );
   }
 
@@ -49,23 +46,15 @@ export default async function NewQuestionPage({ searchParams }: PageProps) {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-5 py-7 sm:px-8 sm:py-10 xl:px-10">
-      <header className="border-line bg-card rounded-panel space-y-2 border p-6 sm:p-8">
-        <Link href="/admin/questions" className="text-text-soft hover:text-text text-sm">
-          ← Questions
-        </Link>
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-          Question bank
-        </p>
-        <h1 className="text-text text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-          Create a question
-        </h1>
-        <p className="text-text-soft text-sm leading-relaxed">
-          {subject.name}. Saves as a draft — publishing is a separate step.
-        </p>
-      </header>
+    <PageShell as="main" width="wide">
+      <PageHeader
+        back={{ href: "/admin/questions", label: "Questions" }}
+        eyebrow="Question bank"
+        title="Create a question"
+        lede={`${subject.name}. Saves as a draft — publishing is a separate step.`}
+      />
 
       <QuestionEditor chapters={chapters} defaults={defaults} initial={emptyDraft(defaults)} />
-    </main>
+    </PageShell>
   );
 }

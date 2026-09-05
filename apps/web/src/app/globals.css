@@ -132,6 +132,34 @@
   /* What goes *on* a saffron fill. Near-black, not white — see the note above. */
   --color-on-brand: oklch(0.185 0.011 65);
 
+  /* ── The desk: the one dark panel ───────────────────────────────────────
+     Four places in the product put a dark panel on the light page — the
+     dashboard's resume hero, the progress page's revision list, the landing
+     page's proof band, and the sign-in aside. They were four different dark
+     panels: `bg-sand-900` with `text-sand-300` on one, `bg-text` with
+     `text-white/72` on another, `bg-sand-950` with `text-white/65` on a third.
+     Same object, three surfaces and six soft-text values.
+
+     So the desk is a surface with its own small semantic set, the way `card`
+     is. `on-desk-soft` is the one that mattered: `white/60` and `white/72`
+     were both "the quieter line", and neither had been measured against the
+     ground it sat on.
+
+     These were. On the light-mode desk:
+     `on-desk` 15.6:1, `on-desk-soft` 10.4:1, `on-desk-faint` 6.5:1 and
+     `brand-300` 9.0:1; on `desk-raised` the same four are 12.9, 8.6, 4.9 and
+     7.4. The dark-mode desk keeps all four above 5.2:1.
+
+     Deliberately literal rather than flipping. The desk is dark *by design* —
+     it is the evening revision desk the page rests on — so in dark mode it
+     lifts a step rather than inverting, or it would disappear into the page. */
+  --color-desk: oklch(0.245 0.013 65);
+  --color-desk-raised: oklch(0.305 0.015 65);
+  --color-desk-line: oklch(1 0 0 / 0.14);
+  --color-on-desk: oklch(0.985 0.004 65);
+  --color-on-desk-soft: oklch(0.855 0.013 65);
+  --color-on-desk-faint: oklch(0.72 0.018 65);
+
   /* ── Type ───────────────────────────────────────────────────────────────
      Poppins runs the interface. Geometric, high-contrast at heavy weights, and
      it carries Devanagari in the same family — so `समझो` in the wordmark is set
@@ -147,19 +175,137 @@
   --font-serif: var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
 
-  /* Display sizes for the two or three places where a number or a greeting is
-     the largest thing on the screen. Poppins is drawn on a wide geometric
-     rhythm, so display sizes need real negative tracking to stop reading as a
-     poster. */
-  --text-display: 3rem;
-  --text-display--line-height: 1.05;
-  --text-display--letter-spacing: -0.03em;
-  --text-display--font-weight: 700;
+  /* ── The heading scale ──────────────────────────────────────────────────
+     Six steps, each with exactly one job, because a scale with two steps that
+     mean the same thing is a scale that drifts. Before these existed the page
+     title was written nine different ways across sixteen pages — 30/36, 30/40,
+     32/36, 34, 30 — and a student moving between Practice and Progress saw the
+     title change size for no reason they could name.
 
-  --text-title: 1.875rem;
-  --text-title--line-height: 1.15;
-  --text-title--letter-spacing: -0.022em;
+     Every step carries its own line-height, tracking and weight, so a heading
+     is `text-title` and nothing else. Nothing at a call site should ever set
+     `tracking-[…]` on a heading again: the tracking *belongs to the size*, and
+     the reason the old values ranged from -0.015em to -0.052em is that each was
+     eyeballed against whatever size it happened to sit at.
+
+     ## Why they are fluid rather than breakpointed
+
+     Poppins is drawn on a wide geometric rhythm and needs real negative
+     tracking at display sizes to stop reading as a poster. It also means a
+     30px→40px jump at exactly 640px is *visible* — the title lurches as a
+     phone rotates. `clamp()` costs nothing, removes a responsive variant from
+     every call site, and holds the intended size at both ends. The lower bound
+     of each is the 360px value; the upper is reached around 1024px. */
+
+  /* The landing page's opening line, and nothing else in the product. */
+  --text-hero: clamp(2.9rem, 2.2rem + 3.35vw, 4.5rem);
+  --text-hero--line-height: 1.01;
+  --text-hero--letter-spacing: -0.052em;
+  --text-hero--font-weight: 600;
+
+  /* The one biggest line on a signed-in screen: the dashboard greeting, the
+     resume panel's focus, a final call to action. One per page, at most. */
+  --text-display: clamp(2rem, 1.55rem + 2vw, 2.85rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 600;
+
+  /* Every `<h1>`. The app, the teacher workspace, the admin tools and the
+     error pages all use this one — they are the same object. */
+  --text-title: clamp(1.875rem, 1.54rem + 1.5vw, 2.5rem);
+  --text-title--line-height: 1.08;
+  --text-title--letter-spacing: -0.035em;
   --text-title--font-weight: 600;
+
+  /* The headline of a centred notice card — the error boundary and the 404.
+     Deliberately *not* `--text-title`: that step is fluid on the viewport, and
+     these two headlines live in a 36rem card whose width does not change with
+     it. On a desktop the clamp took them to 40px inside a card built for 30,
+     which is the one place viewport-fluid type is simply the wrong tool. */
+  --text-notice: 1.875rem;
+  --text-notice--line-height: 1.15;
+  --text-notice--letter-spacing: -0.03em;
+  --text-notice--font-weight: 600;
+
+  /* Every `<h2>` that heads a section or a panel. */
+  --text-heading: clamp(1.25rem, 1.16rem + 0.4vw, 1.4rem);
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.024em;
+  --text-heading--font-weight: 600;
+
+  /* Every `<h3>`: a card's own title inside a section. */
+  --text-subheading: 1.125rem;
+  --text-subheading--line-height: 1.3;
+  --text-subheading--letter-spacing: -0.018em;
+  --text-subheading--font-weight: 600;
+
+  /* The uppercase label above a heading. It was written 28 different ways —
+     eight letter-spacings between 0.04em and 0.16em, and both `font-bold` and
+     `font-semibold` — which is a lot of variation for a nine-character word.
+     Small caps at 12px need wide tracking to stay readable; 0.14em is the
+     value most of the product already used and the one measured against
+     Poppins' geometric caps. */
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.25;
+  --text-eyebrow--letter-spacing: 0.14em;
+  --text-eyebrow--font-weight: 700;
+
+  /* The interface's in-between step: 15px, between `text-sm`'s small print and
+     `text-base`'s reading size. It is what a navigation destination, a primary
+     button and a page's opening line are set in — six places that each wrote
+     `text-[0.9375rem]` and one that wrote `sm:text-[0.9375rem]`. */
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.45;
+
+  /* Question prose: the serif at the size `@samjho/ui`'s `.samjho-prose` uses,
+     for the two places outside that package that set a question as text — the
+     landing page's live question, and the auth panel's marked answer. Keeping
+     the number here is what stops the marketing question looking a step off
+     from the same question inside the product. */
+  --text-prose: 1.0625rem;
+  --text-prose--line-height: 1.7;
+
+  /* Secondary reading prose: a solution, a marking-scheme step, an
+     explanation. The serif a step below the question body itself, with the same
+     generous leading — it was written by hand as
+     `font-serif text-[0.9375rem] leading-[1.7]` in one place and
+     `leading-[1.6]` in another two paragraphs down. */
+  --text-reading: 0.9375rem;
+  --text-reading--line-height: 1.7;
+
+  /* The eyebrow, one step down, for the labels inside a small card where 12px
+     caps would crowd the two lines they sit above. Same weight and tracking, so
+     it reads as the same object at a smaller size rather than as a new one. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.25;
+  --text-micro--letter-spacing: 0.14em;
+  --text-micro--font-weight: 700;
+
+  /* ── Figures ────────────────────────────────────────────────────────────
+     A number that is the point of its own card — a streak, a countdown, marks
+     earned, questions graded. It is a separate role from a heading because it
+     is set in tabular figures and needs its own tracking: Poppins' lining
+     numerals are wide, and the tracking that suits a word at 30px is loose
+     around a four-digit total.
+
+     Two steps only. `figure` is the value on a summary tile; `figure-lg` is the
+     one number a page is *about*. Anything smaller is body copy with
+     `tabular-nums` on it, which is what the inline stats already are. */
+  --text-figure: 1.875rem;
+  --text-figure--line-height: 1.05;
+  --text-figure--letter-spacing: -0.04em;
+  --text-figure--font-weight: 600;
+
+  --text-figure-lg: clamp(2.25rem, 1.95rem + 1.35vw, 3rem);
+  --text-figure-lg--line-height: 1;
+  --text-figure-lg--letter-spacing: -0.05em;
+  --text-figure-lg--font-weight: 600;
+
+  /* ── Tracking ───────────────────────────────────────────────────────────
+     The headings carry their own, so these are only for the two places a
+     non-heading needs it: a button's label, and a code a student types in. */
+  --tracking-control: -0.01em;
+  --tracking-code: 0.16em;
 
   /* ── Radius: three sizes, each meaning something ────────────────────────
      A page where every corner has the same radius reads as a component kit
@@ -221,6 +367,12 @@
   --dk-tick-700: oklch(0.79 0.12 155);
   --dk-half-600: oklch(0.82 0.15 95);
   --dk-half-700: oklch(0.87 0.13 95);
+
+  /* The desk lifts rather than inverting: on a warm near-black page a panel
+     that is *also* near-black is not a panel. Two steps above `--dk-page`
+     keeps the dark hero reading as a raised object. */
+  --dk-desk: oklch(0.315 0.014 62);
+  --dk-desk-raised: oklch(0.375 0.015 62);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -242,6 +394,8 @@
     --color-tick-700: var(--dk-tick-700);
     --color-half-600: var(--dk-half-600);
     --color-half-700: var(--dk-half-700);
+    --color-desk: var(--dk-desk);
+    --color-desk-raised: var(--dk-desk-raised);
   }
 }
 
@@ -263,6 +417,8 @@
   --color-tick-700: var(--dk-tick-700);
   --color-half-600: var(--dk-half-600);
   --color-half-700: var(--dk-half-700);
+  --color-desk: var(--dk-desk);
+  --color-desk-raised: var(--dk-desk-raised);
 }
 
 /*
@@ -376,6 +532,52 @@
         transparent 0 2.25rem,
         color-mix(in oklab, var(--color-brand-500) 11%, transparent) 2.25rem 2.3125rem
       );
+  }
+
+  /**
+   * The panel orbit — the sibling of `.auth-aside-orbit`, for the panels inside
+   * the product.
+   *
+   * Three of them used to draw their own arc as a thick border: 30px on the
+   * dashboard hero, 18px on the practice and result cards. At the sizes those
+   * panels actually render, a band that thick stops reading as a curve and
+   * becomes a slab lying across the content, cut square by the card's own
+   * `overflow: hidden`. It read as a rendering fault. On the dashboard it ran
+   * straight through the "Set status" card; on the practice hub it sat behind
+   * the Resume button.
+   *
+   * Hairlines instead, the way the sign-in aside has always done it. A 1px ring
+   * cannot slab, so it stays decoration at any panel height and behind anything
+   * that lands in front of it. Anchored bottom-right and mostly outside the
+   * panel, because the top-left is where every one of these panels starts its
+   * eyebrow and headline.
+   */
+  .panel-orbit {
+    position: absolute;
+    right: -7rem;
+    bottom: -8rem;
+    width: 20rem;
+    height: 20rem;
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    pointer-events: none;
+  }
+
+  /* One ring on the light card, two on the dark one. On `brand-50` a second
+     concentric band at 8% is still a visible edge, and two faint edges an inch
+     apart read as banding rather than as an orbit; on the near-black desk the
+     same values disappear into the panel. */
+  .panel-orbit--brand {
+    border-color: color-mix(in oklab, var(--color-brand-300) 45%, transparent);
+    box-shadow: 0 0 0 3.25rem color-mix(in oklab, var(--color-brand-300) 9%, transparent);
+  }
+
+  .panel-orbit--desk {
+    border-color: color-mix(in oklab, var(--color-brand-500) 30%, transparent);
+    box-shadow:
+      0 0 0 3.25rem color-mix(in oklab, var(--color-brand-500) 9%, transparent),
+      0 0 0 6.5rem color-mix(in oklab, var(--color-brand-500) 5%, transparent);
   }
 
   /* The auth column shares a single answer-sheet rule with the desktop panel
@@ -492,6 +694,28 @@
   .auth-question-subject {
     background: var(--color-brand-100);
     color: var(--color-brand-800);
+  }
+
+  /* The aside's headline sizes itself here rather than at the call site, and
+     that is a bug fix rather than a preference. The short-laptop rule below
+     drops it to 2.3rem so the marked question underneath is not cut off — and
+     it never once fired, because the markup carried
+     `text-[2.45rem] xl:text-[3.25rem]` and Tailwind's utilities layer outranks
+     this one. Every anonymous 14" laptop the sign-in page was reviewed on got
+     the tall headline the rule was written to prevent. With the size living in
+     one place, the override is the only thing that can change it. */
+  .auth-aside-copy h2 {
+    max-width: 28rem;
+    font-size: 2.45rem;
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.045em;
+  }
+
+  @media (min-width: 80rem) {
+    .auth-aside-copy h2 {
+      font-size: 3.25rem;
+    }
   }
 
   /* The left pane is supporting evidence, not the thing a student came to

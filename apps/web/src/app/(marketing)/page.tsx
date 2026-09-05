@@ -5,6 +5,8 @@ import { Check } from "@/components/icons";
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/page";
+import { cardClass } from "@/components/ui/surface";
 
 export const metadata: Metadata = {
   title: { absolute: "Samjho — CBSE Class 10 board exam practice" },
@@ -34,16 +36,18 @@ function SignalStrip() {
   ] as const;
 
   return (
-    <section aria-label="How Samjho is different" className="bg-sand-950 text-white">
-      <div className="mx-auto grid max-w-6xl divide-y divide-white/10 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
+    <section aria-label="How Samjho is different" className="bg-desk text-on-desk">
+      <div className="divide-desk-line mx-auto grid max-w-6xl divide-y px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
         {signals.map(([title, body], index) => (
           <div key={title} className="flex gap-4 py-6 md:px-6 md:first:pl-0 md:last:pr-0 lg:py-7">
-            <span className="text-brand-300 pt-0.5 text-xs font-semibold tracking-[0.12em]">
+            <span className="text-brand-300 pt-0.5 text-xs font-semibold tabular-nums">
               0{index + 1}
             </span>
             <div>
               <h2 className="text-sm font-semibold">{title}</h2>
-              <p className="mt-1.5 max-w-[25ch] text-sm leading-relaxed text-white/65">{body}</p>
+              <p className="text-on-desk-soft mt-1.5 max-w-[25ch] text-sm leading-relaxed">
+                {body}
+              </p>
             </div>
           </div>
         ))}
@@ -54,17 +58,12 @@ function SignalStrip() {
 
 function Inside() {
   return (
-    <section
-      id="inside"
-      className="bg-raised scroll-mt-24 border-y border-[var(--color-line)] py-24 lg:py-36"
-    >
+    <section id="inside" className="bg-raised border-line scroll-mt-24 border-y py-24 lg:py-36">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
           <div className="lg:col-span-7">
-            <p className="text-brand-700 text-xs font-semibold tracking-[0.13em] uppercase">
-              Made for the marks that matter
-            </p>
-            <h2 className="mt-4 max-w-[13ch] text-[2.4rem] leading-[1.03] font-semibold tracking-[-0.045em] sm:text-5xl">
+            <Eyebrow>Made for the marks that matter</Eyebrow>
+            <h2 className="text-display mt-4 max-w-[13ch]">
               A question bank does not know what you need next.
             </h2>
           </div>
@@ -107,9 +106,9 @@ const FEATURES = [
 function FeatureLedger() {
   return (
     <div className="lg:col-span-5 lg:pt-1">
-      <p className="text-text-faint border-line border-b pb-4 text-xs font-semibold tracking-[0.12em] uppercase">
+      <Eyebrow tone="muted" className="border-line border-b pb-4">
         In your working copy
-      </p>
+      </Eyebrow>
       <ol className="divide-line divide-y">
         {FEATURES.map((feature, index) => (
           <li
@@ -120,7 +119,7 @@ function FeatureLedger() {
               0{index + 1}
             </span>
             <div>
-              <h3 className="text-text text-lg font-semibold tracking-[-0.015em] transition-colors group-hover:text-brand-700">
+              <h3 className="text-text text-subheading group-hover:text-brand-700 transition-colors">
                 {feature.title}
               </h3>
               <p className="text-text-soft mt-2 text-sm leading-relaxed">{feature.body}</p>
@@ -128,7 +127,7 @@ function FeatureLedger() {
           </li>
         ))}
       </ol>
-      <p className="border-half-300 bg-half-50 text-half-700 mt-5 rounded-control border px-4 py-3 text-sm leading-relaxed">
+      <p className="border-half-200 bg-half-50 text-half-700 rounded-control mt-5 border px-4 py-3 text-sm leading-relaxed">
         Full three-hour papers are being built with the real internal choices and section rules.
       </p>
     </div>
@@ -137,7 +136,7 @@ function FeatureLedger() {
 
 function MarkingScheme() {
   return (
-    <figure className="rounded-panel border-line bg-card shadow-pop m-0 overflow-hidden border">
+    <figure className={`${cardClass({ pad: "flush" })} shadow-pop m-0 overflow-hidden`}>
       <div className="border-line flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-5 py-4 sm:px-6">
         <span className="text-text text-sm font-semibold">Section D · Question 20</span>
         <span className="text-text-faint text-sm">Written answer</span>
@@ -147,9 +146,7 @@ function MarkingScheme() {
       <div className="grid lg:grid-cols-[minmax(0,1fr)_10rem]">
         <div className="flex flex-col gap-6 px-5 py-6 sm:px-7 sm:py-8">
           <div>
-            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">
-              The question
-            </p>
+            <Eyebrow>The question</Eyebrow>
             <p className="text-text mt-3 font-serif text-xl leading-[1.55] sm:text-2xl">
               Prove that <span className="whitespace-nowrap">√5</span> is irrational.
             </p>
@@ -183,9 +180,7 @@ function MarkingScheme() {
 
         <figcaption className="border-line bg-brand-50 flex flex-col justify-between gap-8 border-t px-5 py-6 sm:px-7 lg:border-t-0 lg:border-l lg:px-5">
           <div>
-            <p className="text-brand-700 text-xs font-semibold tracking-[0.12em] uppercase">
-              The point
-            </p>
+            <Eyebrow>The point</Eyebrow>
             <p className="text-text mt-3 text-sm leading-relaxed">
               You do not just see the answer. You can see what earns each mark.
             </p>
@@ -206,7 +201,7 @@ const SCHEME = [
 function ForParents() {
   return (
     <section id="parents" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-36">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-panel bg-sand-950 px-6 py-10 text-white sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+      <div className="rounded-panel bg-desk text-on-desk relative mx-auto max-w-6xl overflow-hidden px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
         <div aria-hidden="true" className="parent-stamp absolute -top-12 -right-10 hidden lg:block">
           <span>FOR STUDENTS</span>
           <span>FOR STUDENTS</span>
@@ -216,20 +211,18 @@ function ForParents() {
 
         <div className="relative grid gap-14 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
-            <p className="text-brand-300 text-xs font-semibold tracking-[0.13em] uppercase">
-              A note for parents
-            </p>
-            <h2 className="mt-4 max-w-[12ch] text-[2.35rem] leading-[1.04] font-semibold tracking-[-0.045em] sm:text-5xl">
+            <Eyebrow tone="desk">A note for parents</Eyebrow>
+            <h2 className="text-display mt-4 max-w-[12ch]">
               Built for studying, not for holding attention.
             </h2>
-            <p className="mt-6 max-w-[38ch] text-base leading-relaxed text-white/65">
+            <p className="text-on-desk-soft mt-6 max-w-[38ch] text-base leading-relaxed">
               This is a closed, free pilot for students preparing for an exam. That gives us a
               simple standard: the product should respect a student and their family before it asks
               for their time.
             </p>
           </div>
 
-          <ul className="divide-y divide-white/10 lg:col-span-7">
+          <ul className="divide-desk-line divide-y lg:col-span-7">
             {COMMITMENTS.map((item, index) => (
               <li
                 key={item.title}
@@ -240,7 +233,7 @@ function ForParents() {
                 </span>
                 <div>
                   <h3 className="text-base font-semibold">{item.title}</h3>
-                  <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-white/65">
+                  <p className="text-on-desk-soft mt-2 max-w-[52ch] text-sm leading-relaxed">
                     {item.body}
                   </p>
                 </div>
@@ -249,8 +242,8 @@ function ForParents() {
           </ul>
         </div>
 
-        <div className="relative mt-14 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-sm text-white/70">
-          <span className="inline-flex items-center gap-2 text-white">
+        <div className="border-desk-line text-on-desk-soft relative mt-14 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-6 text-sm">
+          <span className="text-on-desk inline-flex items-center gap-2">
             <Check className="text-brand-300 size-4" /> No card on file
           </span>
           <span>Class 10 · CBSE preparation</span>
@@ -288,19 +281,15 @@ function FinalCall() {
         </div>
 
         <div className="relative border-b border-black/15 pb-7 lg:col-span-3 lg:border-r lg:border-b-0 lg:py-3 lg:pr-10 lg:pb-3">
-          <p className="text-on-brand text-6xl leading-none font-semibold tracking-[-0.07em] sm:text-7xl">
-            10
-          </p>
+          <p className="text-on-brand text-hero">10</p>
           <p className="text-sand-800 mt-2 max-w-[12ch] text-sm font-semibold">
             questions in your first set
           </p>
         </div>
 
         <div className="relative pt-8 lg:col-span-9 lg:pt-0">
-          <p className="text-sand-800 text-xs font-semibold tracking-[0.13em] uppercase">
-            Start with the paper
-          </p>
-          <h2 className="text-on-brand mt-3 max-w-[14ch] text-[2.35rem] leading-[1.04] font-semibold tracking-[-0.045em] sm:text-5xl">
+          <p className="text-sand-800 text-eyebrow uppercase">Start with the paper</p>
+          <h2 className="text-on-brand text-display mt-3 max-w-[14ch]">
             Sit down with the question you need.
           </h2>
           <p className="text-sand-800 mt-5 max-w-[48ch] leading-relaxed">

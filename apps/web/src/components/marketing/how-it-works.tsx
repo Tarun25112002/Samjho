@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef } from "react";
 
 import { Check, Cross } from "@/components/icons";
+import { cardClass } from "@/components/ui/surface";
 import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
 
 const STEPS = [
@@ -79,12 +80,8 @@ export function HowItWorks() {
     <section ref={root} id="how" className="scroll-mt-24 py-24 lg:py-36">
       <div className="mx-auto grid max-w-6xl gap-14 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
         <div className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start">
-          <p className="text-brand-700 text-xs font-semibold tracking-[0.13em] uppercase">
-            The revision loop
-          </p>
-          <h2 className="mt-4 max-w-[10ch] text-[2.35rem] leading-[1.03] font-semibold tracking-[-0.045em] sm:text-5xl">
-            A wrong answer is raw material.
-          </h2>
+          <p className="text-brand-700 text-eyebrow uppercase">The revision loop</p>
+          <h2 className="text-display mt-4 max-w-[10ch]">A wrong answer is raw material.</h2>
           <p className="text-text-soft mt-6 max-w-[43ch] text-base leading-relaxed sm:text-lg">
             Most practice tools announce a score and move on. Samjho makes the answer, the mark, and
             the next attempt into one quiet loop.
@@ -126,11 +123,13 @@ export function HowItWorks() {
                 {step.number}
               </span>
 
-              <article className="border-line bg-card rounded-panel border px-5 py-6 transition-[border-color,transform,box-shadow] duration-300 group-data-[reached]:border-brand-200 group-data-[reached]:shadow-lift sm:px-7 sm:py-7">
-                <p className="text-brand-700 text-xs font-semibold tracking-[0.11em] uppercase">
-                  {step.detail}
-                </p>
-                <h3 className="text-text mt-3 max-w-[23ch] text-2xl leading-tight font-semibold tracking-[-0.025em] sm:text-[1.75rem]">
+              <article
+                className={`${cardClass()} group-data-[reached]:border-brand-200 group-data-[reached]:shadow-lift transition-[border-color,transform,box-shadow] duration-300`}
+              >
+                <p className="text-brand-700 text-eyebrow uppercase">{step.detail}</p>
+                {/* A step above the app's `text-heading`: this is a landing page, where three
+                    cards carry the whole argument and sit under a 45px headline. */}
+                <h3 className="text-text mt-3 max-w-[23ch] text-2xl font-semibold tracking-[-0.025em]">
                   {step.title}
                 </h3>
                 <p className="text-text-soft mt-4 max-w-[58ch] leading-relaxed">{step.body}</p>

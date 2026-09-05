@@ -2,6 +2,9 @@
 
 import { useId, type ReactNode } from "react";
 
+import { inputClass as sharedInputClass } from "@/components/ui/form";
+import { cardClass } from "@/components/ui/surface";
+
 /**
  * Form primitives for the admin area.
  *
@@ -15,6 +18,11 @@ import { useId, type ReactNode } from "react";
  * dropped when markup is copied: every control has a real `<label>` bound by id,
  * and every error is announced through `aria-describedby` rather than only being
  * red.
+ *
+ * The field *appearance* is not local, though — it is re-exported from
+ * `components/ui/form`. An admin text box and a student text box are the same
+ * object, and this file having its own copy is how the editor ended up with
+ * 14px fields that make iOS Safari zoom the page on focus.
  */
 
 interface FieldProps {
@@ -53,8 +61,7 @@ export function Field({ label, hint, error, children }: FieldProps) {
   );
 }
 
-export const inputClass =
-  "border-line-strong bg-card text-text min-h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+export const inputClass = sharedInputClass;
 
 export function Fieldset({
   legend,
@@ -66,10 +73,8 @@ export function Fieldset({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="border-line bg-card rounded-panel space-y-5 border p-5 sm:p-6">
-      <legend className="text-text px-1 text-base font-semibold tracking-[-0.02em]">
-        {legend}
-      </legend>
+    <fieldset className={`${cardClass()} space-y-5`}>
+      <legend className="text-text text-subheading px-1">{legend}</legend>
       {description ? (
         <p className="text-text-soft -mt-2 max-w-3xl text-xs leading-relaxed">{description}</p>
       ) : null}

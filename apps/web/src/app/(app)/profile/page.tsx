@@ -2,6 +2,8 @@ import { subjectListResponseSchema, type AIStatus } from "@samjho/contracts";
 import type { Metadata } from "next";
 
 import { Check, SparkIcon } from "@/components/icons";
+import { Eyebrow, PageShell, PageHeader, SectionHeading } from "@/components/ui/page";
+import { Card, Meter } from "@/components/ui/surface";
 import { ProfileForm } from "@/features/profile/profile-form";
 import { loadTutorStatus } from "@/lib/ai";
 import { apiFetchAuthed } from "@/lib/api-client";
@@ -17,20 +19,22 @@ export default async function ProfilePage() {
   if (!profile) {
     // An admin reaching this page. They have no learning profile by design, and
     // saying so beats rendering an empty form they cannot fill in.
+    //
+    // The shell is the same width as the branch below it. It used to be one
+    // step narrower, which meant an admin and a student saw the same page with
+    // its content at two different insets.
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
-        <section className="rounded-panel border-line bg-card border p-6 sm:p-8">
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Account details
-          </p>
+      <PageShell>
+        <Card pad="roomy">
+          <Eyebrow>Account details</Eyebrow>
           <p className="text-text mt-2 text-lg font-semibold">
             No student profile is attached to this account.
           </p>
           <p className="text-text-soft mt-2 text-sm leading-relaxed">
             You are signed in as {me.user.email} ({me.user.role}).
           </p>
-        </section>
-      </div>
+        </Card>
+      </PageShell>
     );
   }
 
@@ -46,36 +50,21 @@ export default async function ProfilePage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
-      <header className="border-line border-b pb-6">
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-          Account settings
-        </p>
-        <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-          Your learning profile
-        </h1>
-        <p className="text-text-soft mt-2 text-sm leading-relaxed">
-          Class {profile.classLevel} {profile.board} · {me.user.email}
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Account settings"
+        title="Your learning profile"
+        lede={`Class ${String(profile.classLevel)} ${profile.board} · ${me.user.email}`}
+      />
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
         <section aria-labelledby="study-preferences-heading" className="flex flex-col gap-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Study setup
-            </p>
-            <h2
-              id="study-preferences-heading"
-              className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-            >
-              What you are preparing for
-            </h2>
-            <p className="text-text-soft mt-2 text-sm leading-relaxed">
-              Keep your subjects, language, and exam target accurate so your practice stays
-              relevant.
-            </p>
-          </div>
+          <SectionHeading
+            id="study-preferences-heading"
+            eyebrow="Study setup"
+            title="What you are preparing for"
+            lede="Keep your subjects, language, and exam target accurate so your practice stays relevant."
+          />
           <ProfileForm profile={profile} subjectOptions={subjects} />
         </section>
 
@@ -91,7 +80,7 @@ export default async function ProfilePage() {
           <TutorAllowance status={tutor} />
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -122,17 +111,13 @@ function ConsentPanel({
   termsAcceptedVersion: string | null;
 }) {
   return (
-    <section
-      aria-labelledby="consent-heading"
-      className="rounded-panel border-line bg-card border p-5 sm:p-6"
-    >
-      <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Account safety</p>
-      <h2 id="consent-heading" className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
-        Guardian and consent
-      </h2>
-      <p className="text-text-soft mt-2 text-sm leading-relaxed">
-        The details we keep to make sure your account is set up responsibly.
-      </p>
+    <Card aria-labelledby="consent-heading">
+      <SectionHeading
+        id="consent-heading"
+        eyebrow="Account safety"
+        title="Guardian and consent"
+        lede="The details we keep to make sure your account is set up responsibly."
+      />
 
       <dl className="divide-line mt-5 divide-y text-sm">
         <Row
@@ -165,7 +150,7 @@ function ConsentPanel({
         Samjho collects no advertising or behavioural-tracking data. During the closed pilot we
         record your declaration rather than contacting your guardian to confirm it.
       </p>
-    </section>
+    </Card>
   );
 }
 
@@ -211,14 +196,11 @@ function TutorAllowance({ status }: { status: AIStatus }) {
   const fraction = quota.messagesLimit === 0 ? 0 : used / quota.messagesLimit;
 
   return (
-    <section
-      aria-labelledby="tutor-allowance-heading"
-      className="rounded-panel border-line bg-card border p-5 sm:p-6"
-    >
-      <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">AI tutor</p>
+    <Card aria-labelledby="tutor-allowance-heading">
+      <Eyebrow>AI tutor</Eyebrow>
       <h2
         id="tutor-allowance-heading"
-        className="text-text mt-1 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.02em]"
+        className="text-text text-heading mt-1 inline-flex items-center gap-2"
       >
         <SparkIcon className="text-brand-600 size-5" />
         Today&rsquo;s allowance
@@ -232,15 +214,7 @@ function TutorAllowance({ status }: { status: AIStatus }) {
 
           {/* Presentational: the sentence above already says it, and a bar that
               a screen reader also reads out is the same fact twice. */}
-          <div
-            className="bg-raised mt-4 h-2 w-full overflow-hidden rounded-full"
-            aria-hidden="true"
-          >
-            <div
-              className="bg-brand-500 h-full rounded-full transition-[width] duration-300"
-              style={{ width: `${String(Math.round(fraction * 100))}%` }}
-            />
-          </div>
+          <Meter percent={fraction * 100} className="mt-4" />
 
           <p className="text-text-faint mt-3 text-xs leading-relaxed">
             Resets at {formatTime(quota.resetsAt)}.
@@ -256,7 +230,7 @@ function TutorAllowance({ status }: { status: AIStatus }) {
         Running out never removes help: every question keeps its full written solution and marking
         scheme, and that is what the tutor falls back to.
       </p>
-    </section>
+    </Card>
   );
 }
 

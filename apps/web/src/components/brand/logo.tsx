@@ -83,7 +83,7 @@ export function Wordmark({
   className?: string;
 }) {
   const mark = { sm: "size-6", md: "size-7", lg: "size-10" }[size];
-  const type = { sm: "text-[1.0625rem]", md: "text-xl", lg: "text-3xl" }[size];
+  const type = { sm: "text-prose", md: "text-xl", lg: "text-3xl" }[size];
   const colour = { ink: "text-text", brand: "text-brand-600", inherit: "" }[tone];
 
   return (

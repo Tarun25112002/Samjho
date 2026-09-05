@@ -1,10 +1,10 @@
 import { PRACTICE_MODE_LABELS, type PracticeTopicResult } from "@samjho/contracts";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ChevronLeft } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
+import { Card, Meter, PanelOrbit } from "@/components/ui/surface";
 import { SessionReview } from "@/features/practice/session-review";
 import { StartPractice } from "@/features/practice/start-practice";
 import { ApiClientError } from "@/lib/api-client";
@@ -46,44 +46,27 @@ export default async function PracticeResultPage({ params }: PageProps) {
       : 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10">
-      <header className="border-line border-b pb-6">
-        <Link
-          href="/practice"
-          className="text-text-soft hover:text-text inline-flex min-h-11 items-center gap-1 text-sm font-medium"
-        >
-          <ChevronLeft className="size-4" />
-          Practice
-        </Link>
-
-        <p className="text-brand-700 mt-4 text-xs font-bold tracking-[0.14em] uppercase">
-          Practice result
-        </p>
-        <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-          {session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
-        </h1>
-        <p className="text-text-soft mt-2 text-sm">
-          {session.status === "IN_PROGRESS" ? "Still in progress · " : ""}
-          {formatDuration(session.totals.timeSpentMs)}
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        back={{ href: "/practice", label: "Practice" }}
+        eyebrow="Practice result"
+        title={session.focus ?? PRACTICE_MODE_LABELS[session.mode]}
+        lede={`${session.status === "IN_PROGRESS" ? "Still in progress · " : ""}${formatDuration(
+          session.totals.timeSpentMs,
+        )}`}
+      />
 
       <section aria-labelledby="score-heading" className="flex flex-col gap-4">
         <h2 id="score-heading" className="sr-only">
           Your score
         </h2>
 
-        <div className="rounded-panel border-brand-200 bg-brand-50 relative overflow-hidden border p-5 sm:p-7">
-          <div
-            aria-hidden="true"
-            className="border-brand-200/70 absolute -top-16 -right-12 size-48 rounded-full border-[18px]"
-          />
+        <Card tone="brand" pad="roomy" className="relative overflow-hidden">
+          <PanelOrbit />
           <div className="relative">
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Your result
-            </p>
+            <Eyebrow>Your result</Eyebrow>
             <p className="text-text-soft mt-3 text-sm font-medium">Marks earned</p>
-            <p className="text-text mt-1 flex items-baseline gap-2 text-5xl font-semibold tracking-[-0.045em] tabular-nums sm:text-6xl">
+            <p className="text-text text-figure-lg mt-1 flex items-baseline gap-2 tabular-nums">
               {formatMarksValue(session.totals.marksEarned)}
               <span className="text-text-soft text-2xl font-medium tracking-normal">
                 / {formatMarksValue(session.totals.marksPossible)}
@@ -104,7 +87,7 @@ export default async function PracticeResultPage({ params }: PageProps) {
               <Stat label="Time taken" value={formatDuration(session.totals.timeSpentMs)} />
             </dl>
           </div>
-        </div>
+        </Card>
 
         {session.totals.awaitingSelfEvaluation > 0 ? (
           <p className="rounded-panel border-half-200 bg-half-50 text-sand-800 border p-5 text-sm leading-relaxed">
@@ -122,27 +105,23 @@ export default async function PracticeResultPage({ params }: PageProps) {
 
       {topics.length > 0 ? (
         <section aria-labelledby="topics-heading" className="flex flex-col gap-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Session detail
-            </p>
-            <h2
-              id="topics-heading"
-              className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-            >
-              Performance by topic
-            </h2>
-          </div>
+          <SectionHeading
+            id="topics-heading"
+            eyebrow="Session detail"
+            title="Performance by topic"
+          />
 
-          <ul className="border-line bg-card rounded-panel divide-line divide-y overflow-hidden border">
-            {topics.map((topic) => (
-              <TopicRow
-                key={topic.topicId}
-                topic={topic}
-                weak={weakTopics.some((weakTopic) => weakTopic.topicId === topic.topicId)}
-              />
-            ))}
-          </ul>
+          <Card pad="flush" className="overflow-hidden">
+            <ul className="divide-line divide-y">
+              {topics.map((topic) => (
+                <TopicRow
+                  key={topic.topicId}
+                  topic={topic}
+                  weak={weakTopics.some((weakTopic) => weakTopic.topicId === topic.topicId)}
+                />
+              ))}
+            </ul>
+          </Card>
 
           {/*
             Said plainly rather than left for a student to infer from small
@@ -154,18 +133,13 @@ export default async function PracticeResultPage({ params }: PageProps) {
         </section>
       ) : null}
 
-      <section
-        aria-labelledby="next-heading"
-        className="rounded-panel border-line bg-card border p-5 sm:p-6"
-      >
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Keep moving</p>
-        <h2 id="next-heading" className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
-          Turn this result into your next set
-        </h2>
-        <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-          A quick retry while the work is still fresh is the fastest way to turn a mistake into a
-          strength.
-        </p>
+      <Card aria-labelledby="next-heading">
+        <SectionHeading
+          id="next-heading"
+          eyebrow="Keep moving"
+          title="Turn this result into your next set"
+          lede="A quick retry while the work is still fresh is the fastest way to turn a mistake into a strength."
+        />
 
         <div className="mt-5 flex flex-wrap items-start gap-3">
           {mistakeQuestionIds.length > 0 ? (
@@ -192,29 +166,21 @@ export default async function PracticeResultPage({ params }: PageProps) {
             Choose another set
           </ButtonLink>
         </div>
-      </section>
+      </Card>
 
       <section aria-labelledby="review-heading" className="flex flex-col gap-4">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Review</p>
-          <h2
-            id="review-heading"
-            className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]"
-          >
-            Question by question
-          </h2>
-        </div>
+        <SectionHeading id="review-heading" eyebrow="Review" title="Question by question" />
 
         <SessionReview initial={session} />
       </section>
-    </div>
+    </PageShell>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dd className="text-text text-lg font-semibold tabular-nums sm:text-xl">{value}</dd>
+    <div className="min-w-0">
+      <dd className="text-text truncate text-lg font-semibold tabular-nums sm:text-xl">{value}</dd>
       <dt className="text-text-soft mt-0.5 text-xs sm:text-sm">{label}</dt>
     </div>
   );
@@ -232,7 +198,7 @@ function TopicRow({ topic, weak }: { topic: PracticeTopicResult; weak: boolean }
   const share = topic.marksPossible > 0 ? (topic.marksEarned / topic.marksPossible) * 100 : 0;
 
   return (
-    <li className="px-5 py-4">
+    <li className="px-5 py-4 sm:px-6">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
         <span className="text-text font-medium">{topic.name}</span>
         <span className="text-text-faint text-xs">{topic.chapterName}</span>
@@ -241,16 +207,12 @@ function TopicRow({ topic, weak }: { topic: PracticeTopicResult; weak: boolean }
         </span>
       </div>
 
-      <div
-        className="bg-raised mt-2.5 h-2 w-full overflow-hidden rounded-full"
-        role="img"
-        aria-label={`${String(Math.round(share))} per cent of the marks in ${topic.name}`}
-      >
-        <div
-          className={weak ? "bg-marker-500 h-2 rounded-full" : "bg-tick-500 h-2 rounded-full"}
-          style={{ width: `${String(share)}%` }}
-        />
-      </div>
+      <Meter
+        percent={share}
+        tone={weak ? "wrong" : "correct"}
+        className="mt-2.5"
+        label={`${String(Math.round(share))} per cent of the marks in ${topic.name}`}
+      />
     </li>
   );
 }

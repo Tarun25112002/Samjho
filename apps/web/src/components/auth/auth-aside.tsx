@@ -48,7 +48,7 @@ export function AuthAside({
 
       <div className="relative z-10 flex items-center justify-between">
         <Wordmark size="md" variant="inverse" tone="inherit" />
-        <span className="auth-aside-session rounded-pill border px-3 py-1.5 text-[0.6875rem] font-semibold tracking-[0.1em] uppercase">
+        <span className="auth-aside-session rounded-pill text-micro border px-3 py-1.5 uppercase">
           Revision mode
         </span>
       </div>
@@ -65,20 +65,18 @@ export function AuthAside({
       </div>
 
       <div className="auth-aside-copy relative z-10 my-auto max-w-[31rem]">
-        <p className="text-brand-200 mb-4 text-xs font-semibold tracking-[0.14em] uppercase">
-          {eyebrow}
-        </p>
-        <h2 className="max-w-[28rem] text-[2.45rem] leading-[1.06] font-semibold tracking-[-0.045em] xl:text-[3.25rem]">
-          {headline}
-        </h2>
-        <p className="auth-aside-note mt-5 max-w-md text-sm leading-relaxed text-sand-200">
+        <p className="text-brand-200 text-eyebrow mb-4 uppercase">{eyebrow}</p>
+        {/* Size, weight and tracking come from `.auth-aside-copy h2` in globals.css —
+            see the note there for why they cannot live in a class here. */}
+        <h2>{headline}</h2>
+        <p className="auth-aside-note text-on-desk-soft mt-5 max-w-md text-sm leading-relaxed">
           {note}
         </p>
 
         <MarkedQuestion />
       </div>
 
-      <p className="relative z-10 text-xs leading-relaxed text-sand-300">
+      <p className="text-on-desk-soft relative z-10 text-xs leading-relaxed">
         A small review now makes the next answer easier.
       </p>
     </aside>
@@ -100,7 +98,7 @@ function MarkedQuestion() {
   return (
     <figure className="auth-aside-question relative mt-8 mb-0 overflow-hidden rounded-[1.25rem] border bg-card text-text shadow-pop">
       <div className="auth-question-topline flex items-center justify-between px-5 pt-4 pb-3">
-        <span className="auth-question-subject rounded-pill px-2.5 py-1 text-[0.6875rem] font-bold tracking-[0.08em] uppercase">
+        <span className="auth-question-subject rounded-pill text-micro px-2.5 py-1 uppercase">
           Physics · Light
         </span>
         <span className="text-text-faint text-xs font-medium">3 marks</span>
@@ -114,7 +112,7 @@ function MarkedQuestion() {
           <span className="text-text-soft text-xs font-semibold">Mirror formula</span>
         </div>
 
-        <p className="font-serif text-[0.9375rem] leading-[1.62]">
+        <p className="text-prose font-serif">
           A concave mirror produces a three times magnified real image of an object placed 10 cm in
           front of it. Where is the image located?
         </p>
@@ -130,9 +128,7 @@ function MarkedQuestion() {
         </ul>
 
         <div className="auth-aside-question-explanation rounded-control bg-brand-50 px-3.5 py-3">
-          <p className="text-brand-800 text-xs font-bold tracking-[0.08em] uppercase">
-            Why it works
-          </p>
+          <p className="text-brand-800 text-eyebrow uppercase">Why it works</p>
           <p className="text-text-soft mt-1 font-serif text-sm leading-[1.5]">
             A real image forms on the same side as the object, so it is in front of the mirror.
           </p>

@@ -11,7 +11,9 @@ import {
   inputClass,
   invalidInputClass,
   Label,
+  selectClass,
 } from "@/components/ui/form";
+import { Card, cardClass } from "@/components/ui/surface";
 
 import { suggestBoardSessions } from "./board-sessions";
 import {
@@ -48,7 +50,7 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
 
   return (
     <form
-      className="rounded-panel border-line bg-card flex flex-col gap-7 border p-5 shadow-lift sm:p-8"
+      className={`${cardClass({ pad: "roomy" })} shadow-lift flex flex-col gap-7`}
       onSubmit={(event) => {
         event.preventDefault();
         if (wizard.isLastStep) {
@@ -93,9 +95,7 @@ export function OnboardingWizard({ subjectsByClass }: OnboardingWizardProps) {
         <p className="text-text-faint text-sm font-medium">
           Step {wizard.stepIndex + 1} of {ONBOARDING_STEPS.length}
         </p>
-        <h1 className="text-text mt-1 text-[1.75rem] leading-tight font-semibold tracking-[-0.025em] sm:text-3xl">
-          {stepMeta?.title}
-        </h1>
+        <h1 className="text-text text-title mt-1">{stepMeta?.title}</h1>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">{stepMeta?.blurb}</p>
       </header>
 
@@ -185,7 +185,7 @@ function ClassStep({ wizard }: { wizard: Wizard }) {
               preferredLanguage: event.target.value === "HINDI" ? "HINDI" : "ENGLISH",
             });
           }}
-          className={inputClass}
+          className={selectClass}
         >
           <option value="ENGLISH">English</option>
           <option value="HINDI">Hindi</option>
@@ -211,10 +211,12 @@ function SubjectsStep({
 
   if (options.length === 0) {
     return (
-      <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm leading-relaxed">
-        No subjects are available for Class {wizard.draft.classLevel} yet. Samjho currently covers
-        Class 10 Mathematics and Science. Go back to choose Class 10.
-      </p>
+      <Card pad="roomy">
+        <p className="text-text-soft text-sm leading-relaxed">
+          No subjects are available for Class {wizard.draft.classLevel} yet. Samjho currently covers
+          Class 10 Mathematics and Science. Go back to choose Class 10.
+        </p>
+      </Card>
     );
   }
 
@@ -313,7 +315,7 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
         hint="Use an adult's address, not your own. We use it to reach a guardian about this account."
       />
 
-      <div className="border-line bg-card rounded-panel space-y-4 border p-5">
+      <Card as="div" className="space-y-4">
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -350,7 +352,7 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
           </span>
         </label>
         <FieldError errors={wizard.errors} name="consent.termsAccepted" />
-      </div>
+      </Card>
 
       {/*
         Said plainly rather than hidden in a policy document. Under the DPDP Act

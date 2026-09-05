@@ -4,6 +4,8 @@ import { useEffect } from "react";
 
 import { Wordmark } from "@/components/brand/logo";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 
 /**
  * The last line of defence.
@@ -45,25 +47,29 @@ export default function GlobalError({
     // the route, and every layout in this app already supplies the landmark —
     // two of them on one page means a screen reader offers a choice of "main
     // content", which is not a choice anyone can make.
-    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-5 py-12 sm:px-8 sm:py-16">
-      <section className="rounded-panel border-line bg-card relative w-full overflow-hidden border px-6 py-10 text-center shadow-lift sm:px-10 sm:py-12">
+    <div className="mx-auto grid min-h-[70vh] max-w-xl place-items-center px-4 py-12 sm:px-8 sm:py-16">
+      <Card pad="roomy" className="shadow-lift relative w-full overflow-hidden text-center">
+        {/* Blurred, like every other decorative blob in the product. Hard-edged
+            it read as a beige rectangle clipped by the corner rather than as a
+            wash behind the card. */}
         <div
           aria-hidden="true"
-          className="bg-brand-50 absolute -top-20 -right-20 size-48 rounded-full"
+          className="bg-brand-100 absolute -top-24 -right-20 size-52 rounded-full blur-3xl"
         />
         <div className="relative flex flex-col items-center gap-6">
-          <span className="border-brand-200 bg-brand-50 grid size-14 place-items-center rounded-2xl border text-brand-700">
-            <span className="text-xl font-semibold">!</span>
-          </span>
+          {/*
+            The wordmark and nothing above it, which is what the 404 beside this
+            page has always done. There used to be a saffron "!" badge stacked
+            on top of it — two orange marks, one above the other, at the same
+            spacing as everything else on the card, so the page opened with what
+            read as two logos. The eyebrow directly below already says
+            "Temporary problem", in the same saffron, in words.
+          */}
           <Wordmark size="sm" tone="brand" />
 
           <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-              Temporary problem
-            </p>
-            <h1 className="text-text mt-2 text-3xl font-semibold tracking-[-0.03em]">
-              That didn&rsquo;t load
-            </h1>
+            <Eyebrow>Temporary problem</Eyebrow>
+            <h1 className="text-text text-notice mt-2">That didn&rsquo;t load</h1>
             <p className="text-text-soft mt-3 leading-relaxed">
               This is usually a connection problem, not your account. Your practice is safe—try
               again, and use the reference below if it keeps happening.
@@ -83,7 +89,7 @@ export default function GlobalError({
             </p>
           )}
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

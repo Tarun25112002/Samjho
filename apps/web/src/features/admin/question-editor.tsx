@@ -13,6 +13,9 @@ import {
 import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@samjho/ui";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/surface";
+
 import { Field, Fieldset, inputClass } from "./fields";
 import { QuestionPreview } from "./question-preview";
 import { useQuestionEditor, type QuestionEditorDefaults } from "./use-question-editor";
@@ -331,7 +334,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
                   </span>
                   <button
                     type="button"
-                    className="text-text-soft hover:text-marker-700 min-h-11 text-xs"
+                    className="text-text-soft hover:text-marker-700 min-h-11 text-xs font-semibold transition-colors"
                     onClick={() => {
                       editor.removeSubPart(index);
                     }}
@@ -423,13 +426,9 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
               </div>
             ))}
 
-            <button
-              type="button"
-              className="border-line-strong bg-card text-text min-h-11 rounded-pill border px-4 text-sm font-semibold transition-colors hover:border-brand-500 hover:bg-brand-50"
-              onClick={editor.addSubPart}
-            >
+            <Button variant="secondary" size="sm" onClick={editor.addSubPart}>
               Add a sub-part
-            </button>
+            </Button>
 
             {fieldErrors["subParts"] || fieldErrors["marks"] ? (
               <p role="alert" className="text-marker-700 text-xs">
@@ -628,7 +627,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         {editor.failure ? (
           <div
             role="alert"
-            className="border-marker-500 bg-marker-50 space-y-1 rounded-control border p-4 text-sm"
+            className="border-marker-200 bg-marker-50 rounded-control space-y-1 border p-4 text-sm"
           >
             <p className="text-text">{editor.failure.message}</p>
             {editor.failure.requestId ? (
@@ -640,25 +639,20 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={editor.saving}
-            className="bg-brand-500 text-on-brand shadow-brand min-h-11 rounded-pill px-5 text-sm font-semibold transition-colors hover:bg-brand-400 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={editor.saving}>
             {editor.saving ? "Saving…" : question ? "Save changes" : "Save draft"}
-          </button>
+          </Button>
 
           {question ? null : (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               disabled={editor.saving}
               onClick={() => {
                 void editor.submit("saved-and-next");
               }}
-              className="border-line-strong bg-card text-text min-h-11 rounded-pill border px-5 text-sm font-semibold transition-colors hover:border-brand-500 hover:bg-brand-50 disabled:opacity-60"
             >
               Save and add another
-            </button>
+            </Button>
           )}
 
           {editor.savedAt ? (
@@ -675,12 +669,12 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
         </div>
       </form>
 
-      <aside className="border-line bg-card rounded-panel space-y-3 border p-4 sm:p-5 xl:sticky xl:top-6 xl:self-start">
-        <div className="flex items-center justify-between">
+      <Card as="aside" className="space-y-3 xl:sticky xl:top-6 xl:self-start">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-text text-sm font-semibold">Preview, as a student sees it</h2>
           <button
             type="button"
-            className="text-text-soft min-h-11 text-xs"
+            className="text-text-soft hover:text-text min-h-11 shrink-0 text-xs font-semibold transition-colors"
             onClick={() => {
               setShowPreview((value) => !value);
             }}
@@ -698,7 +692,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
               .map((topic) => topic.name)}
           />
         ) : null}
-      </aside>
+      </Card>
     </div>
   );
 }

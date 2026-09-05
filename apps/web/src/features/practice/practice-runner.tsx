@@ -13,6 +13,8 @@ import Link from "next/link";
 
 import { BookmarkIcon, ChevronLeft, ChevronRight } from "@/components/icons";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { PageShell } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 import { formatMarksValue, markingFrom } from "@/lib/practice-format";
 import { TutorPanel } from "@/features/ai/tutor-panel";
 import { FeedbackPanel } from "./feedback-panel";
@@ -50,15 +52,17 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
 
   if (!item) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <p className="text-text-soft">
-          This set has no questions left in it. A question can be withdrawn by an editor after a set
-          is built.
-        </p>
-        <ButtonLink href="/practice" className="mt-6">
-          Build another set
-        </ButtonLink>
-      </main>
+      <PageShell as="main" width="narrow" className="py-16 text-center sm:py-20">
+        <div>
+          <p className="text-text-soft">
+            This set has no questions left in it. A question can be withdrawn by an editor after a
+            set is built.
+          </p>
+          <ButtonLink href="/practice" className="mt-6">
+            Build another set
+          </ButtonLink>
+        </div>
+      </PageShell>
     );
   }
 
@@ -83,7 +87,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
       />
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
-        <div className="rounded-panel border-line bg-card border p-5 sm:p-6">
+        <Card as="div">
           <QuestionRenderer
             question={item.question}
             displayNumber={String(index + 1)}
@@ -98,7 +102,7 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
                   },
                 })}
           />
-        </div>
+        </Card>
 
         {runner.failure ? (
           <p

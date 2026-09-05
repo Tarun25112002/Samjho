@@ -3,6 +3,7 @@
 import { EMPTY_ANSWER, type PracticeSession } from "@samjho/contracts";
 import { QuestionRenderer } from "@samjho/ui";
 
+import { Card } from "@/components/ui/surface";
 import { TutorPanel } from "@/features/ai/tutor-panel";
 import { markingFrom } from "@/lib/practice-format";
 
@@ -27,9 +28,9 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
 
   if (runner.session.items.length === 0) {
     return (
-      <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm">
-        The questions in this set are no longer available.
-      </p>
+      <Card pad="roomy">
+        <p className="text-text-soft text-sm">The questions in this set are no longer available.</p>
+      </Card>
     );
   }
 
@@ -42,10 +43,7 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
         const marking = markingFrom(item.attempts);
 
         return (
-          <li
-            key={item.question.id}
-            className="rounded-panel border-line bg-card flex flex-col gap-4 border p-5 sm:p-6"
-          >
+          <Card as="li" key={item.question.id} className="flex flex-col gap-4">
             {/* No `onChange`: every control renders disabled. The review shows
                 what the student answered, and the answer is now history. */}
             <QuestionRenderer
@@ -82,7 +80,7 @@ export function SessionReview({ initial }: { initial: PracticeSession }) {
                 />
               </>
             )}
-          </li>
+          </Card>
         );
       })}
 

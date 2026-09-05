@@ -9,6 +9,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { inputClass } from "@/components/ui/form";
+import { Eyebrow } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 import { sendJson, type ApiFailure } from "@/lib/client-api";
 
 /**
@@ -70,14 +73,14 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
   }
 
   return (
-    <section className="border-line bg-card rounded-panel space-y-5 border p-5 sm:p-6">
+    <Card className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Publishing</p>
-          <h2 className="text-text mt-1 font-semibold tracking-[-0.02em]">Status</h2>
+          <Eyebrow>Publishing</Eyebrow>
+          <h2 className="text-text text-subheading mt-1">Status</h2>
           <p className="text-text-soft mt-1 text-sm">{STATUS_TEXT[question.status]}</p>
         </div>
-        <span className="bg-raised text-text-soft rounded-pill px-3 py-1.5 text-xs font-bold tracking-[0.06em] uppercase">
+        <span className="bg-raised text-text-soft rounded-pill px-2.5 py-1 text-xs font-semibold uppercase">
           {question.status.replace(/_/g, " ")}
         </span>
       </div>
@@ -100,7 +103,7 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
             setReason(event.target.value);
           }}
           placeholder="Student reported the answer key is wrong"
-          className="border-line-strong bg-card text-text min-h-11 w-full rounded-control border px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className={inputClass}
         />
       </label>
 
@@ -116,7 +119,7 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
               onClick={() => {
                 void move(status);
               }}
-              className="border-line-strong bg-card text-text min-h-11 rounded-pill border px-4 text-sm font-semibold transition-colors hover:border-brand-500 hover:bg-brand-50 disabled:opacity-50"
+              className="border-line-strong bg-card text-text enabled:hover:border-brand-500 enabled:hover:bg-brand-50 rounded-pill min-h-11 border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-55"
             >
               {busy === status ? "Working…" : LABELS[status]}
             </button>
@@ -129,6 +132,6 @@ export function StatusControls({ question }: { question: AdminQuestion }) {
           {failure.message}
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }

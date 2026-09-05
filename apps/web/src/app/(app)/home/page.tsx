@@ -15,6 +15,8 @@ import { ChevronRight, FlameIcon, PaperIcon, RedoIcon } from "@/components/icons
 import { StartPractice } from "@/features/practice/start-practice";
 import { WeeklyTrend } from "@/features/dashboard/weekly-trend";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow, PageShell, SectionHeading } from "@/components/ui/page";
+import { Card, Chip, Figure, IconTile, Meter, PanelOrbit } from "@/components/ui/surface";
 import { loadSubject } from "@/lib/catalog";
 import { loadStudentClassrooms } from "@/lib/classrooms";
 import {
@@ -26,7 +28,12 @@ import {
 } from "@/lib/dashboard";
 import { requireOnboarded } from "@/lib/me";
 import { loadSessions } from "@/lib/practice";
-import { describeScore, formatDuration, formatMarksValue, practiceHref } from "@/lib/practice-format";
+import {
+  describeScore,
+  formatDuration,
+  formatMarksValue,
+  practiceHref,
+} from "@/lib/practice-format";
 import { loadProgressOverview } from "@/lib/progress";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -108,17 +115,21 @@ export default async function HomePage() {
   const today = days.at(-1);
 
   return (
-    <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-4 py-6 sm:gap-7 sm:px-8 sm:py-8 xl:px-10 xl:py-10 2xl:px-14">
+    <PageShell width="wide">
+      {/*
+        The one header in the product without a rule under it. What follows is a
+        full-bleed dark panel that draws its own top edge, and a hairline a few
+        pixels above it reads as a mistake rather than as structure — see the
+        note on `PageHeader`, whose default this is the stated exception to.
+      */}
       <header className="flex flex-wrap items-end justify-between gap-5 pb-1">
         <div className="min-w-0">
-          <p className="text-brand-700 mb-2 text-xs font-bold tracking-[0.16em] uppercase">
-            {today?.label ?? "Your revision desk"}
-          </p>
-          <h1 className="text-text text-[2rem] leading-[1.04] font-semibold tracking-[-0.045em] sm:text-[2.85rem]">
+          <Eyebrow className="mb-2">{today?.label ?? "Your revision desk"}</Eyebrow>
+          <h1 className="text-text text-display">
             {firstName === undefined ? "Welcome back" : `${greeting()}, ${firstName}`}
           </h1>
           {profile ? (
-            <p className="text-text-soft mt-3 text-sm sm:text-[0.9375rem]">
+            <p className="text-text-soft text-ui mt-3">
               Class {profile.classLevel} {profile.board}
               {countdown ? ` · ${countdown.when} board exams` : ""}
             </p>
@@ -129,7 +140,7 @@ export default async function HomePage() {
           {week.accuracy !== null ? (
             <Link
               href="/progress"
-              className="border-line-strong bg-card hover:border-brand-300 hover:bg-brand-50/60 inline-flex min-h-10 items-center gap-2 rounded-pill border px-3.5 text-sm font-semibold transition-colors"
+              className="border-line-strong bg-card hover:border-brand-300 hover:bg-brand-50/60 rounded-pill inline-flex min-h-11 items-center gap-2 border px-3.5 text-sm font-semibold transition-colors"
             >
               <span className="text-text tabular-nums">{String(week.accuracy)}%</span>
               <span className="text-text-soft">this week</span>
@@ -139,15 +150,18 @@ export default async function HomePage() {
           {/* Shown only once it exists. A streak counter reading "0 days" on the
               day someone comes back is a scolding, not a nudge. */}
           {streak > 0 ? (
-            <p className="bg-brand-50 text-brand-700 rounded-pill inline-flex min-h-10 items-center gap-2 px-3.5 text-sm font-semibold">
+            <Chip tone="brand" className="min-h-11 px-3.5 text-sm">
               <FlameIcon className="size-4" />
               {streak === 1 ? "1 day streak" : `${String(streak)} day streak`}
-            </p>
+            </Chip>
           ) : null}
         </div>
       </header>
 
-      <section aria-label="Your next study step" className="grid min-w-0 gap-4 2xl:grid-cols-12 2xl:gap-5">
+      <section
+        aria-label="Your next study step"
+        className="grid min-w-0 gap-4 2xl:grid-cols-12 2xl:gap-5"
+      >
         <div className="min-w-0 2xl:col-span-8">
           {resume ? (
             <ResumeCard
@@ -182,34 +196,30 @@ export default async function HomePage() {
         <div className="flex min-w-0 flex-col gap-6 2xl:col-span-8">
           <ThisWeek week={week} days={days} hasHistory={history.items.length > 0} />
           <section aria-labelledby="subjects-heading" className="flex min-w-0 flex-col gap-4">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-brand-700 text-xs font-bold tracking-[0.16em] uppercase">
-                  Your study plan
-                </p>
-                <h2
-                  id="subjects-heading"
-                  className="text-text mt-1 text-[1.35rem] font-semibold tracking-[-0.028em]"
+            <SectionHeading
+              id="subjects-heading"
+              eyebrow="Your study plan"
+              title="Your subjects"
+              action={
+                <Link
+                  href="/profile"
+                  className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
                 >
-                  Your subjects
-                </h2>
-              </div>
-              <Link
-                href="/profile"
-                className="text-brand-700 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
-              >
-                Manage <ChevronRight className="size-4" />
-              </Link>
-            </div>
+                  Manage <ChevronRight className="size-4" />
+                </Link>
+              }
+            />
 
             {subjects.length === 0 ? (
-              <p className="border-line bg-card rounded-panel text-text-soft border p-6 text-sm">
-                No subjects selected yet.{" "}
-                <Link href="/profile" className="text-brand-700 font-semibold underline">
-                  Choose your subjects
-                </Link>{" "}
-                and your chapters will appear here.
-              </p>
+              <Card pad="roomy">
+                <p className="text-text-soft text-sm">
+                  No subjects selected yet.{" "}
+                  <Link href="/profile" className="text-brand-700 font-semibold underline">
+                    Choose your subjects
+                  </Link>{" "}
+                  and your chapters will appear here.
+                </p>
+              </Card>
             ) : (
               <ul className="grid min-w-0 gap-4 md:grid-cols-2">
                 {subjects.map((subject, index) => (
@@ -231,7 +241,7 @@ export default async function HomePage() {
           <RecentPractice recent={recent} />
         </aside>
       </section>
-    </div>
+    </PageShell>
   );
 }
 
@@ -279,137 +289,173 @@ function ResumeCard({
   const remaining = Math.max(total - answered, 0);
 
   return (
-    <section
-      aria-labelledby="resume-heading"
-      className="relative h-full min-h-[16.5rem] overflow-hidden rounded-panel bg-sand-900 px-6 py-7 text-sand-50 sm:px-8 sm:py-8"
+    <DeskHero
+      headingId="resume-heading"
+      eyebrow="Continue your revision"
+      kicker="You are already in the flow."
+      title={focus}
+      body={
+        remaining === 0
+          ? "Your answers are ready for a final check."
+          : `${String(remaining)} ${remaining === 1 ? "question remains" : "questions remain"} in this set.`
+      }
+      aside={
+        <DeskAside label="Set status" value={String(total)} caption="questions in this set">
+          <span className="text-on-desk font-semibold tabular-nums">{answered}</span>
+          <span className="text-on-desk-soft">complete</span>
+        </DeskAside>
+      }
     >
-      <div
-        aria-hidden="true"
-        className="border-brand-500/35 absolute -top-24 -right-24 size-80 rounded-full border-[1.9rem]"
-      />
-      <div
-        aria-hidden="true"
-        className="border-brand-500/20 absolute right-10 bottom-[-9rem] size-64 rounded-full border"
-      />
-      <div className="relative grid h-full gap-7 lg:grid-cols-[minmax(0,1fr)_12.5rem] lg:items-end">
-        <div className="flex min-w-0 flex-col">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-brand-300 uppercase">
-            <span className="bg-brand-500 inline-block size-2 rounded-full" /> Continue your revision
-          </p>
-          <p className="mt-4 text-sm font-medium text-sand-300">You are already in the flow.</p>
-          <h2
-            id="resume-heading"
-            className="mt-1 max-w-[19ch] text-[2rem] leading-[1.06] font-semibold tracking-[-0.042em] sm:max-w-[24ch] sm:text-[2.5rem]"
-          >
-            {focus}
-          </h2>
-          <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-sand-300">
-            {remaining === 0
-              ? "Your answers are ready for a final check."
-              : `${String(remaining)} ${remaining === 1 ? "question remains" : "questions remain"} in this set.`}
-          </p>
-
-          <div className="mt-6 max-w-xl">
-            <div className="flex items-baseline justify-between gap-4 text-sm">
-              <span className="font-medium text-sand-200">
-                {answered} of {total} answered
-              </span>
-              <span className="font-semibold tabular-nums text-brand-300">{percent}%</span>
-            </div>
-            <div
-              role="progressbar"
-              aria-valuenow={answered}
-              aria-valuemin={0}
-              aria-valuemax={total}
-              aria-label="Questions answered in this set"
-              className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/15"
-            >
-              <div
-                className="h-full rounded-full bg-brand-500"
-                style={{ width: `${String(percent)}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="mt-7 flex flex-wrap gap-3">
-            <ButtonLink href={`/practice/sessions/${id}`}>Resume set</ButtonLink>
-            <Link
-              href="/practice"
-              className="inline-flex min-h-12 items-center justify-center rounded-pill border border-white/20 px-5 text-sm font-semibold text-sand-50 transition-colors hover:border-brand-300 hover:bg-white/8"
-            >
-              Browse practice
-            </Link>
-          </div>
+      <div className="mt-6 max-w-xl">
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="text-on-desk-soft font-medium">
+            {answered} of {total} answered
+          </span>
+          <span className="text-brand-300 font-semibold tabular-nums">{percent}%</span>
         </div>
-
-        <div className="border-brand-300/20 bg-sand-800/95 relative overflow-hidden rounded-control border p-5 lg:self-stretch">
-          <p className="text-xs font-bold tracking-[0.14em] text-brand-300 uppercase">Set status</p>
-          <p className="mt-6 text-6xl leading-none font-semibold tracking-[-0.07em] tabular-nums">
-            {String(total)}
-          </p>
-          <p className="mt-2 text-sm text-sand-300">questions in this set</p>
-          <div className="mt-6 flex items-center gap-2 border-t border-white/12 pt-4 text-sm">
-            <span className="font-semibold text-sand-50 tabular-nums">{answered}</span>
-            <span className="text-sand-300">complete</span>
-          </div>
-        </div>
+        <Meter
+          percent={percent}
+          tone="brand"
+          className="mt-2 bg-on-desk/15"
+          label="Questions answered in this set"
+        />
       </div>
-    </section>
+
+      <div className="mt-7 flex flex-wrap gap-3">
+        <ButtonLink href={`/practice/sessions/${id}`}>Resume set</ButtonLink>
+        <DeskLink href="/practice">Browse practice</DeskLink>
+      </div>
+    </DeskHero>
   );
 }
 
 /** The same slot when there is nothing to resume. */
 function StartCard() {
   return (
-    <section
-      aria-labelledby="start-heading"
-      className="relative h-full min-h-[16.5rem] overflow-hidden rounded-panel bg-sand-900 px-6 py-7 text-sand-50 sm:px-8 sm:py-8"
+    <DeskHero
+      headingId="start-heading"
+      eyebrow="Today's practice plan"
+      kicker="A short session can shift your week."
+      title="Your 10-minute practice plan"
+      body="Ten fresh questions, instant marking, and every mistake saved for the next revision."
+      aside={
+        <DeskAside label="Today's set" value="10" caption="fresh questions">
+          <span className="text-on-desk-soft">About 10 minutes</span>
+        </DeskAside>
+      }
     >
-      <div
-        aria-hidden="true"
-        className="border-brand-500/35 absolute -top-24 -right-24 size-80 rounded-full border-[1.9rem]"
-      />
-      <div
-        aria-hidden="true"
-        className="border-brand-500/20 absolute right-10 bottom-[-9rem] size-64 rounded-full border"
-      />
+      <div className="mt-7 flex flex-wrap items-start gap-3">
+        {/* The preset, not the builder. Most students do not want to build
+            anything — they want to start, and docs/00 §5 counts the taps. */}
+        <StartPractice mode="QUICK" filters={{ unseenOnly: true }} count={10} label="Start now" />
+        <DeskLink href="/practice/new">Build a focused set</DeskLink>
+      </div>
+    </DeskHero>
+  );
+}
+
+/**
+ * The dashboard's dark hero, in the one shape both of its states share.
+ *
+ * `ResumeCard` and `StartCard` were 60 lines of identical markup each, differing
+ * only in their words and their two buttons — which meant the decorative rings,
+ * the grid, the eyebrow and the aside panel all existed twice and had already
+ * begun to disagree (`tracking-[0.16em]` on one eyebrow, `0.14em` on the aside's).
+ * One component, two callers, and the states cannot drift apart again.
+ */
+function DeskHero({
+  headingId,
+  eyebrow,
+  kicker,
+  title,
+  body,
+  aside,
+  children,
+}: {
+  headingId: string;
+  eyebrow: string;
+  kicker: string;
+  title: string;
+  body: string;
+  aside: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card
+      tone="desk"
+      pad="roomy"
+      aria-labelledby={headingId}
+      className="relative h-full min-h-[16.5rem] overflow-hidden"
+    >
+      <PanelOrbit tone="desk" />
       <div className="relative grid h-full gap-7 lg:grid-cols-[minmax(0,1fr)_12.5rem] lg:items-end">
         <div className="flex min-w-0 flex-col">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-brand-300 uppercase">
-            <span className="bg-brand-500 inline-block size-2 rounded-full" /> Today&apos;s practice plan
-          </p>
-          <p className="mt-4 text-sm font-medium text-sand-300">A short session can shift your week.</p>
-          <h2
-            id="start-heading"
-            className="mt-1 max-w-[19ch] text-[2rem] leading-[1.06] font-semibold tracking-[-0.042em] sm:max-w-[24ch] sm:text-[2.5rem]"
-          >
-            Your 10-minute practice plan
+          <Eyebrow tone="desk" className="flex items-center gap-2">
+            <span className="bg-brand-500 inline-block size-2 rounded-full" /> {eyebrow}
+          </Eyebrow>
+          <p className="text-on-desk-soft mt-4 text-sm font-medium">{kicker}</p>
+          <h2 id={headingId} className="text-display mt-1 max-w-[19ch] sm:max-w-[24ch]">
+            {title}
           </h2>
-          <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-sand-300">
-            Ten fresh questions, instant marking, and every mistake saved for the next revision.
-          </p>
-
-          <div className="mt-7 flex flex-wrap items-start gap-3">
-            {/* The preset, not the builder. Most students do not want to build
-                anything — they want to start, and docs/00 §5 counts the taps. */}
-            <StartPractice mode="QUICK" filters={{ unseenOnly: true }} count={10} label="Start now" />
-            <Link
-              href="/practice/new"
-              className="inline-flex min-h-12 items-center justify-center rounded-pill border border-white/20 px-5 text-sm font-semibold text-sand-50 transition-colors hover:border-brand-300 hover:bg-white/8"
-            >
-              Build a focused set
-            </Link>
-          </div>
+          <p className="text-on-desk-soft mt-3 max-w-[48ch] text-sm leading-relaxed">{body}</p>
+          {children}
         </div>
 
-        <div className="border-brand-300/20 bg-sand-800/95 relative overflow-hidden rounded-control border p-5 lg:self-stretch">
-          <p className="text-xs font-bold tracking-[0.14em] text-brand-300 uppercase">Today&apos;s set</p>
-          <p className="mt-6 text-6xl leading-none font-semibold tracking-[-0.07em] tabular-nums">10</p>
-          <p className="mt-2 text-sm text-sand-300">fresh questions</p>
-          <div className="mt-6 border-t border-white/12 pt-4 text-sm text-sand-300">About 10 minutes</div>
-        </div>
+        {aside}
       </div>
-    </section>
+    </Card>
+  );
+}
+
+/** The figure panel beside the dashboard hero. */
+function DeskAside({
+  label,
+  value,
+  caption,
+  children,
+}: {
+  label: string;
+  value: string;
+  caption: string;
+  children: ReactNode;
+}) {
+  return (
+    /*
+      `justify-between` rather than the default. The panel is `self-stretch`, so
+      it takes the height of the tallest column — on a wide screen that left 155
+      of its 274 pixels empty below the footer row, with everything bunched at
+      the top. Pinning the footer to the bottom is what makes the stretch mean
+      something instead of looking like a card that failed to load.
+    */
+    <div className="border-brand-300/20 bg-desk-raised/95 rounded-control relative flex flex-col justify-between overflow-hidden border p-5 lg:self-stretch">
+      <div>
+        <Eyebrow tone="desk">{label}</Eyebrow>
+        <p className="text-figure-lg mt-6 tabular-nums">{value}</p>
+        <p className="text-on-desk-soft mt-2 text-sm">{caption}</p>
+      </div>
+      <div className="border-desk-line mt-6 flex items-center gap-2 border-t pt-4 text-sm">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The secondary action on the dark panel.
+ *
+ * Not `<Button variant="secondary">`: that one is a white card with a sand
+ * border, which on a near-black panel is a bright rectangle competing with the
+ * saffron button beside it. Same size and shape as the button it sits next to,
+ * outlined in the panel's own hairline.
+ */
+function DeskLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="border-desk-line text-on-desk hover:border-brand-300 hover:bg-on-desk/8 rounded-pill inline-flex min-h-12 items-center justify-center border px-5 text-sm font-semibold transition-colors"
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -437,13 +483,8 @@ function TeacherBrief({
       <div className="flex min-w-0 items-start gap-3">
         <span className="bg-brand-500 mt-1.5 size-2 shrink-0 rounded-full" aria-hidden="true" />
         <div className="min-w-0">
-          <p className="text-brand-700 text-xs font-bold tracking-[0.12em] uppercase">
-            From {classroomName}
-          </p>
-          <h2
-            id="teacher-brief-heading"
-            className="text-text mt-1 truncate text-base font-semibold tracking-[-0.016em] sm:text-lg"
-          >
+          <Eyebrow>From {classroomName}</Eyebrow>
+          <h2 id="teacher-brief-heading" className="text-text text-subheading mt-1 truncate">
             {title}
           </h2>
           <p className="text-text-soft mt-1 text-sm">
@@ -483,40 +524,38 @@ function formatAssignmentDue(value: string): string {
 function CountdownCard({ countdown }: { countdown: ReturnType<typeof examCountdown> }) {
   if (countdown === null) {
     return (
-      <section className="rounded-control border-line bg-card flex min-h-[10.5rem] flex-col justify-between border p-5">
+      <MiniCard>
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-text-soft text-sm font-medium">Board exam target</p>
-            <h2 className="text-text mt-2 text-xl font-semibold tracking-[-0.028em]">
-              Set your target
-            </h2>
+            <h2 className="text-text text-heading mt-2">Set your target</h2>
           </div>
-          <span className="bg-brand-50 text-brand-700 grid size-9 place-items-center rounded-full text-sm font-semibold">
+          <span className="bg-brand-50 text-brand-700 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold">
             +
           </span>
         </div>
-        <Link href="/profile" className="text-brand-700 mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">
+        <Link
+          href="/profile"
+          className="text-brand-700 mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
+        >
           Add exam details <ChevronRight className="size-4" />
         </Link>
-      </section>
+      </MiniCard>
     );
   }
 
   return (
-    <section
-      aria-labelledby="countdown-heading"
-      className="rounded-control border-line bg-card flex min-h-[10.5rem] flex-col justify-between border p-5"
-    >
+    <MiniCard aria-labelledby="countdown-heading">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-text-soft text-sm font-medium">Board exam target</p>
-          <h2 id="countdown-heading" className="text-text mt-2 text-xl font-semibold tracking-[-0.028em]">
+          <h2 id="countdown-heading" className="text-text text-heading mt-2">
             {countdown.when}
           </h2>
         </div>
         <Link
           href="/profile"
-          className="text-brand-700 rounded-pill bg-brand-50 px-3 py-1.5 text-xs font-semibold hover:bg-brand-100"
+          className="text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-pill shrink-0 px-3 py-1.5 text-xs font-semibold transition-colors"
         >
           Edit
         </Link>
@@ -528,14 +567,42 @@ function CountdownCard({ countdown }: { countdown: ReturnType<typeof examCountdo
         </p>
       ) : (
         <div className="mt-4 flex items-baseline gap-2">
-          <p className="text-text text-4xl font-semibold tracking-[-0.05em] tabular-nums">
-            {countdown.daysRemaining}
-          </p>
+          <p className="text-text text-figure tabular-nums">{countdown.daysRemaining}</p>
           <p className="text-text-soft text-sm font-medium">
             {countdown.daysRemaining === 1 ? "day to go" : "days to go"}
           </p>
         </div>
       )}
+    </MiniCard>
+  );
+}
+
+/**
+ * The two small cards in the dashboard's right column.
+ *
+ * `rounded-control` rather than `rounded-panel`, and that is deliberate: they
+ * sit *inside* the hero row as a pair, and a panel radius at this size makes
+ * two 168px boxes read as two more panels rather than as the hero's companions.
+ * The height is fixed so the pair aligns whatever their content.
+ */
+function MiniCard({
+  children,
+  tone = "card",
+  "aria-labelledby": ariaLabelledBy,
+}: {
+  children: ReactNode;
+  tone?: "card" | "brand";
+  "aria-labelledby"?: string;
+}) {
+  return (
+    <section
+      aria-labelledby={ariaLabelledBy}
+      className={[
+        "rounded-control flex min-h-[10.5rem] flex-col justify-between border p-5",
+        tone === "brand" ? "border-brand-200 bg-brand-50" : "border-line bg-card",
+      ].join(" ")}
+    >
+      {children}
     </section>
   );
 }
@@ -551,21 +618,19 @@ function TodayCard({
   const answeredToday = today?.answered ?? 0;
 
   return (
-    <section className="border-brand-200 bg-brand-50 rounded-control flex min-h-[10.5rem] flex-col justify-between border p-5">
+    <MiniCard tone="brand">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-brand-700 text-sm font-semibold">Today&apos;s momentum</p>
-          <p className="text-text mt-3 text-4xl leading-none font-semibold tracking-[-0.05em] tabular-nums">
-            {String(answeredToday)}
-          </p>
+          <p className="text-text text-figure mt-3 tabular-nums">{String(answeredToday)}</p>
           <p className="text-text-soft mt-1 text-sm">questions answered</p>
         </div>
-        <span className="border-brand-300 text-brand-700 inline-flex min-h-9 shrink-0 items-center rounded-pill border bg-card px-2.5 text-xs font-bold tabular-nums">
+        <span className="border-brand-300 text-brand-700 bg-card rounded-pill inline-flex min-h-9 shrink-0 items-center border px-2.5 text-xs font-bold tabular-nums">
           {week.sessions === 1 ? "1 set" : `${String(week.sessions)} sets`}
         </span>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-brand-200 pt-3">
+      <div className="border-brand-200 mt-4 flex items-center justify-between gap-3 border-t pt-3">
         <p className="text-text-soft text-xs font-medium">
           {week.sessions === 0
             ? "Start a 10-question sprint."
@@ -578,7 +643,7 @@ function TodayCard({
           Practice <ChevronRight className="size-4" />
         </Link>
       </div>
-    </section>
+    </MiniCard>
   );
 }
 
@@ -591,24 +656,20 @@ function QuickActions({ overview }: { overview: ProgressOverview | null }) {
   const weakTopic = overview?.weakTopics.find((topic) => topic.attempted >= 2);
 
   return (
-    <section
-      aria-labelledby="revision-queue-heading"
-      className="rounded-panel border-line bg-card min-w-0 overflow-hidden border p-5 sm:p-6"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.16em] uppercase">Revision queue</p>
-          <h2
-            id="revision-queue-heading"
-            className="text-text mt-1 text-[1.35rem] font-semibold tracking-[-0.028em]"
+    <Card aria-labelledby="revision-queue-heading" className="min-w-0 overflow-hidden">
+      <SectionHeading
+        id="revision-queue-heading"
+        eyebrow="Revision queue"
+        title="What to revisit next"
+        action={
+          <Link
+            href="/progress"
+            className="text-brand-700 inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
           >
-            What to revisit next
-          </h2>
-        </div>
-        <Link href="/progress" className="text-brand-700 shrink-0 text-sm font-semibold hover:underline">
-          Progress
-        </Link>
-      </div>
+            Progress
+          </Link>
+        }
+      />
 
       <ul className="mt-5 flex min-w-0 flex-col gap-2.5">
         {overview !== null && overview.openMistakes > 0 ? (
@@ -669,7 +730,7 @@ function QuickActions({ overview }: { overview: ProgressOverview | null }) {
           Finish a few graded questions and this queue will become more personal.
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
@@ -691,16 +752,9 @@ function QueueItem({
   return (
     <Link
       href={href}
-      className="rounded-control border-line hover:border-brand-300 hover:bg-brand-50/50 group grid w-full min-w-0 max-w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden border p-3 transition-colors"
+      className="rounded-control border-line hover:border-brand-300 hover:bg-brand-50/50 group grid w-full max-w-full min-w-0 grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden border p-3 transition-colors"
     >
-      <span
-        className={[
-          "grid size-10 shrink-0 place-items-center rounded-xl",
-          tone === "brand" ? "bg-brand-50 text-brand-700" : "bg-raised text-text-soft",
-        ].join(" ")}
-      >
-        {icon}
-      </span>
+      <IconTile tone={tone === "brand" ? "brand" : "neutral"}>{icon}</IconTile>
       <span className="min-w-0 flex-1">
         <span className="text-text block truncate text-sm font-semibold">{title}</span>
         <span className="text-text-soft mt-0.5 block truncate text-xs">{detail}</span>
@@ -731,35 +785,30 @@ function ThisWeek({
   hasHistory: boolean;
 }) {
   return (
-    <section
-      aria-labelledby="week-heading"
-      className="rounded-panel border-line bg-card w-full overflow-hidden border"
-    >
-      <div className="flex flex-wrap items-end justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.16em] uppercase">Weekly performance</p>
-          <h2
-            id="week-heading"
-            className="text-text mt-1 text-[1.35rem] font-semibold tracking-[-0.028em]"
-          >
-            This week
-          </h2>
-          <p className="text-text-soft mt-1 text-sm">
-            {week.sessions === 0
+    <Card aria-labelledby="week-heading" pad="flush" className="w-full overflow-hidden">
+      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+        <SectionHeading
+          id="week-heading"
+          eyebrow="Weekly performance"
+          title="This week"
+          lede={
+            week.sessions === 0
               ? "A clear view of your study rhythm will begin with your first set."
-              : `${String(week.sessions)} ${week.sessions === 1 ? "practice set" : "practice sets"} in the last seven days`}
-          </p>
-        </div>
-        <Link
-          href="/progress"
-          className="text-brand-700 inline-flex min-h-10 items-center gap-1 text-sm font-semibold hover:underline"
-        >
-          Full progress <ChevronRight className="size-4" />
-        </Link>
+              : `${String(week.sessions)} ${week.sessions === 1 ? "practice set" : "practice sets"} in the last seven days`
+          }
+          action={
+            <Link
+              href="/progress"
+              className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+            >
+              Full progress <ChevronRight className="size-4" />
+            </Link>
+          }
+        />
       </div>
 
       {week.answered === 0 ? (
-        <div className="mt-5 border-t border-line bg-raised/55 px-5 py-5 sm:px-6">
+        <div className="border-line bg-raised/55 mt-5 border-t px-5 py-5 sm:px-6">
           <p className="text-text max-w-[48ch] text-sm leading-relaxed">
             {hasHistory
               ? "Nothing has been answered this week yet. A short set is enough to restart your rhythm."
@@ -773,17 +822,23 @@ function ThisWeek({
           </Link>
         </div>
       ) : (
-        <div className="mt-5 border-t border-line px-5 py-5 sm:px-6 sm:py-6">
-          <dl className="grid grid-cols-3 divide-x divide-line">
-            <Figure label="Questions" value={String(week.answered)} />
+        <div className="border-line mt-5 border-t px-5 py-5 sm:px-6 sm:py-6">
+          <dl className="divide-line grid grid-cols-3 divide-x">
+            <Figure
+              label="Questions"
+              value={String(week.answered)}
+              className="px-3 first:pl-0 last:pr-0 sm:px-5"
+            />
             {/* Null, not zero — see `weekTotals`. */}
             <Figure
               label="Accuracy"
               value={week.accuracy === null ? "—" : `${String(week.accuracy)}%`}
+              className="px-3 first:pl-0 last:pr-0 sm:px-5"
             />
             <Figure
               label="Marks"
               value={`${formatMarksValue(week.marksEarned)}/${formatMarksValue(week.marksPossible)}`}
+              className="px-3 first:pl-0 last:pr-0 sm:px-5"
             />
           </dl>
 
@@ -804,54 +859,42 @@ function ThisWeek({
           </div>
         </div>
       )}
-    </section>
-  );
-}
-
-function Figure({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 px-3 first:pl-0 last:pr-0 sm:px-5">
-      <dd className="text-text truncate text-xl font-semibold tracking-[-0.035em] tabular-nums sm:text-3xl">
-        {value}
-      </dd>
-      <dt className="text-text-soft mt-1 text-xs font-medium sm:text-sm">{label}</dt>
-    </div>
+    </Card>
   );
 }
 
 function RecentPractice({ recent }: { recent: PracticeSessionSummary[] }) {
   return (
-    <section
-      aria-labelledby="recent-heading"
-      className="rounded-panel border-line bg-card min-w-0 border p-5 sm:p-6"
-    >
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.16em] uppercase">Recent activity</p>
-          <h2
-            id="recent-heading"
-            className="text-text mt-1 text-[1.35rem] font-semibold tracking-[-0.028em]"
+    <Card aria-labelledby="recent-heading" className="min-w-0">
+      <SectionHeading
+        id="recent-heading"
+        eyebrow="Recent activity"
+        title="Your latest work"
+        action={
+          <Link
+            href="/practice"
+            className="text-brand-700 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
           >
-            Your latest work
-          </h2>
-        </div>
-        <Link href="/practice" className="text-brand-700 inline-flex items-center gap-1 text-sm font-semibold hover:underline">
-          All <ChevronRight className="size-4" />
-        </Link>
-      </div>
+            All <ChevronRight className="size-4" />
+          </Link>
+        }
+      />
 
       {recent.length === 0 ? (
-        <div className="border-line bg-raised/55 mt-5 rounded-control border p-4">
+        <div className="border-line bg-raised/55 rounded-control mt-5 border p-4">
           <p className="text-text text-sm font-semibold">Your first result will live here.</p>
           <p className="text-text-soft mt-1 text-sm leading-relaxed">
             Complete a set to start building a useful revision history.
           </p>
-          <Link href="/practice" className="text-brand-700 mt-3 inline-flex items-center gap-1 text-sm font-semibold hover:underline">
+          <Link
+            href="/practice"
+            className="text-brand-700 mt-3 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
+          >
             Open practice <ChevronRight className="size-4" />
           </Link>
         </div>
       ) : (
-        <ul className="mt-5 min-w-0 divide-y divide-line">
+        <ul className="divide-line mt-5 min-w-0 divide-y">
           {recent.map((session) => {
             const allCorrect =
               session.totals.answered > 0 && session.totals.correct === session.totals.answered;
@@ -860,8 +903,8 @@ function RecentPractice({ recent }: { recent: PracticeSessionSummary[] }) {
             const tone = allCorrect
               ? "border-tick-200 bg-tick-50 text-tick-700"
               : noneCorrect
-              ? "border-marker-200 bg-marker-50 text-marker-700"
-              : "border-brand-200 bg-brand-50 text-brand-700";
+                ? "border-marker-200 bg-marker-50 text-marker-700"
+                : "border-brand-200 bg-brand-50 text-brand-700";
 
             return (
               <li key={session.id} className="min-w-0">
@@ -885,7 +928,9 @@ function RecentPractice({ recent }: { recent: PracticeSessionSummary[] }) {
                   </span>
                   <span className="text-text-faint shrink-0 text-right text-xs font-medium">
                     <span className="block">{formatPracticeDate(session.startedAt)}</span>
-                    <span className="mt-0.5 block">{formatDuration(session.totals.timeSpentMs)}</span>
+                    <span className="mt-0.5 block">
+                      {formatDuration(session.totals.timeSpentMs)}
+                    </span>
                   </span>
                   <ChevronRight className="text-brand-700 size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 </Link>
@@ -894,7 +939,7 @@ function RecentPractice({ recent }: { recent: PracticeSessionSummary[] }) {
           })}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -933,18 +978,23 @@ function SubjectCard({
     : `/subjects/${summary.slug}`;
 
   return (
-    <article className="rounded-panel border-line bg-card hover:border-brand-300 hover:shadow-lift group relative flex min-h-[12.5rem] flex-col overflow-hidden border p-5 transition-all sm:p-6">
-      <div aria-hidden="true" className="bg-brand-500 absolute inset-x-0 top-0 h-1 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
+    <Card
+      as="article"
+      interactive
+      className="group relative flex min-h-[12.5rem] flex-col overflow-hidden"
+    >
+      <div
+        aria-hidden="true"
+        className="bg-brand-500 absolute inset-x-0 top-0 h-1 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+      />
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-text-faint text-xs font-bold tracking-[0.14em] uppercase">
-            Subject {String(index + 1).padStart(2, "0")}
-          </p>
-        {/* The variant is only appended when the name has not already said it.
-            The seed stores Mathematics as "Mathematics (Standard)" *and* sets
-            `variant: "STANDARD"`, and printing both gives "Mathematics
-            (Standard) (STANDARD)". */}
-          <h3 className="text-text mt-1 truncate text-lg font-semibold tracking-[-0.024em]">
+          <Eyebrow tone="muted">Subject {String(index + 1).padStart(2, "0")}</Eyebrow>
+          {/* The variant is only appended when the name has not already said it.
+              The seed stores Mathematics as "Mathematics (Standard)" *and* sets
+              `variant: "STANDARD"`, and printing both gives "Mathematics
+              (Standard) (STANDARD)". */}
+          <h3 className="text-text text-subheading mt-1 truncate">
             {summary.name}
             {summary.variant !== null &&
             !summary.name.toLowerCase().includes(summary.variant.toLowerCase()) ? (
@@ -958,9 +1008,9 @@ function SubjectCard({
           </p>
         </div>
         {mastery !== null && progress?.attempted !== 0 ? (
-          <span className="border-brand-200 bg-brand-50 text-brand-700 shrink-0 rounded-pill border px-2.5 py-1 text-xs font-bold tabular-nums">
+          <Chip tone="brand" className="border-brand-200 shrink-0 border tabular-nums">
             {String(mastery)}% mastery
-          </span>
+          </Chip>
         ) : null}
       </div>
 
@@ -973,16 +1023,12 @@ function SubjectCard({
                 {accuracy === null ? "—" : `${String(accuracy)}% accurate`}
               </span>
             </div>
-            <div
-              className="bg-raised mt-2 h-1.5 overflow-hidden rounded-full"
-              role="progressbar"
-              aria-label={`Recent mastery in ${summary.name}`}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={mastery ?? 0}
-            >
-              <div className="bg-brand-500 h-full rounded-full" style={{ width: `${String(mastery ?? 0)}%` }} />
-            </div>
+            <Meter
+              percent={mastery ?? 0}
+              size="slim"
+              className="mt-2"
+              label={`Recent mastery in ${summary.name}`}
+            />
           </>
         ) : (
           <p className="text-text-soft text-sm">Ready for your first focused set.</p>
@@ -994,7 +1040,8 @@ function SubjectCard({
           href={actionHref}
           className="text-brand-700 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
         >
-          {hasPractice ? "Continue practice" : "Explore chapters"} <ChevronRight className="size-4" />
+          {hasPractice ? "Continue practice" : "Explore chapters"}{" "}
+          <ChevronRight className="size-4" />
         </Link>
 
         {detail ? (
@@ -1003,7 +1050,7 @@ function SubjectCard({
           </span>
         ) : null}
       </div>
-    </article>
+    </Card>
   );
 }
 

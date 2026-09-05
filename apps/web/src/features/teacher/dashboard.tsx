@@ -2,6 +2,8 @@ import type { TeacherDashboard } from "@samjho/contracts";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/page";
+import { Card } from "@/components/ui/surface";
 
 /**
  * The teacher overview.
@@ -97,16 +99,14 @@ function Tile({
     <Link
       href={href}
       className={[
-        "rounded-panel flex min-h-40 flex-col border p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lift sm:p-6",
+        "rounded-panel hover:shadow-lift flex min-h-40 flex-col border p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 sm:p-6",
         tone === "attention"
           ? "border-brand-200 bg-brand-50 hover:border-brand-400"
           : "border-line bg-card hover:border-line-strong",
       ].join(" ")}
     >
-      <p className="text-text-faint text-xs font-bold tracking-[0.11em] uppercase">{label}</p>
-      <p className="text-text mt-3 text-3xl font-semibold tracking-[-0.04em] tabular-nums">
-        {value}
-      </p>
+      <Eyebrow tone="muted">{label}</Eyebrow>
+      <p className="text-text text-figure mt-3 tabular-nums">{value}</p>
       <p className="text-text-soft mt-auto pt-2 text-sm leading-snug">{hint}</p>
     </Link>
   );
@@ -114,9 +114,9 @@ function Tile({
 
 function Upcoming({ rows }: { rows: TeacherDashboard["upcoming"] }) {
   return (
-    <section className="border-line bg-card rounded-panel border p-5 sm:p-6">
+    <Card>
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-text font-semibold">Open work</h2>
+        <h2 className="text-text text-subheading">Open work</h2>
         <span className="text-text-faint text-xs font-semibold tabular-nums">
           {rows.length} {rows.length === 1 ? "set" : "sets"}
         </span>
@@ -152,15 +152,15 @@ function Upcoming({ rows }: { rows: TeacherDashboard["upcoming"] }) {
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }
 
 function BankBreakdown({ bank }: { bank: TeacherDashboard["bank"] }) {
   return (
-    <section className="border-line bg-card rounded-panel border p-5 sm:p-6">
+    <Card>
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-text font-semibold">Your question bank</h2>
+        <h2 className="text-text text-subheading">Your question bank</h2>
         {bank.total > 0 ? (
           <span className="text-text-faint text-xs font-semibold tabular-nums">
             {bank.total} total
@@ -193,16 +193,19 @@ function BankBreakdown({ bank }: { bank: TeacherDashboard["bank"] }) {
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }
 
 function FirstRun() {
   return (
-    <section className="border-line bg-card rounded-panel relative min-h-72 overflow-hidden border p-7 sm:p-9">
-      <div className="bg-brand-100 absolute -right-10 -bottom-16 size-56 rounded-full blur-2xl" />
+    <Card pad="roomy" className="relative min-h-72 overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="bg-brand-100 absolute -right-10 -bottom-16 size-56 rounded-full blur-2xl"
+      />
       <div className="relative max-w-2xl">
-        <p className="text-text text-xl font-semibold tracking-[-0.02em]">Start with one class.</p>
+        <p className="text-text text-heading">Start with one class.</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Make a classroom for a subject and share its code. Then set a short practice set — or
           upload one of your own papers and let Samjho pull the questions out of it, sorted by
@@ -215,7 +218,7 @@ function FirstRun() {
           </ButtonLink>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
 

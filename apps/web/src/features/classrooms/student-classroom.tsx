@@ -11,6 +11,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { codeInputClass } from "@/components/ui/form";
+import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
+import { Card, Chip, flushBandClass } from "@/components/ui/surface";
 import { sendJson } from "@/lib/client-api";
 import { formatDuration, formatMarksValue } from "@/lib/practice-format";
 
@@ -18,24 +21,17 @@ export function StudentClassroom({ classrooms }: { classrooms: StudentClassroom[
   const [joinOpen, setJoinOpen] = useState(classrooms.length === 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-[96rem] flex-col gap-7 px-4 py-6 sm:px-8 sm:py-8 xl:px-12 xl:py-10 2xl:px-16">
-      <header className="border-line flex flex-wrap items-end justify-between gap-5 border-b pb-6">
-        <div>
-          <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-            Teacher workspace
-          </p>
-          <h1 className="text-text mt-2 text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
-            Your classroom
-          </h1>
-          <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-            See assigned practice, due dates, and your feedback in one place. Your personal practice
-            stays separate.
-          </p>
-        </div>
-        <Button variant="secondary" onClick={() => setJoinOpen((open) => !open)}>
-          {joinOpen ? "Close" : "Join a class"}
-        </Button>
-      </header>
+    <PageShell width="wide">
+      <PageHeader
+        eyebrow="Teacher workspace"
+        title="Your classroom"
+        lede="See assigned practice, due dates, and your feedback in one place. Your personal practice stays separate."
+        action={
+          <Button variant="secondary" onClick={() => setJoinOpen((open) => !open)}>
+            {joinOpen ? "Close" : "Join a class"}
+          </Button>
+        }
+      />
 
       {joinOpen ? <JoinClassroom onJoined={() => setJoinOpen(false)} /> : null}
 
@@ -46,7 +42,7 @@ export function StudentClassroom({ classrooms }: { classrooms: StudentClassroom[
           <ClassroomCard key={classroom.id} classroom={classroom} />
         ))}
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -83,13 +79,8 @@ function JoinClassroom({ onJoined }: { onJoined: () => void }) {
   }
 
   return (
-    <section className="rounded-panel border-brand-200 bg-brand-50 border p-5 sm:p-6">
-      <div className="mb-5">
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">Join a class</p>
-        <h2 className="text-text mt-1 text-xl font-semibold tracking-[-0.02em]">
-          Enter your class code
-        </h2>
-      </div>
+    <Card tone="brand">
+      <SectionHeading eyebrow="Join a class" title="Enter your class code" className="mb-5" />
       <form
         className="flex flex-col gap-4 sm:flex-row sm:items-end"
         onSubmit={(event) => {
@@ -97,7 +88,11 @@ function JoinClassroom({ onJoined }: { onJoined: () => void }) {
           void join();
         }}
       >
-        <div className="min-w-0 flex-1">
+        {/* Not `flex-1`. The field is a fixed 16rem now, so stretching this
+            wrapper only pushed "Join class" to the far side of a 1200px row,
+            leaving eight hundred pixels between a code and the button that
+            submits it. */}
+        <div className="min-w-0">
           <label htmlFor="class-code" className="text-text block text-sm font-semibold">
             Class code
           </label>
@@ -108,11 +103,11 @@ function JoinClassroom({ onJoined }: { onJoined: () => void }) {
             id="class-code"
             value={joinCode}
             onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
-            placeholder="e.g. B7K2MQ"
+            placeholder="B7K2MQ"
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}
-            className="border-brand-200 bg-card text-text mt-3 h-11 w-full rounded-xl border px-3 font-mono text-base tracking-[0.16em] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className={`${codeInputClass} mt-3`}
           />
         </div>
         <Button type="submit" disabled={busy}>
@@ -124,19 +119,20 @@ function JoinClassroom({ onJoined }: { onJoined: () => void }) {
           {message}
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
 function EmptyClassroom({ onJoin }: { onJoin: () => void }) {
   return (
-    <section className="border-line bg-card rounded-panel relative overflow-hidden border p-7 sm:p-9">
-      <div className="bg-brand-100 absolute -top-16 -right-12 size-44 rounded-full blur-2xl" />
+    <Card pad="roomy" className="relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="bg-brand-100 absolute -top-16 -right-12 size-44 rounded-full blur-2xl"
+      />
       <div className="relative max-w-xl">
-        <p className="text-brand-700 text-xs font-bold tracking-[0.14em] uppercase">
-          Your classroom is ready
-        </p>
-        <p className="text-text mt-2 text-xl font-semibold tracking-[-0.02em]">No classes yet</p>
+        <Eyebrow>Your classroom is ready</Eyebrow>
+        <p className="text-text text-heading mt-2">No classes yet</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Join with a code and any practice your teacher assigns will appear here. Personal practice
           stays completely separate in your own account.
@@ -145,24 +141,20 @@ function EmptyClassroom({ onJoin }: { onJoin: () => void }) {
           Enter a class code
         </Button>
       </div>
-    </section>
+    </Card>
   );
 }
 
 function ClassroomCard({ classroom }: { classroom: StudentClassroom }) {
   return (
-    <section className="rounded-panel border-line bg-card flex h-full flex-col overflow-hidden border">
-      <div className="border-line bg-raised/60 border-b px-5 py-4 sm:px-6">
+    <Card pad="flush" className="flex h-full flex-col overflow-hidden">
+      <div className={`border-line bg-raised/60 border-b ${flushBandClass}`}>
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-brand-700 text-xs font-bold tracking-[0.12em] uppercase">
-              {classroom.subject.code}
-            </p>
-            <h2 className="text-text mt-1 text-lg font-semibold">{classroom.name}</h2>
+          <div className="min-w-0">
+            <Eyebrow>{classroom.subject.code}</Eyebrow>
+            <h2 className="text-text text-subheading mt-1">{classroom.name}</h2>
           </div>
-          <span className="text-text-faint rounded-pill border-line border bg-card px-2.5 py-1 text-xs font-medium">
-            {classroom.subject.name}
-          </span>
+          <Chip tone="outline">{classroom.subject.name}</Chip>
         </div>
         <p className="text-text-soft mt-2 text-sm">
           {classroom.teacherName ? `with ${classroom.teacherName}` : "Teacher classroom"}
@@ -188,7 +180,7 @@ function ClassroomCard({ classroom }: { classroom: StudentClassroom }) {
           </ul>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -267,6 +259,7 @@ function StartAssignment({ assignment }: { assignment: StudentAssignment }) {
     <div className="flex flex-wrap items-center gap-3">
       <Button
         variant={assignment.progress === "NOT_STARTED" ? "primary" : "secondary"}
+        size="sm"
         disabled={busy}
         onClick={() => void start()}
       >
@@ -282,11 +275,11 @@ function StartAssignment({ assignment }: { assignment: StudentAssignment }) {
 }
 
 function ProgressPill({ progress }: { progress: StudentAssignment["progress"] }) {
-  const styles = {
-    NOT_STARTED: "bg-raised text-text-soft",
-    IN_PROGRESS: "bg-brand-50 text-brand-700",
-    COMPLETED: "bg-brand-100 text-brand-800",
-    LATE: "bg-marker-50 text-marker-700",
+  const tones = {
+    NOT_STARTED: "neutral",
+    IN_PROGRESS: "brand",
+    COMPLETED: "correct",
+    LATE: "wrong",
   } as const;
   const labels = {
     NOT_STARTED: "Not started",
@@ -295,11 +288,7 @@ function ProgressPill({ progress }: { progress: StudentAssignment["progress"] })
     LATE: "Completed late",
   } as const;
 
-  return (
-    <span className={`rounded-pill px-2 py-0.5 text-xs font-semibold ${styles[progress]}`}>
-      {labels[progress]}
-    </span>
-  );
+  return <Chip tone={tones[progress]}>{labels[progress]}</Chip>;
 }
 
 function dueLabel(value: string): string {
