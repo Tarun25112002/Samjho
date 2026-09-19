@@ -3,14 +3,18 @@ import { ALL_BLUEPRINTS } from "@samjho/exam-blueprints";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../../src/generated/prisma/client.js";
+import { class10EnglishChapters } from "./curriculum/english.js";
 import { class10MathsChapters } from "./curriculum/maths.js";
 import { class10ScienceChapters } from "./curriculum/science.js";
+import { class10SocialScienceChapters } from "./curriculum/social-science.js";
 import { seedId, upsertQuestion, type CurriculumIndex } from "./helpers.js";
 import { seedPastPapers } from "./past-papers.js";
+import { class10EnglishQuestions } from "./questions/english.js";
 import { class10MathsQuestions } from "./questions/maths.js";
 import { class10MathsPastPaperQuestions } from "./questions/maths-pyq.js";
 import { class10ScienceQuestions } from "./questions/science.js";
 import { class10SciencePastPaperQuestions } from "./questions/science-pyq.js";
+import { class10SocialScienceQuestions } from "./questions/social-science.js";
 import type { SeedChapter, SeedQuestion } from "./types.js";
 import { enrolStudents, seedClassroom, seedPracticeHistory, seedUsers } from "./users.js";
 
@@ -75,6 +79,28 @@ const CLASS_10_SUBJECTS: SubjectSpec[] = [
     orderIndex: 1,
     chapters: class10ScienceChapters,
     questions: [...class10ScienceQuestions, ...class10SciencePastPaperQuestions],
+  },
+  {
+    code: "SST",
+    name: "Social Science",
+    slug: "class-10-social-science",
+    theoryMarks: 80,
+    internalMarks: 20,
+    hasPractical: false,
+    orderIndex: 2,
+    chapters: class10SocialScienceChapters,
+    questions: class10SocialScienceQuestions,
+  },
+  {
+    code: "ENG",
+    name: "English",
+    slug: "class-10-english-language-and-literature",
+    theoryMarks: 80,
+    internalMarks: 20,
+    hasPractical: false,
+    orderIndex: 3,
+    chapters: class10EnglishChapters,
+    questions: class10EnglishQuestions,
   },
 ];
 
