@@ -16,6 +16,7 @@ import {
   type PracticeSession,
   type PracticeSessionSummary,
   type PracticeTopicResult,
+  type TopicComparison,
   type QuestionAnswer,
   type QuestionSelection,
   type SelfEvaluateInput,
@@ -526,8 +527,56 @@ export const practiceService = {
       .filter((item) => item.attempts.some((attempt) => attempt.isCorrect === false))
       .map((item) => item.question.id);
 
+    const scorePercent =
+      session.marksPossible > 0 ? (session.marksEarned / session.marksPossible) * 100 : 0;
+
+    const previousRow = await practiceRepository.findPreviousComparable({
+      userId,
+      sessionId: session.id,
+      mode: session.mode,
+      objective: session.objective,
+      startedAt: session.startedAt,
+    });
+
+    const previous =
+      previousRow === null
+        ? null
+        : {
+            sessionId: previousRow.id,
+            scorePercent: round1((previousRow.marksEarned / previousRow.marksPossible) * 100),
+            completedAt: (previousRow.completedAt ?? session.startedAt).toISOString(),
+          };
+
+    const history = await practiceRepository.findTopicHistoryBefore({
+      userId,
+      topicIds: topics.map((topic) => topic.topicId),
+      before: session.startedAt,
+    });
+
+    const movements: TopicComparison[] = topics
+      .map((topic) => {
+        const prior = history.get(topic.topicId);
+
+        return {
+          topicId: topic.topicId,
+          name: topic.name,
+          chapterName: topic.chapterName,
+          before: prior && prior.possible > 0 ? clamp01(prior.earned / prior.possible) : null,
+          after: topic.marksPossible > 0 ? clamp01(topic.marksEarned / topic.marksPossible) : 0,
+          attempted: topic.attempted,
+        };
+      })
+      // Biggest improvement first: the point of this list is to show a student
+      // that the work moved something, so the thing that moved most goes on top.
+      // A topic with no prior history sorts last — it is news, not progress.
+      .sort((left, right) => movementOf(right) - movementOf(left));
+
     return {
       session: hydrated,
+      scorePercent: round1(scorePercent),
+      previous,
+      deltaPercent: previous === null ? null : round1(round1(scorePercent) - previous.scorePercent),
+      movements,
       topics,
       weakTopics: topics.filter(
         (topic) =>
@@ -1097,4 +1146,16 @@ function collect(
 async function itemIdFor(questionId: string): Promise<string> {
   const owners = await practiceRepository.findItemOwners([questionId]);
   return owners.get(questionId) ?? questionId;
+}
+
+function movementOf(comparison: TopicComparison): number {
+  return comparison.before === null ? -Infinity : comparison.after - comparison.before;
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
 }

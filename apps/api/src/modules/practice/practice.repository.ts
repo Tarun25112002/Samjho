@@ -281,6 +281,82 @@ export const practiceRepository = {
     });
   },
 
+  /**
+   * The sitting this one should be measured against.
+   *
+   * Matched on objective when there is one and on mode otherwise, so a
+   * diagnostic is compared with the same diagnostic rather than with whatever
+   * the student happened to do last. Returns null when this is the first of its
+   * kind, which the result page reports as such instead of against zero.
+   */
+  findPreviousComparable(data: {
+    userId: string;
+    sessionId: string;
+    mode: PracticeMode;
+    objective: AssessmentObjective | null;
+    startedAt: Date;
+  }): Promise<PreviousSittingRow | null> {
+    return prisma.practiceSession.findFirst({
+      where: {
+        userId: data.userId,
+        id: { not: data.sessionId },
+        status: "COMPLETED",
+        startedAt: { lt: data.startedAt },
+        marksPossible: { gt: 0 },
+        ...(data.objective === null
+          ? { mode: data.mode, objective: null }
+          : { objective: data.objective }),
+      },
+      select: { id: true, marksEarned: true, marksPossible: true, completedAt: true },
+      orderBy: { startedAt: "desc" },
+    });
+  },
+
+  /**
+   * How the student did on these topics before this session started.
+   *
+   * Scoped by `attemptedAt`, not by session id, because "before" means before in
+   * time — attempts from any earlier set count, which is what makes the
+   * comparison a statement about the student rather than about two sittings.
+   */
+  async findTopicHistoryBefore(data: {
+    userId: string;
+    topicIds: string[];
+    before: Date;
+  }): Promise<Map<string, { earned: number; possible: number }>> {
+    if (data.topicIds.length === 0) return new Map();
+
+    const rows = await prisma.questionAttempt.findMany({
+      where: {
+        userId: data.userId,
+        evaluationMode: { not: "PENDING" },
+        attemptedAt: { lt: data.before },
+        question: { topics: { some: { isPrimary: true, topicId: { in: data.topicIds } } } },
+      },
+      select: {
+        marksAwarded: true,
+        marksPossible: true,
+        question: {
+          select: { topics: { where: { isPrimary: true }, select: { topicId: true }, take: 1 } },
+        },
+      },
+    });
+
+    const totals = new Map<string, { earned: number; possible: number }>();
+
+    for (const row of rows) {
+      const topicId = row.question.topics[0]?.topicId;
+      if (topicId === undefined) continue;
+
+      const entry = totals.get(topicId) ?? { earned: 0, possible: 0 };
+      entry.earned += row.marksAwarded;
+      entry.possible += row.marksPossible;
+      totals.set(topicId, entry);
+    }
+
+    return totals;
+  },
+
   findDiagnosticSessions(userId: string): Promise<DiagnosticSessionRow[]> {
     return prisma.practiceSession.findMany({
       where: { userId, objective: { not: null } },
@@ -544,4 +620,11 @@ export interface DiagnosticSessionRow {
   startedAt: Date;
   marksEarned: number;
   marksPossible: number;
+}
+
+export interface PreviousSittingRow {
+  id: string;
+  marksEarned: number;
+  marksPossible: number;
+  completedAt: Date | null;
 }
