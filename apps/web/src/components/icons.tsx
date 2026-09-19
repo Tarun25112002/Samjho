@@ -313,3 +313,19 @@ export function CameraIcon({ className }: IconProps) {
     1.8,
   );
 }
+
+/**
+ * A week. A grid with the header ruled off, which is what a planner looks like
+ * — a single date square would read as "today" and this page is deliberately
+ * not about today.
+ */
+export function CalendarIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+    </>,
+    className,
+    1.8,
+  );
+}

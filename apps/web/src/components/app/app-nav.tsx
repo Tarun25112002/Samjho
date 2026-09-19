@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 
 import {
+  CalendarIcon,
   HomeIcon,
   PenIcon,
   ProgressIcon,
@@ -66,6 +67,7 @@ const DESTINATIONS: Destination[] = [
   { href: "/practice", label: "Practice", icon: PenIcon },
   { href: "/assessment", label: "Assessment", icon: TargetIcon, railOnly: true },
   { href: "/exams", label: "Exams", icon: PaperIcon, railOnly: true },
+  { href: "/plan", label: "Your week", icon: CalendarIcon, railOnly: true },
   { href: "/progress", label: "Progress", icon: ProgressIcon },
   { href: "/ai-tutor", label: "AI tutor", icon: SparkIcon, railOnly: true },
   { href: "/saved", label: "Saved", icon: BookmarkIcon, railOnly: true },
