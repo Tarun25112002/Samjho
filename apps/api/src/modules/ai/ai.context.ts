@@ -56,6 +56,15 @@ export interface QuestionContextInput {
   action: AIAction;
   question: GroundingRow;
   attempt: AttemptSummary | null;
+  /**
+   * What is known about the student, from their own answers.
+   *
+   * Appended after the question and the attempt rather than before, because the
+   * question is what the model must get right and the student is how it should
+   * be said. Putting the profile first invites a reply that is about the
+   * student instead of about the question.
+   */
+  learner?: string[];
 }
 
 /**
@@ -119,7 +128,12 @@ function renderMarkingScheme(scheme: unknown): string | null {
   }
 }
 
-export function buildQuestionContext({ action, question, attempt }: QuestionContextInput): string {
+export function buildQuestionContext({
+  action,
+  question,
+  attempt,
+  learner = [],
+}: QuestionContextInput): string {
   const lines: string[] = ["QUESTION CONTEXT"];
 
   lines.push(`Subject: CBSE Class ${question.subject.classLevel} ${question.subject.name}`);
@@ -182,6 +196,8 @@ export function buildQuestionContext({ action, question, attempt }: QuestionCont
       lines.push(`Score: ${attempt.marksAwarded} / ${attempt.marksPossible}`);
     }
   }
+
+  if (learner.length > 0) lines.push("", ...learner);
 
   return lines.join("\n");
 }
