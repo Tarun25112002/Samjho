@@ -41,6 +41,7 @@ export * from "./classroom/classroom.schema.js";
 export * from "./ai/ai-enums.js";
 export * from "./ai/conversation.schema.js";
 export * from "./ai/grading.schema.js";
+export * from "./ai/transcription.schema.js";
 export * from "./auth/auth-enums.js";
 export * from "./auth/onboarding.schema.js";
 export * from "./auth/teacher.schema.js";

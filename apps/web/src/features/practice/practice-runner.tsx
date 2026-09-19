@@ -17,6 +17,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page";
 import { Card } from "@/components/ui/surface";
 import { formatMarksValue, markingFrom } from "@/lib/practice-format";
+import { PhotoAnswer } from "@/features/ai/photo-answer";
 import { TutorPanel } from "@/features/ai/tutor-panel";
 import { FeedbackPanel } from "./feedback-panel";
 import { SessionTimer } from "./session-timer";
@@ -121,6 +122,18 @@ export function PracticeRunner({
                   onChange: (questionId: string, value: StudentAnswer) => {
                     runner.setAnswer(questionId, value);
                   },
+                  // Only on extended-response fields, and only before the answer
+                  // is in — the renderer decides both, so this is passed for
+                  // every question and appears on the two or three that want it.
+                  responseAccessory: ({ questionId }: { questionId: string }) => (
+                    <PhotoAnswer
+                      questionId={questionId}
+                      hasTypedText={(values[questionId]?.text ?? "").trim().length > 0}
+                      onAccept={(text) => {
+                        runner.setAnswer(questionId, { optionIds: [], text });
+                      }}
+                    />
+                  ),
                 })}
           />
         </Card>

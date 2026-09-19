@@ -295,3 +295,21 @@ export function LockIcon({ className }: IconProps) {
     1.8,
   );
 }
+
+/**
+ * A camera, for photographing a written answer.
+ *
+ * Drawn as a body with a lens rather than as a phone, because what the student
+ * is being asked for is a picture of their page — a phone outline would read as
+ * "open this on your phone", which is the opposite instruction.
+ */
+export function CameraIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M3 8.5a2 2 0 0 1 2-2h2.2l1.3-2h6l1.3 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <circle cx="12" cy="12.5" r="3.2" />
+    </>,
+    className,
+    1.8,
+  );
+}

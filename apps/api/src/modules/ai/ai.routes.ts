@@ -1,6 +1,7 @@
 import {
   sendMessageSchema,
   startConversationSchema,
+  transcribeAnswerSchema,
   type AIStreamEvent,
   type ErrorResponse,
 } from "@samjho/contracts";
@@ -13,6 +14,7 @@ import type { TokenVerifier } from "../../lib/token-verifier.js";
 import { authenticated, getAuthUser } from "../../middleware/auth.js";
 import { parseBody, validate } from "../../middleware/validate.js";
 import { aiService } from "./ai.service.js";
+import { aiTranscribeService } from "./ai.transcribe.service.js";
 import { aiProvider } from "./provider/registry.js";
 
 /**
@@ -108,6 +110,28 @@ export function buildAIRouter(verifyToken: TokenVerifier): Router {
     const { id } = idParams.parse(req.params);
 
     res.json({ data: await aiService.archive(user.id, id) });
+  });
+
+  /**
+   * Read a photograph of a handwritten answer into text.
+   *
+   * Not a conversation, so it sits outside `/conversations` and holds no
+   * history: one image in, one transcription out, nothing stored. The response
+   * is text for the student to check and correct, never an answer submitted on
+   * their behalf — the client puts it in the answer field and the ordinary
+   * submit path takes it from there.
+   *
+   * The image arrives base64 in a JSON body rather than as multipart, because
+   * every other route in this API speaks JSON and validates with Zod, and one
+   * multipart endpoint would mean a second body parser and a second way for a
+   * request to be malformed. `MAX_IMAGE_BASE64_CHARS` keeps it inside the 1 MB
+   * body limit; the client downscales before it sends.
+   */
+  router.post("/transcribe", validate({ body: transcribeAnswerSchema }), async (req, res) => {
+    const user = getAuthUser(req);
+    const input = parseBody(req, transcribeAnswerSchema);
+
+    res.json({ data: await aiTranscribeService.read(user.id, input) });
   });
 
   /** The buffered turn. Same answer as the stream, all at once. */
