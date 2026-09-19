@@ -22,6 +22,7 @@ export * from "./question/admin.schema.js";
 export * from "./question/import.schema.js";
 export * from "./exam/exam-enums.js";
 export * from "./exam/paper.schema.js";
+export * from "./exam/attempt.schema.js";
 export * from "./exam/past-paper.schema.js";
 export * from "./practice/practice-enums.js";
 export * from "./practice/answer.schema.js";

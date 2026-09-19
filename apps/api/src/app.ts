@@ -19,6 +19,7 @@ import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { buildExamPaperAdminRouter } from "./modules/exams/paper.admin.routes.js";
+import { buildExamAttemptRouter } from "./modules/exams/attempt.routes.js";
 import { buildExamPaperRouter } from "./modules/exams/paper.routes.js";
 import { buildPastPaperAdminRouter } from "./modules/exams/past-paper.admin.routes.js";
 import { buildPastPaperRouter } from "./modules/exams/past-paper.routes.js";
@@ -160,6 +161,7 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   // two blast radii want two surfaces.
   router.use("/teacher", buildTeacherRouter(verifyToken));
   router.use("/exam-papers", buildExamPaperRouter(verifyToken));
+  router.use("/exam-attempts", buildExamAttemptRouter(verifyToken));
   router.use("/past-papers", buildPastPaperRouter(verifyToken));
 
   // Mounted under its own prefix rather than as extra verbs on /catalog, so the

@@ -59,6 +59,7 @@ const DESTINATIONS: Destination[] = [
   { href: "/home", label: "Home", icon: HomeIcon, exact: true },
   { href: "/practice", label: "Practice", icon: PenIcon },
   { href: "/assessment", label: "Assessment", icon: TargetIcon, railOnly: true },
+  { href: "/exams", label: "Exams", icon: PaperIcon, railOnly: true },
   { href: "/progress", label: "Progress", icon: ProgressIcon },
   { href: "/ai-tutor", label: "AI tutor", icon: SparkIcon, railOnly: true },
   { href: "/classroom", label: "Class", icon: ClassroomIcon },
