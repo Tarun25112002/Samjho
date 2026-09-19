@@ -1,7 +1,10 @@
 import {
   PRACTICE_MODE_LABELS,
+  type DailyStudyPlan,
+  type DailyStudyPlanItem,
   type PracticeSessionSummary,
   type ProgressOverview,
+  type RevisionQueue,
   type SubjectDetail,
   type SubjectProgressSummary,
   type SubjectSummary,
@@ -13,6 +16,7 @@ import type { ReactNode } from "react";
 
 import { ChevronRight, FlameIcon, PaperIcon, RedoIcon } from "@/components/icons";
 import { StartPractice } from "@/features/practice/start-practice";
+import { StudyPlanAction } from "@/features/study-plan/study-plan-action";
 import { WeeklyTrend } from "@/features/dashboard/weekly-trend";
 import { ButtonLink } from "@/components/ui/button";
 import { Eyebrow, PageShell, SectionHeading } from "@/components/ui/page";
@@ -35,6 +39,9 @@ import {
   practiceHref,
 } from "@/lib/practice-format";
 import { loadProgressOverview } from "@/lib/progress";
+import { loadRevisionQueue } from "@/lib/revision";
+import { loadDailyStudyPlan } from "@/lib/study-plan";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -66,8 +73,13 @@ export default async function HomePage() {
   const me = await requireOnboarded();
   if (me.user.role === "TEACHER") redirect("/teacher");
   const profile = me.profile;
+  // All time-aware dashboard facts come from one request-time snapshot. Apart
+  // from keeping the greeting and activity strip coherent around midnight, it
+  // prevents one server render from constructing adjacent UI with two calendar
+  // days when a request happens to straddle the boundary.
+  const now = new Date();
 
-  const [inProgress, history, classrooms, overview] = await Promise.all([
+  const [inProgress, history, classrooms, overview, revision, studyPlan] = await Promise.all([
     loadSessions({ status: "IN_PROGRESS", limit: 1 }),
     loadSessions({ limit: 50 }),
     // The same rule the subject cards below follow, for the same reason. The
@@ -80,13 +92,21 @@ export default async function HomePage() {
     // Progress is a helpful recommendation signal here, never a reason the
     // student's central workspace should fail to render.
     loadProgressOverview().catch(() => null),
+    // Same rule again. The revision count is the most actionable thing on this
+    // page when it is there, and it is a band — a student whose queue endpoint
+    // is down should still get their dashboard.
+    loadRevisionQueue().catch(() => null),
+    // The plan is a recommendation layer. If it is temporarily unavailable,
+    // the established quick-practice hero remains useful instead of turning a
+    // dashboard load into a failure.
+    loadDailyStudyPlan().catch(() => null),
   ]);
 
   const resume = inProgress.items[0];
-  const week = weekTotals(history.items);
-  const streak = streakDays(history.items);
-  const days = activityStrip(history.items);
-  const countdown = examCountdown(profile?.targetExam ?? null);
+  const week = weekTotals(history.items, now);
+  const streak = streakDays(history.items, now);
+  const days = activityStrip(history.items, now);
+  const countdown = examCountdown(profile?.targetExam ?? null, now);
   const subjects = await loadEnrolledSubjects(profile?.subjects ?? []);
   const progressBySubjectId = new Map(
     overview?.subjects.map((subject) => [subject.subject.id, subject]) ?? [],
@@ -126,7 +146,7 @@ export default async function HomePage() {
         <div className="min-w-0">
           <Eyebrow className="mb-2">{today?.label ?? "Your revision desk"}</Eyebrow>
           <h1 className="text-text text-display">
-            {firstName === undefined ? "Welcome back" : `${greeting()}, ${firstName}`}
+            {firstName === undefined ? "Welcome back" : `${greeting(now)}, ${firstName}`}
           </h1>
           {profile ? (
             <p className="text-text-soft text-ui mt-3">
@@ -171,7 +191,7 @@ export default async function HomePage() {
               total={resume.totals.totalQuestions}
             />
           ) : (
-            <StartCard />
+            <StartCard plan={studyPlan} />
           )}
         </div>
 
@@ -237,7 +257,7 @@ export default async function HomePage() {
         </div>
 
         <aside className="flex min-w-0 flex-col gap-5 2xl:col-span-4">
-          <QuickActions overview={overview} />
+          <QuickActions overview={overview} revision={revision} />
           <RecentPractice recent={recent} />
         </aside>
       </section>
@@ -330,7 +350,48 @@ function ResumeCard({
 }
 
 /** The same slot when there is nothing to resume. */
-function StartCard() {
+function StartCard({ plan }: { plan: DailyStudyPlan | null }) {
+  const first = plan?.items[0];
+
+  if (first) {
+    const copy = planCopy(first);
+
+    return (
+      <DeskHero
+        headingId="study-plan-heading"
+        eyebrow="Your next study step"
+        kicker={copy.kicker}
+        title={copy.title}
+        body={copy.body}
+        aside={
+          <DeskAside label={copy.asideLabel} value={copy.asideValue} caption={copy.asideCaption}>
+            <span className="text-on-desk-soft">{copy.asideFooter}</span>
+          </DeskAside>
+        }
+      >
+        <div className="mt-7 flex flex-wrap items-start gap-3">
+          <StudyPlanAction item={first} primary />
+          <DeskLink href="/practice/new">Build a focused set</DeskLink>
+        </div>
+
+        {plan.items.length > 1 ? (
+          <div className="border-desk-line mt-6 border-t pt-4">
+            <p className="text-on-desk-soft text-xs font-semibold uppercase tracking-[0.14em]">
+              Then, if you have time
+            </p>
+            <ul className="mt-3 flex flex-wrap items-center gap-3">
+              {plan.items.slice(1).map((item) => (
+                <li key={planItemKey(item)}>
+                  <StudyPlanAction item={item} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </DeskHero>
+    );
+  }
+
   return (
     <DeskHero
       headingId="start-heading"
@@ -352,6 +413,89 @@ function StartCard() {
       </div>
     </DeskHero>
   );
+}
+
+/** The copy stays honest about why an action surfaced, not merely what it does. */
+function planCopy(item: DailyStudyPlanItem): {
+  kicker: string;
+  title: string;
+  body: string;
+  asideLabel: string;
+  asideValue: string;
+  asideCaption: string;
+  asideFooter: string;
+} {
+  switch (item.kind) {
+    case "RESUME": {
+      const remaining = Math.max(item.totalQuestions - item.answered, 0);
+      return {
+        kicker: "Finish the work already in motion.",
+        title: PRACTICE_MODE_LABELS[item.mode],
+        body:
+          remaining === 0
+            ? "Your answers are ready for a final check."
+            : `${String(remaining)} ${remaining === 1 ? "question remains" : "questions remain"} in this set.`,
+        asideLabel: "Set status",
+        asideValue: String(item.totalQuestions),
+        asideCaption: "questions in this set",
+        asideFooter: `${String(item.answered)} answered`,
+      };
+    }
+    case "ASSIGNMENT":
+      return {
+        kicker: `From ${item.classroomName}`,
+        title: item.title,
+        body: `${item.subject.name} · ${String(item.questionCount)} questions${
+          item.dueAt ? ` · due ${formatAssignmentDue(item.dueAt)}` : ""
+        }.`,
+        asideLabel: "Assigned work",
+        asideValue: String(item.questionCount),
+        asideCaption: "questions to complete",
+        asideFooter:
+          item.timeLimitMinutes === null
+            ? "Work at your own pace"
+            : `${String(item.timeLimitMinutes)} minute clock once you start`,
+      };
+    case "REVIEW":
+      return {
+        kicker: "A short return now makes the next one easier.",
+        title: `${String(item.dueToday)} due for revision.`,
+        body:
+          item.dueTotal > item.dueToday
+            ? `${String(item.dueTotal)} questions are waiting in total. Clear this small share and the backlog comes down.`
+            : "Everything the schedule says is due today. A short review, then it is empty.",
+        asideLabel: "Today’s review",
+        asideValue: String(item.count),
+        asideCaption: item.count === 1 ? "question to start" : "questions to start",
+        asideFooter: "From mistakes you are rebuilding",
+      };
+    case "TOPIC_PRACTICE":
+      return {
+        kicker: "One focused set beats a scattered hour.",
+        title:
+          item.topicId === null
+            ? `Start with ${item.title}.`
+            : `Build confidence in ${item.title}.`,
+        body: item.reason,
+        asideLabel: "Focused set",
+        asideValue: String(item.questionCount),
+        asideCaption: item.questionCount === 1 ? "fresh question" : "focused questions",
+        asideFooter: item.subject.name,
+      };
+  }
+}
+
+function planItemKey(item: DailyStudyPlanItem): string {
+  switch (item.kind) {
+    case "RESUME":
+      return `resume-${item.sessionId}`;
+    case "ASSIGNMENT":
+      return `assignment-${item.assignmentId}`;
+    case "REVIEW":
+      return "review";
+    case "TOPIC_PRACTICE":
+      return `topic-${item.topicId ?? item.subject.id}`;
+  }
 }
 
 /**
@@ -507,6 +651,7 @@ function TeacherBrief({
 
 function formatAssignmentDue(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     hour: "numeric",
@@ -652,8 +797,15 @@ function TodayCard({
  * The hero owns the one obvious "start" action; these are the useful follow-up
  * routes that earn their space only when there is evidence behind them.
  */
-function QuickActions({ overview }: { overview: ProgressOverview | null }) {
+function QuickActions({
+  overview,
+  revision,
+}: {
+  overview: ProgressOverview | null;
+  revision: RevisionQueue | null;
+}) {
   const weakTopic = overview?.weakTopics.find((topic) => topic.attempted >= 2);
+  const due = revision?.dueToday ?? 0;
 
   return (
     <Card aria-labelledby="revision-queue-heading" className="min-w-0 overflow-hidden">
@@ -663,22 +815,55 @@ function QuickActions({ overview }: { overview: ProgressOverview | null }) {
         title="What to revisit next"
         action={
           <Link
-            href="/progress"
+            href="/revision"
             className="text-brand-700 inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
           >
-            Progress
+            Revision
           </Link>
         }
       />
 
       <ul className="mt-5 flex min-w-0 flex-col gap-2.5">
-        {overview !== null && overview.openMistakes > 0 ? (
+        {/*
+          First, and the only item on this card that carries a number the student
+          did not choose. Everything else here is a suggestion; this is a debt
+          the schedule says is owed today, and it is the one thing on the
+          dashboard with a right answer.
+        */}
+        {due > 0 ? (
           <li className="w-full min-w-0">
             <QueueItem
-              href="/practice"
+              href="/revision"
               icon={<RedoIcon className="size-5" />}
-              title={`Repair ${String(overview.openMistakes)} ${overview.openMistakes === 1 ? "mistake" : "mistakes"}`}
-              detail="Turn a previous answer into a confident one."
+              title={`${String(due)} due for review`}
+              detail={
+                revision !== null && revision.dueTotal > due
+                  ? `${String(revision.dueTotal)} waiting in total · scheduled from what you got wrong`
+                  : "Scheduled from the questions you got wrong."
+              }
+              action="Start"
+              tone="brand"
+            />
+          </li>
+        ) : null}
+
+        {/*
+          The open-mistake count is a different fact from the due count and both
+          are worth showing: "12 unrepaired" is the size of the problem, "5 due"
+          is today's share of it. Shown only when there is no due work, so the
+          card never offers two nearly-identical buttons.
+        */}
+        {due === 0 && overview !== null && overview.openMistakes > 0 ? (
+          <li className="w-full min-w-0">
+            <QueueItem
+              href="/revision"
+              icon={<RedoIcon className="size-5" />}
+              title={`${String(overview.openMistakes)} ${overview.openMistakes === 1 ? "mistake" : "mistakes"} still open`}
+              detail={
+                revision?.nextDueAt == null
+                  ? "Turn a previous answer into a confident one."
+                  : "Nothing due today — your next review is scheduled."
+              }
               action="Review"
               tone="brand"
             />
@@ -944,9 +1129,11 @@ function RecentPractice({ recent }: { recent: PracticeSessionSummary[] }) {
 }
 
 function formatPracticeDate(value: string): string {
-  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
+    day: "numeric",
+    month: "short",
+  }).format(new Date(value));
 }
 
 /**

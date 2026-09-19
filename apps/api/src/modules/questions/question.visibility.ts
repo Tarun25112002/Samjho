@@ -82,3 +82,42 @@ export const STUDENT_VISIBLE_TOP_LEVEL: Prisma.QuestionWhereInput = {
   ...STUDENT_VISIBLE_QUESTION,
   parentId: null,
 };
+
+/**
+ * A question already materialised into a session the caller owns.
+ *
+ * Everything `STUDENT_VISIBLE_QUESTION` requires *except* the shared-bank rule:
+ * still published, still licence-clear, still in an active chapter, but not
+ * required to be ownerless.
+ *
+ * ## Why dropping that one clause is safe here and nowhere else
+ *
+ * The other predicates answer "may this student be shown this question?" against
+ * a bank they are browsing. This one answers a narrower question — "is this
+ * question, which is already in a set built for this student, still fit to
+ * render?" — and the ids it filters have already been through the owner check
+ * once, at selection time, by a selector that had the classroom in hand. A
+ * student cannot get an id in here: the only source is
+ * `PracticeSession.questionIds`, and the session was fetched with `userId` in
+ * its `WHERE`.
+ *
+ * ## The bug this fixes
+ *
+ * An assignment with `sourcePool: TEACHER_BANK` selected the teacher's own
+ * questions, wrote their ids into the session, and then hydrated that session
+ * through a predicate demanding `ownerTeacherId: null` — so every question
+ * silently dropped out. The student got an assignment with no questions in it,
+ * and grading a submitted answer 404'd for the same reason. It was unreachable
+ * from any test, because nothing exercised a teacher-bank assignment end to end;
+ * `classroom.test.ts` now does.
+ *
+ * The three rules that *are* kept still matter, and each one earns its place: a
+ * teacher withdrawing a question mid-assignment should stop it being served, an
+ * editor flagging a licence problem should too, and a deactivated chapter should
+ * take its questions with it.
+ */
+export const SESSION_VISIBLE_QUESTION: Prisma.QuestionWhereInput = {
+  status: "PUBLISHED",
+  NOT: { source: { licenceStatus: "RESTRICTED" } },
+  chapter: { isActive: true, subject: { isActive: true } },
+};

@@ -1,8 +1,11 @@
+import type { AssignmentItemAnalysis } from "@samjho/contracts";
 import type { Metadata } from "next";
 
 import { PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
 import { Card, Chip } from "@/components/ui/surface";
-import { loadAssignmentReport } from "@/lib/classrooms";
+import { ItemCard } from "@/features/teacher/class-diagnostics";
+import { loadAssignmentItemAnalysis, loadAssignmentReport } from "@/lib/classrooms";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 import { requireTeacher } from "@/lib/me";
 import { formatDuration, formatMarksValue } from "@/lib/practice-format";
 
@@ -12,7 +15,15 @@ export const dynamic = "force-dynamic";
 export default async function AssignmentReportPage(props: { params: Promise<{ id: string }> }) {
   await requireTeacher();
   const { id } = await props.params;
-  const report = await loadAssignmentReport(id);
+
+  const [report, analysis] = await Promise.all([
+    loadAssignmentReport(id),
+    // The register is the page; the analysis is a section of it. A diagnostics
+    // query that fails — most plausibly on an assignment nobody has sat, where
+    // there is nothing to fold — should cost the teacher that section rather
+    // than the page they came for.
+    loadAssignmentItemAnalysis(id).catch(() => null),
+  ]);
   const completed = report.students.filter(
     (student) => student.progress === "COMPLETED" || student.progress === "LATE",
   ).length;
@@ -98,6 +109,14 @@ export default async function AssignmentReportPage(props: { params: Promise<{ id
           </Card>
         )}
       </section>
+
+      {/*
+        Below the register rather than above it, because a teacher opening this
+        page during a lesson usually wants "has 10B finished" — but the reason
+        they come back to it afterwards is this section, which is the one that
+        changes what they teach.
+      */}
+      <ItemAnalysisSection analysis={analysis} />
     </PageShell>
   );
 }
@@ -133,9 +152,61 @@ function ProgressPill({
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+/**
+ * Per-question analysis of this assignment, hardest first.
+ *
+ * ## The caveat is on the page, not left to be inferred
+ *
+ * Item analysis compares directly only when every student sat the same
+ * questions — which is true of a hand-built test and false of a drawn one, where
+ * the selector gives each student their own set. On a drawn assignment the
+ * denominators come out as 3, 1, 2, and a teacher reading "1 of 1 got it wrong"
+ * as a class-wide signal would be badly misled.
+ *
+ * Rather than hide the section or silently weaken it, it says so. The fix is
+ * also stated, because it is one choice on the form next time.
+ */
+function ItemAnalysisSection({ analysis }: { analysis: AssignmentItemAnalysis | null }) {
+  if (analysis === null || analysis.items.length === 0) return null;
+
+  return (
+    <section aria-labelledby="item-analysis" className="flex flex-col gap-4">
+      <SectionHeading
+        id="item-analysis"
+        eyebrow="Item analysis"
+        title="What they got wrong"
+        lede="Hardest first. For objective questions the bars show which option the class actually chose — a distractor most of them picked is one misconception to correct, not thirty separate errors."
+        action={
+          <p className="text-text-faint text-sm font-medium tabular-nums">
+            {analysis.studentsAttempted} of {analysis.studentsInClass} attempted
+          </p>
+        }
+      />
+
+      {!analysis.sameQuestionsForEveryone ? (
+        <Card>
+          <p className="text-text-soft text-sm leading-relaxed">
+            Students were given different questions in this assignment, so the per-question numbers
+            below cover whoever happened to be shown each one. To compare the class question by
+            question, set a test by picking the questions yourself — every student then sits the
+            same paper.
+          </p>
+        </Card>
+      ) : null}
+
+      <div className="flex flex-col gap-4">
+        {analysis.items.map((item) => (
+          <ItemCard key={item.questionId} item={item} />
+        ))}
+      </div>
+    </section>
+  );
 }

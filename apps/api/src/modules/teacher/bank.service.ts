@@ -6,9 +6,12 @@ import type {
   TeacherQuestionStatusInput,
 } from "@samjho/contracts";
 
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
+
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { STUDENT_VISIBLE_TOP_LEVEL } from "../questions/question.visibility.js";
 
 /**
  * The teacher's own question bank: browsing, filtering, and publishing.
@@ -44,9 +47,19 @@ export const bankService = {
 
     const rows = await prisma.question.findMany({
       where,
-      // Newest first: the bank a teacher is looking at is almost always the
-      // paper they imported ten minutes ago.
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      // Two banks, two natural orders.
+      //
+      // A teacher's own bank is almost always the paper they imported ten
+      // minutes ago, so newest first puts what they came for at the top.
+      //
+      // The shared bank is a syllabus, and nobody browsing a syllabus wants it
+      // in upload order. Chapter order, then ascending marks inside a chapter,
+      // is how a question paper is laid out and how a teacher builds one: the
+      // one-markers first, then the three, then the case study.
+      orderBy:
+        query.scope === "SHARED"
+          ? [{ chapter: { orderIndex: "asc" } }, { marks: "asc" }, { id: "asc" }]
+          : [{ createdAt: "desc" }, { id: "desc" }],
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
       select: {
@@ -189,13 +202,22 @@ function toWhere(
   query: TeacherBankQuery,
   omit?: "difficulty" | "type" | "chapterId" | "marks",
 ): Prisma.QuestionWhereInput {
-  const where: Prisma.QuestionWhereInput = {
-    ownerTeacherId: teacherId,
-    // Sub-parts are never listed on their own: a case study is one question
-    // worth four marks, not three questions, and every count a teacher sees
-    // has to agree with what a paper would call it.
-    parentId: null,
-  };
+  const where: Prisma.QuestionWhereInput =
+    query.scope === "SHARED"
+      ? // Byte for byte the predicate a student's practice uses, spread from the
+        // shared constant rather than restated. A teacher browsing Samjho's bank
+        // sees exactly what is already published to every student in the country
+        // — no drafts, nothing licence-restricted, nothing from a withdrawn
+        // chapter — and the guarantee holds because there is one definition of
+        // it, not two that agree today.
+        { ...STUDENT_VISIBLE_TOP_LEVEL }
+      : {
+          ownerTeacherId: teacherId,
+          // Sub-parts are never listed on their own: a case study is one question
+          // worth four marks, not three questions, and every count a teacher sees
+          // has to agree with what a paper would call it.
+          parentId: null,
+        };
 
   if (query.subjectId) where.subjectId = query.subjectId;
   if (query.chapterId && omit !== "chapterId") where.chapterId = query.chapterId;
@@ -204,7 +226,20 @@ function toWhere(
   if (query.difficulty?.length && omit !== "difficulty") {
     where.difficulty = { in: query.difficulty };
   }
-  if (query.status?.length) where.status = { in: query.status };
+  // Only meaningful on the teacher's own bank. In `SHARED` the status is already
+  // pinned to PUBLISHED by the visibility predicate, and letting a status filter
+  // through would let a teacher ask for drafts and get a confusing empty list
+  // rather than the refusal they deserve.
+  if (query.status?.length && query.scope !== "SHARED") where.status = { in: query.status };
+
+  // Provenance, assembled into one clause for the same reason the practice
+  // selector does it: `source` is a single relation filter, so a second
+  // assignment would silently replace the first and "board questions from 2019"
+  // would quietly become "anything from 2019".
+  const source: Prisma.QuestionSourceWhereInput = {};
+  if (query.previousYearOnly) source.sourceType = { in: [...PREVIOUS_YEAR_SOURCE_TYPES] };
+  if (query.years?.length) source.year = { in: query.years };
+  if (Object.keys(source).length > 0) where.source = source;
 
   if (query.topicId) {
     // A case study's topics live on its sub-parts as often as on the container,

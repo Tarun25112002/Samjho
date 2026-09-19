@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { PaperIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, Chip } from "@/components/ui/surface";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 
 import { UploadForm } from "./upload-form";
 
@@ -117,7 +118,10 @@ function UploadRow({ upload }: { upload: PaperUploadSummary }) {
           <div className="min-w-0">
             <p className="text-text font-semibold">{upload.title}</p>
             <p className="text-text-faint mt-1 text-sm">
-              {upload.subject.name} · {new Date(upload.createdAt).toLocaleDateString("en-IN")}
+              {upload.subject.name} ·{" "}
+              {new Date(upload.createdAt).toLocaleDateString("en-IN", {
+                timeZone: INDIA_TIME_ZONE,
+              })}
               {upload.fileName ? ` · ${upload.fileName}` : ""}
             </p>
             <StatusLine upload={upload} />

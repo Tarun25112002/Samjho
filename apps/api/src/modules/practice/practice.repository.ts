@@ -6,7 +6,7 @@ import {
   studentQuestionSelect,
   type StudentQuestionRow,
 } from "../questions/question.repository.js";
-import { STUDENT_VISIBLE_QUESTION } from "../questions/question.visibility.js";
+import { SESSION_VISIBLE_QUESTION } from "../questions/question.visibility.js";
 
 /**
  * Practice data access.
@@ -120,6 +120,8 @@ const sessionSelect = {
   marksEarned: true,
   marksPossible: true,
   timeSpentMs: true,
+  timeLimitSeconds: true,
+  deadlineAt: true,
 } satisfies Prisma.PracticeSessionSelect;
 
 export type SessionRow = Prisma.PracticeSessionGetPayload<{ select: typeof sessionSelect }>;
@@ -146,6 +148,9 @@ export interface CreateSessionData {
   questionIds: string[];
   /** Summed over graded units, so a case study contributes its sub-parts. */
   marksPossible: number;
+  /** Both or neither — the service computes the deadline from the limit. */
+  timeLimitSeconds?: number;
+  deadlineAt?: Date;
 }
 
 export const practiceRepository = {
@@ -160,6 +165,8 @@ export const practiceRepository = {
         questionIds: data.questionIds,
         totalQuestions: data.questionIds.length,
         marksPossible: data.marksPossible,
+        ...(data.timeLimitSeconds === undefined ? {} : { timeLimitSeconds: data.timeLimitSeconds }),
+        ...(data.deadlineAt === undefined ? {} : { deadlineAt: data.deadlineAt }),
       },
       select: sessionSelect,
     });
@@ -194,20 +201,36 @@ export const practiceRepository = {
     return { rows: hasMore ? rows.slice(0, query.limit) : rows, hasMore };
   },
 
-  /** The student view of a session's questions — no answer keys, by construction. */
+  /**
+   * The student view of a session's questions — no answer keys, by construction.
+   *
+   * `SESSION_VISIBLE_QUESTION` rather than `STUDENT_VISIBLE_QUESTION`: these ids
+   * are already in a set built for this student, and one of the pools a set can
+   * be built from is a teacher's own bank, whose questions are by definition not
+   * ownerless. Filtering them out here is what used to empty a teacher-bank
+   * assignment on the way to the screen. See the predicate's own comment.
+   */
   async findSessionQuestions(questionIds: string[]): Promise<StudentQuestionRow[]> {
     if (questionIds.length === 0) return [];
 
     return prisma.question.findMany({
-      where: { id: { in: questionIds }, ...STUDENT_VISIBLE_QUESTION },
+      where: { id: { in: questionIds }, ...SESSION_VISIBLE_QUESTION },
       select: studentQuestionSelect,
     });
   },
 
-  /** One question with everything needed to grade it. Visibility still applies. */
+  /**
+   * One question with everything needed to grade it.
+   *
+   * Same predicate as `findSessionQuestions`, and it has to be: a question the
+   * runner was allowed to render must be a question the grader is allowed to
+   * mark, or a student answers something that then cannot be scored. The caller
+   * has already checked the id is in the session (`practice.service.ts`), which
+   * is the ownership half of the check.
+   */
   findForGrading(questionId: string): Promise<GradingRow | null> {
     return prisma.question.findFirst({
-      where: { id: questionId, ...STUDENT_VISIBLE_QUESTION },
+      where: { id: questionId, ...SESSION_VISIBLE_QUESTION },
       select: gradingSelect,
     });
   },

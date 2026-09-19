@@ -12,6 +12,7 @@ import type {
 
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { teacherVisibleQuestion } from "../questions/question.visibility.js";
 import { practiceService } from "../practice/practice.service.js";
 
 /**
@@ -52,6 +53,7 @@ export const classroomService = {
             title: true,
             questionCount: true,
             sourcePool: true,
+            timeLimitMinutes: true,
             dueAt: true,
             chapter: { select: { name: true } },
             submissions: { select: { session: { select: { status: true } } } },
@@ -73,6 +75,7 @@ export const classroomService = {
           chapterName: assignment.chapter?.name ?? null,
           questionCount: assignment.questionCount,
           sourcePool: assignment.sourcePool,
+          timeLimitMinutes: assignment.timeLimitMinutes,
           dueAt: iso(assignment.dueAt),
           startedCount: assignment.submissions.length,
           completedCount: assignment.submissions.filter(
@@ -102,6 +105,7 @@ export const classroomService = {
                 title: true,
                 instructions: true,
                 questionCount: true,
+                timeLimitMinutes: true,
                 dueAt: true,
                 chapter: { select: { name: true } },
                 submissions: {
@@ -143,6 +147,7 @@ export const classroomService = {
             title: assignment.title,
             instructions: assignment.instructions,
             questionCount: assignment.questionCount,
+            timeLimitMinutes: assignment.timeLimitMinutes,
             dueAt: iso(assignment.dueAt),
             chapterName: assignment.chapter?.name ?? null,
             progress: progressOf(submission?.session ?? null, assignment.dueAt),
@@ -232,6 +237,57 @@ export const classroomService = {
 
     const sourcePool = input.sourcePool ?? "SHARED";
 
+    /**
+     * A hand-built test: verify every question the teacher picked, now.
+     *
+     * The check is `subjectId` plus visibility plus `parentId: null`, and each
+     * clause closes a real hole rather than being defensive decoration:
+     *
+     *  - **Subject.** Without it a teacher could set a Maths paper for a Science
+     *    class — most likely by accident, having left a filter on, and the
+     *    students would discover it rather than the teacher.
+     *  - **Visibility.** The teacher browsed a list; between browsing and
+     *    submitting, an editor may have withdrawn something. Freezing an id that
+     *    is no longer servable produces a test with a hole in it at 9am on
+     *    Friday, and the failure would surface as a short set with no explanation.
+     *  - **Top-level.** Sub-part ids are guessable from a case study's payload,
+     *    and a set built from one would show "Calculate the current" with no
+     *    circuit above it.
+     *
+     * Either bank is allowed: a teacher may mix their own imported questions
+     * with Samjho's, which is exactly what building a paper looks like.
+     */
+    if (sourcePool === "CURATED") {
+      const picked = await prisma.question.findMany({
+        where: {
+          id: { in: input.questionIds },
+          subjectId: classroom.subjectId,
+          parentId: null,
+          status: "PUBLISHED",
+          NOT: { source: { licenceStatus: "RESTRICTED" } },
+          chapter: { isActive: true, subject: { isActive: true } },
+          // Samjho's bank, or this teacher's own. Not another teacher's.
+          OR: [{ ownerTeacherId: null }, { ownerTeacherId: teacherId }],
+        },
+        select: { id: true },
+      });
+
+      const found = new Set(picked.map((question) => question.id));
+      const missing = input.questionIds.filter((id) => !found.has(id));
+
+      if (missing.length > 0) {
+        throw new ValidationError("Request validation failed", [
+          {
+            path: "body.questionIds",
+            message:
+              missing.length === input.questionIds.length
+                ? "none of those questions are available for this class's subject"
+                : `${String(missing.length)} of those questions are no longer available — refresh the list and pick again`,
+          },
+        ]);
+      }
+    }
+
     if (sourcePool === "TEACHER_BANK") {
       // Checked here rather than discovered at start time, because the failure
       // would otherwise land on a student: they tap "start", the selector finds
@@ -240,9 +296,12 @@ export const classroomService = {
       // out now, while they are still on the form.
       const owned = await prisma.question.count({
         where: {
-          ownerTeacherId: teacherId,
+          // This must be the predicate used when the student starts the
+          // assignment, not a weaker approximation of it. Otherwise a
+          // restricted source or deactivated chapter can make an assignment
+          // look valid here and leave the student with nothing to start.
+          ...teacherVisibleQuestion(teacherId),
           subjectId: classroom.subjectId,
-          status: "PUBLISHED",
           parentId: null,
           ...(input.chapterId ? { chapterId: input.chapterId } : {}),
         },
@@ -265,8 +324,13 @@ export const classroomService = {
         title: input.title.trim(),
         instructions: input.instructions?.trim() || null,
         chapterId: input.chapterId ?? null,
-        questionCount: input.questionCount,
+        // For a curated test the count *is* the list length. Storing what the
+        // client sent would let the two disagree, and every count a student and
+        // a teacher see downstream reads this column.
+        questionCount: sourcePool === "CURATED" ? input.questionIds.length : input.questionCount,
         sourcePool,
+        questionIds: sourcePool === "CURATED" ? input.questionIds : [],
+        timeLimitMinutes: input.timeLimitMinutes ?? null,
         dueAt,
       },
       select: { id: true },
@@ -286,6 +350,8 @@ export const classroomService = {
         chapterId: true,
         questionCount: true,
         sourcePool: true,
+        questionIds: true,
+        timeLimitMinutes: true,
         classroom: { select: { subjectId: true, teacherId: true } },
       },
     });
@@ -300,23 +366,36 @@ export const classroomService = {
     // The exact question ids are chosen and frozen by the same service that
     // builds personal practice. An assignment cannot leak a key by carrying a
     // hand-made question payload through a teacher endpoint.
+    const curated = assignment.sourcePool === "CURATED";
+
     const session = await practiceService.create(
       studentId,
       {
-        mode: assignment.chapterId ? "CHAPTER" : "CUSTOM",
+        // `ASSIGNED` for a curated test, because the set was neither filtered nor
+        // drawn and calling it `CHAPTER` would put the wrong label on the
+        // student's history and rebuild the wrong thing behind "practise this
+        // again".
+        mode: curated ? "ASSIGNED" : assignment.chapterId ? "CHAPTER" : "CUSTOM",
         filters: {
           subjectId: assignment.classroom.subjectId,
           ...(assignment.chapterId ? { chapterId: assignment.chapterId } : {}),
           unseenOnly: false,
         },
         count: assignment.questionCount,
+        // Copied onto the session at start, so a teacher editing the limit later
+        // cannot shorten a paper somebody is halfway through.
+        ...(assignment.timeLimitMinutes === null
+          ? {}
+          : { timeLimitMinutes: assignment.timeLimitMinutes }),
       },
-      // The teacher id comes from the classroom, never from the request. A
-      // student cannot name a bank; they can only start an assignment, and the
-      // assignment already knows whose class it belongs to.
-      assignment.sourcePool === "TEACHER_BANK"
-        ? { ownerTeacherId: assignment.classroom.teacherId }
-        : {},
+      // Both options come from the assignment, never from the request. A student
+      // cannot name a bank or a question; they can only start an assignment, and
+      // the assignment already knows whose class it belongs to and what is in it.
+      curated
+        ? { questionIds: assignment.questionIds }
+        : assignment.sourcePool === "TEACHER_BANK"
+          ? { ownerTeacherId: assignment.classroom.teacherId }
+          : {},
     );
 
     try {
@@ -331,7 +410,14 @@ export const classroomService = {
         where: { assignmentId_studentId: { assignmentId: assignment.id, studentId } },
         select: { sessionId: true },
       });
-      if (raced) return practiceService.get(studentId, raced.sessionId);
+      if (raced) {
+        // The losing request created a session before the unique submission
+        // constraint chose the winner. It has never been returned to the
+        // student, so remove that otherwise unreachable session instead of
+        // leaving an orphan in their history and progress queries.
+        await prisma.practiceSession.delete({ where: { id: session.id } });
+        return practiceService.get(studentId, raced.sessionId);
+      }
       throw error;
     }
 

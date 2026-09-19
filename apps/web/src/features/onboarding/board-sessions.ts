@@ -16,6 +16,7 @@ import { EXAM_PHASE_LABELS, type ExamPhase } from "@samjho/contracts";
 
 /** June onwards, the current year's sittings are both behind us. */
 const FIRST_MONTH_AFTER_BOTH_SITTINGS = 5; // 0-indexed: June
+const INDIA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export interface BoardSessionOption {
   session: string;
@@ -25,8 +26,12 @@ export interface BoardSessionOption {
 }
 
 export function suggestBoardSessions(now: Date): BoardSessionOption[] {
-  const year = now.getFullYear();
-  const nextSession = now.getMonth() >= FIRST_MONTH_AFTER_BOTH_SITTINGS ? year + 1 : year;
+  // CBSE's calendar changes on an Indian day, not in whichever time zone hosts
+  // the server (or happens to be configured on a student's device). India has
+  // no daylight-saving change, so shifting then reading UTC is unambiguous.
+  const indiaNow = new Date(now.getTime() + INDIA_OFFSET_MS);
+  const year = indiaNow.getUTCFullYear();
+  const nextSession = indiaNow.getUTCMonth() >= FIRST_MONTH_AFTER_BOTH_SITTINGS ? year + 1 : year;
 
   return [
     {

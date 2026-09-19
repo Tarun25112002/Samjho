@@ -25,6 +25,22 @@ import { z } from "zod";
  *  - `PREVIOUS_YEAR` — a filter preset over provenance, promoted to a mode
  *                      because it is a first-class entry point on the hub
  *                      (docs/01 §2) rather than a checkbox someone must find.
+ *  - `REVIEW_DUE`    — the spaced-repetition queue: questions the schedule says
+ *                      are due *today*, oldest debt first.
+ *  - `ASSIGNED`      — a set a teacher hand-picked. Its questions come from the
+ *                      assignment rather than from the selector.
+ *
+ * ## Why `REVIEW_DUE` is not `MISTAKE_REVIEW` with a date filter
+ *
+ * They answer different questions and a student uses them at different moments.
+ * `MISTAKE_REVIEW` is "let me go at my mistakes" — an act of will, drawing from
+ * everything still unrepaired, as much of it as they ask for. `REVIEW_DUE` is
+ * "what does the schedule say I owe today" — a bounded, finishable list that
+ * gets *shorter* as the student works, and whose contents they did not choose.
+ *
+ * A finishable list is the entire behavioural premise of spaced repetition, and
+ * it is destroyed by making it a filter on a mode that can also return four
+ * hundred things. So they are two modes, and the second one has an end.
  */
 export const practiceModeSchema = z.enum([
   "QUICK",
@@ -33,6 +49,8 @@ export const practiceModeSchema = z.enum([
   "MISTAKE_REVIEW",
   "BOOKMARKS",
   "PREVIOUS_YEAR",
+  "REVIEW_DUE",
+  "ASSIGNED",
 ]);
 export type PracticeMode = z.infer<typeof practiceModeSchema>;
 
@@ -43,6 +61,8 @@ export const PRACTICE_MODE_LABELS = {
   MISTAKE_REVIEW: "Your mistakes",
   BOOKMARKS: "Saved questions",
   PREVIOUS_YEAR: "Previous-year questions",
+  REVIEW_DUE: "Today's revision",
+  ASSIGNED: "Set by your teacher",
 } as const satisfies Record<PracticeMode, string>;
 
 /**

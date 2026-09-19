@@ -1,6 +1,8 @@
 import type { MistakeReason } from "@samjho/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
+import { istDay } from "../../lib/study-day.js";
+import { scheduleAfterReview, scheduleFirstReview } from "../revision/revision.scheduler.js";
 
 /**
  * Keeping the progress rollups true, one attempt at a time.
@@ -48,6 +50,24 @@ export interface FinalisedAttempt {
   marksPossible: number;
   mistakeReason: MistakeReason | null;
   at: Date;
+  /**
+   * Whether this attempt came from the revision queue.
+   *
+   * Only affects the study-day ledger's `reviews` counter — the schedule itself
+   * moves on any finalised attempt, wherever it happened. That is deliberate: a
+   * student who meets a question they once missed inside an ordinary chapter set
+   * has genuinely reviewed it, and requiring them to have entered through the
+   * right door would schedule a second sighting of something they just proved
+   * they knew.
+   */
+  fromReview?: boolean;
+  /**
+   * The revision session's creation time, when this is an answer from the
+   * scheduled queue. It lets the mistake-record write reject a stale second
+   * review session that was opened before another tab already reviewed the same
+   * item.
+   */
+  reviewSessionStartedAt?: Date;
 }
 
 /**
@@ -83,37 +103,101 @@ export async function applyFinalisedAttempt(tx: Tx, attempt: FinalisedAttempt): 
   // Phase 4 editor's re-read outside its transaction.
   await updateTopicMastery(tx, attempt, mistakeDelta);
   await updateSubjectProgress(tx, attempt, mistakeDelta);
+  await recordStudyDay(tx, attempt, attempt.fromReview ?? false);
 }
 
 /**
- * Open, close or leave alone the student's mistake record for this question.
+ * Open, close or leave alone the student's mistake record for this question,
+ * and set when it should next come back.
  *
  * Returns the change to their unrepaired-mistake count: +1 when a mistake
  * opened or reopened, -1 when one was repaired, 0 otherwise. Returning the delta
  * rather than having the callers re-derive it is what keeps the three tables
  * agreeing — there is exactly one place that decides a mistake was repaired.
  *
- * `repairAttempts` counts how many times the student has come back to a question
- * they once got wrong, right or wrong. It is the input a spaced-repetition
- * schedule will want later; `nextReviewAt` is deliberately left null until
- * something actually schedules.
+ * ## Repair and schedule are decided together, here, or not at all
+ *
+ * The scheduling could have lived in the revision module, run after the fact
+ * over records the student had just answered. It lives here instead, because the
+ * decision "was this a successful review?" and the decision "is this mistake
+ * repaired?" are the same decision read two ways, and computing them in two
+ * places is how they come to disagree. One correct answer, one transaction, both
+ * facts written.
+ *
+ * ## Getting it right once no longer means finished
+ *
+ * `repairedAt` still moves on the first correct answer, because everything that
+ * reads it — the dashboard's unrepaired count, `MISTAKE_REVIEW` — means "has
+ * this student got it right since?" and that is still the right answer to that
+ * question.
+ *
+ * What changed is that a repaired record keeps a `nextReviewAt`. It has left the
+ * mistake *list* and not the review *queue*, and it leaves the queue only on
+ * graduation. That is the entire behavioural difference this feature makes: a
+ * question answered correctly ninety seconds after its solution was on screen is
+ * not learned, and the old model had no way to say so.
+ *
+ * `repairAttempts` continues to count every return to the question, right or
+ * wrong. `reviewCount` counts the same events for the scheduler; they are equal
+ * today and would diverge the moment anything reviewed a question that was never
+ * missed, so they are not folded into one column.
  */
 async function settleMistakeRecord(tx: Tx, attempt: FinalisedAttempt): Promise<number> {
   const existing = await tx.mistakeRecord.findUnique({
     where: { userId_questionId: { userId: attempt.userId, questionId: attempt.questionId } },
-    select: { id: true, repairedAt: true },
+    select: {
+      id: true,
+      repairedAt: true,
+      intervalDays: true,
+      easeFactor: true,
+      reviewStreak: true,
+      reviewCount: true,
+      graduatedAt: true,
+      lastReviewedAt: true,
+    },
   });
+
+  // A revision session is a snapshot of what was due when it was opened. If a
+  // second tab holds the same snapshot and the first tab has already reviewed
+  // this question, treating the stale answer as another scheduled review would
+  // let two taps earn two schedule steps (and potentially a graduation). The
+  // attempt itself remains real and is still reflected in mastery and the
+  // study-day ledger below; only the schedule is deliberately idempotent.
+  if (
+    attempt.reviewSessionStartedAt !== undefined &&
+    existing?.lastReviewedAt !== null &&
+    existing?.lastReviewedAt !== undefined &&
+    existing.lastReviewedAt.getTime() >= attempt.reviewSessionStartedAt.getTime()
+  ) {
+    return 0;
+  }
 
   if (attempt.isCorrect) {
     // Getting it right the first time is not a repair, and there is nothing to
     // record — the whole table is about mistakes.
     if (!existing) return 0;
 
+    const decision = scheduleAfterReview(existing, {
+      correct: true,
+      mistakeReason: null,
+      at: attempt.at,
+    });
+
     await tx.mistakeRecord.update({
       where: { id: existing.id },
       data: {
         repairAttempts: { increment: 1 },
         ...(existing.repairedAt === null ? { repairedAt: attempt.at } : {}),
+        intervalDays: decision.intervalDays,
+        easeFactor: decision.easeFactor,
+        reviewStreak: decision.reviewStreak,
+        reviewCount: decision.reviewCount,
+        lastReviewedAt: attempt.at,
+        nextReviewAt: decision.nextReviewAt,
+        // Only ever set, never cleared here. A record that graduates and is
+        // later missed again is reopened below, which is where the graduation is
+        // withdrawn — keeping both edges in one branch each.
+        ...(decision.graduated ? { graduatedAt: attempt.at } : {}),
       },
     });
 
@@ -121,6 +205,8 @@ async function settleMistakeRecord(tx: Tx, attempt: FinalisedAttempt): Promise<n
   }
 
   if (!existing) {
+    const decision = scheduleFirstReview(attempt.at);
+
     await tx.mistakeRecord.create({
       data: {
         userId: attempt.userId,
@@ -128,11 +214,20 @@ async function settleMistakeRecord(tx: Tx, attempt: FinalisedAttempt): Promise<n
         firstMissedAt: attempt.at,
         lastMissedAt: attempt.at,
         lastReason: attempt.mistakeReason,
+        intervalDays: decision.intervalDays,
+        easeFactor: decision.easeFactor,
+        nextReviewAt: decision.nextReviewAt,
       },
     });
 
     return 1;
   }
+
+  const decision = scheduleAfterReview(existing, {
+    correct: false,
+    mistakeReason: attempt.mistakeReason,
+    at: attempt.at,
+  });
 
   await tx.mistakeRecord.update({
     where: { id: existing.id },
@@ -143,11 +238,62 @@ async function settleMistakeRecord(tx: Tx, attempt: FinalisedAttempt): Promise<n
       // starting a second one: `firstMissedAt` is when this question first
       // became a problem, and that date does not change because it came back.
       repairedAt: null,
+      // A graduated question that comes back was not, in fact, finished with.
+      // Clearing this rather than keeping it as history is deliberate: every
+      // query that means "still being learned" would otherwise have to remember
+      // to check `graduatedAt IS NULL OR repairedAt IS NULL`, and one that
+      // forgot would silently drop the question from the queue for good.
+      graduatedAt: null,
+      intervalDays: decision.intervalDays,
+      easeFactor: decision.easeFactor,
+      reviewStreak: decision.reviewStreak,
+      reviewCount: decision.reviewCount,
+      lastReviewedAt: attempt.at,
+      nextReviewAt: decision.nextReviewAt,
       ...(attempt.mistakeReason ? { lastReason: attempt.mistakeReason } : {}),
     },
   });
 
   return existing.repairedAt === null ? 0 : 1;
+}
+
+/**
+ * Add one finalised attempt to the student's day.
+ *
+ * An upsert on `(userId, day)`, which is why the unique index exists rather than
+ * merely being tidy: two attempts finalising in the same millisecond from two
+ * tabs would otherwise race into two rows for one day, and a streak counted off
+ * duplicated days is not wrong in a way anyone would notice until it was months
+ * old.
+ *
+ * `isReview` is passed in rather than inferred from the attempt, because the
+ * attempt row does not know what kind of session it belongs to and the caller
+ * always does.
+ */
+async function recordStudyDay(tx: Tx, attempt: FinalisedAttempt, isReview: boolean): Promise<void> {
+  const day = istDay(attempt.at);
+  const correct = attempt.isCorrect ? 1 : 0;
+  const reviews = isReview ? 1 : 0;
+
+  await tx.studyDay.upsert({
+    where: { userId_day: { userId: attempt.userId, day } },
+    create: {
+      userId: attempt.userId,
+      day,
+      attempts: 1,
+      correct,
+      marksEarned: attempt.marksAwarded,
+      marksPossible: attempt.marksPossible,
+      reviews,
+    },
+    update: {
+      attempts: { increment: 1 },
+      correct: { increment: correct },
+      marksEarned: { increment: attempt.marksAwarded },
+      marksPossible: { increment: attempt.marksPossible },
+      reviews: { increment: reviews },
+    },
+  });
 }
 
 async function updateTopicMastery(

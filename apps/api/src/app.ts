@@ -23,6 +23,8 @@ import { healthRouter } from "./modules/health/health.routes.js";
 import { buildBookmarkRouter } from "./modules/practice/bookmark.routes.js";
 import { buildPracticeRouter } from "./modules/practice/practice.routes.js";
 import { buildProgressRouter } from "./modules/progress/progress.routes.js";
+import { buildRevisionRouter } from "./modules/revision/revision.routes.js";
+import { buildStudyPlanRouter } from "./modules/study-plan/study-plan.routes.js";
 import { buildQuestionRouter } from "./modules/questions/question.routes.js";
 import { buildQuestionAdminRouter } from "./modules/questions/question.admin.routes.js";
 import { buildAdminDashboardRouter } from "./modules/questions/dashboard.routes.js";
@@ -142,6 +144,8 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/practice-sessions", buildPracticeRouter(verifyToken));
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
   router.use("/progress", buildProgressRouter(verifyToken));
+  router.use("/revision", buildRevisionRouter(verifyToken));
+  router.use("/study-plan", buildStudyPlanRouter(verifyToken));
   router.use("/classrooms", buildClassroomRouter(verifyToken));
   router.use("/ai", buildAIRouter(verifyToken));
 

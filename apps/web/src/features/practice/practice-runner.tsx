@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/surface";
 import { formatMarksValue, markingFrom } from "@/lib/practice-format";
 import { TutorPanel } from "@/features/ai/tutor-panel";
 import { FeedbackPanel } from "./feedback-panel";
+import { SessionTimer } from "./session-timer";
 import { usePracticeRunner } from "./use-practice-runner";
 
 /**
@@ -46,7 +47,14 @@ import { usePracticeRunner } from "./use-practice-runner";
  * at the bottom of the screen anyway. It is sticky rather than fixed so it
  * cannot cover the last line of a long answer field.
  */
-export function PracticeRunner({ initial }: { initial: PracticeSession }) {
+export function PracticeRunner({
+  initial,
+  clockAnchor,
+}: {
+  initial: PracticeSession;
+  /** API-issued time paired with this active session; see `SessionTimer`. */
+  clockAnchor: string;
+}) {
   const runner = usePracticeRunner(initial);
   const { session, item, index, targets, answers, answered, busy } = runner;
 
@@ -83,6 +91,10 @@ export function PracticeRunner({ initial }: { initial: PracticeSession }) {
         onToggleBookmark={() => void runner.toggleBookmark()}
         onJump={(next) => {
           runner.goTo(next);
+        }}
+        clockAnchor={clockAnchor}
+        onExpire={() => {
+          void runner.finish();
         }}
       />
 
@@ -230,12 +242,16 @@ function RunnerHeader({
   bookmarked,
   onToggleBookmark,
   onJump,
+  clockAnchor,
+  onExpire,
 }: {
   session: PracticeSession;
   index: number;
   bookmarked: boolean;
   onToggleBookmark: () => void;
   onJump: (index: number) => void;
+  clockAnchor: string;
+  onExpire: () => void;
 }) {
   const total = session.items.length;
 
@@ -260,12 +276,29 @@ function RunnerHeader({
           </p>
         </div>
 
+        {/*
+          Before the Save button rather than after it, so the clock sits nearest
+          the question rather than nearest Exit. On a timed set it is the second
+          most important thing in this bar after "Question 3 of 10", and the two
+          read together.
+        */}
+        {session.deadlineAt !== null && session.status === "IN_PROGRESS" ? (
+          <div className="ml-auto">
+            <SessionTimer
+              deadlineAt={session.deadlineAt}
+              clockAnchor={clockAnchor}
+              onExpire={onExpire}
+            />
+          </div>
+        ) : null}
+
         <button
           type="button"
           aria-pressed={bookmarked}
           onClick={onToggleBookmark}
           className={[
-            "rounded-pill ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 border px-3 text-sm font-medium transition-colors",
+            "rounded-pill inline-flex min-h-11 shrink-0 items-center gap-2 border px-3 text-sm font-medium transition-colors",
+            session.deadlineAt === null || session.status !== "IN_PROGRESS" ? "ml-auto" : "",
             bookmarked
               ? "border-brand-300 bg-brand-50 text-brand-700"
               : "border-line-strong text-text-soft hover:border-brand-300",

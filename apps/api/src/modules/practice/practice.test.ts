@@ -355,6 +355,20 @@ describe("creating a session", () => {
       .expect(404);
   });
 
+  it("reserves internally materialised modes for revision and assignments", async () => {
+    await request(app)
+      .post("/api/v1/practice-sessions")
+      .set("authorization", student)
+      .send({ mode: "REVIEW_DUE", filters: { chapterId: CHAPTER }, count: 3 })
+      .expect(400);
+
+    await request(app)
+      .post("/api/v1/practice-sessions")
+      .set("authorization", student)
+      .send({ mode: "ASSIGNED", filters: { chapterId: CHAPTER }, count: 3 })
+      .expect(400);
+  });
+
   it("requires authentication", async () => {
     await request(app).post("/api/v1/practice-sessions").send({ mode: "QUICK" }).expect(401);
   });
@@ -685,15 +699,22 @@ describe("progress rollups", () => {
     expect(mastery).toBeNull();
   });
 
-  it("records why the student thinks they got it wrong", async () => {
-    const session = await startSession();
-    const outcome = await answer(session.id, Q_NUMERICAL, [
+  it("records a reason and reweights the latest review lapse", async () => {
+    const firstSession = await startSession();
+    await answer(firstSession.id, Q_NUMERICAL, [{ targetId: Q_NUMERICAL, answer: { text: "4" } }]);
+
+    // The second miss receives the neutral schedule while the grader returns.
+    // Choosing a reason immediately afterwards must replace that neutral
+    // schedule, rather than merely annotating it for a dashboard that does not
+    // use it to decide when the question comes back.
+    const reviewSession = await startSession();
+    const outcome = await answer(reviewSession.id, Q_NUMERICAL, [
       { targetId: Q_NUMERICAL, answer: { text: "4" } },
     ]);
     const attemptId = outcome.item.attempts[0]?.id ?? "";
 
     await request(app)
-      .post(`/api/v1/practice-sessions/${session.id}/attempts/${attemptId}/mistake-reason`)
+      .post(`/api/v1/practice-sessions/${reviewSession.id}/attempts/${attemptId}/mistake-reason`)
       .set("authorization", student)
       .send({ reason: "CALCULATION_ERROR" })
       .expect(200);
@@ -702,6 +723,8 @@ describe("progress rollups", () => {
       where: { userId_questionId: { userId: studentId, questionId: Q_NUMERICAL } },
     });
     expect(record?.lastReason).toBe("CALCULATION_ERROR");
+    expect(record?.intervalDays).toBe(3);
+    expect(record?.easeFactor).toBeCloseTo(2.45);
   });
 });
 

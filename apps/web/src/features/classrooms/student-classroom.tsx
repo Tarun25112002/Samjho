@@ -3,7 +3,6 @@
 import {
   joinClassroomResponseSchema,
   joinClassroomSchema,
-  startAssignmentResponseSchema,
   type StudentAssignment,
   type StudentClassroom,
 } from "@samjho/contracts";
@@ -14,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { codeInputClass } from "@/components/ui/form";
 import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
 import { Card, Chip, flushBandClass } from "@/components/ui/surface";
+import { StartAssignment } from "@/features/classrooms/start-assignment";
 import { sendJson } from "@/lib/client-api";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 import { formatDuration, formatMarksValue } from "@/lib/practice-format";
 
 export function StudentClassroom({ classrooms }: { classrooms: StudentClassroom[] }) {
@@ -215,61 +216,7 @@ function AssignmentCard({ assignment }: { assignment: StudentAssignment }) {
         </p>
       ) : null}
 
-      <StartAssignment assignment={assignment} />
-    </div>
-  );
-}
-
-function StartAssignment({ assignment }: { assignment: StudentAssignment }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function start(): Promise<void> {
-    setBusy(true);
-    setMessage(null);
-    const result = await sendJson(
-      "POST",
-      `/api/v1/classrooms/assignments/${encodeURIComponent(assignment.id)}/start`,
-      {},
-      startAssignmentResponseSchema,
-    );
-
-    if (!result.ok) {
-      setBusy(false);
-      setMessage(result.failure.message);
-      return;
-    }
-
-    router.push(
-      result.data.status === "COMPLETED"
-        ? `/practice/sessions/${result.data.id}/result`
-        : `/practice/sessions/${result.data.id}`,
-    );
-  }
-
-  const label =
-    assignment.progress === "NOT_STARTED"
-      ? "Start assigned practice"
-      : assignment.progress === "IN_PROGRESS"
-        ? "Resume practice"
-        : "Review your work";
-
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button
-        variant={assignment.progress === "NOT_STARTED" ? "primary" : "secondary"}
-        size="sm"
-        disabled={busy}
-        onClick={() => void start()}
-      >
-        {busy ? "Opening…" : label}
-      </Button>
-      {message ? (
-        <p role="alert" className="text-marker-700 text-sm">
-          {message}
-        </p>
-      ) : null}
+      <StartAssignment assignmentId={assignment.id} progress={assignment.progress} />
     </div>
   );
 }
@@ -293,6 +240,7 @@ function ProgressPill({ progress }: { progress: StudentAssignment["progress"] })
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     hour: "numeric",

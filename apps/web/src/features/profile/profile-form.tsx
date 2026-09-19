@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ChoiceCard, FieldError, inputClass, Label, selectClass } from "@/components/ui/form";
 import { cardClass } from "@/components/ui/surface";
-import { suggestBoardSessions } from "@/features/onboarding/board-sessions";
+import type { BoardSessionOption } from "@/features/onboarding/board-sessions";
 
 import { useProfileForm } from "./use-profile-form";
 
@@ -21,22 +21,24 @@ import { useProfileForm } from "./use-profile-form";
 export function ProfileForm({
   profile,
   subjectOptions,
+  boardSessionOptions,
 }: {
   profile: StudentProfile;
   subjectOptions: SubjectSummary[];
+  /** Computed by the Server Component so its calendar cannot diverge on hydration. */
+  boardSessionOptions: BoardSessionOption[];
 }) {
   const form = useProfileForm(profile);
-  const sessions = useMemo(() => suggestBoardSessions(new Date()), []);
 
   // The student's current target may be older than anything `suggestBoardSessions`
   // offers — they onboarded a year ago. Merging it in stops the radio group from
   // silently showing nothing selected.
   const sessionOptions = useMemo(() => {
     const current = form.draft.session;
-    const known = sessions.some(
+    const known = boardSessionOptions.some(
       (option) => option.session === current && option.phase === form.draft.phase,
     );
-    if (known || current.length === 0) return sessions;
+    if (known || current.length === 0) return boardSessionOptions;
 
     return [
       {
@@ -45,9 +47,9 @@ export function ProfileForm({
         label: `${form.draft.phase === "PHASE_1" ? "February" : "May"} ${current}`,
         hint: "Your current target.",
       },
-      ...sessions,
+      ...boardSessionOptions,
     ];
-  }, [sessions, form.draft.session, form.draft.phase]);
+  }, [boardSessionOptions, form.draft.session, form.draft.phase]);
 
   return (
     <form

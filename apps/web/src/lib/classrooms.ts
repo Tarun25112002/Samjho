@@ -1,8 +1,12 @@
 import {
+  assignmentItemAnalysisSchema,
   assignmentReportSchema,
+  classroomDiagnosticsSchema,
   studentClassroomListSchema,
   teacherClassroomListSchema,
+  type AssignmentItemAnalysis,
   type AssignmentReport,
+  type ClassroomDiagnostics,
   type StudentClassroom,
   type TeacherClassroom,
 } from "@samjho/contracts";
@@ -31,4 +35,30 @@ export async function loadAssignmentReport(assignmentId: string): Promise<Assign
     { cache: "no-store" },
   );
   return data;
+}
+
+/**
+ * Class diagnostics and per-item analysis.
+ *
+ * `cache: "no-store"` like everything else in this file, and here for a reason
+ * worth naming: these pages are read *during* a lesson, minutes after a class
+ * finished a test. A cached answer to "what did they get wrong?" is an answer
+ * about a different lesson.
+ */
+export async function loadClassroomDiagnostics(classroomId: string): Promise<ClassroomDiagnostics> {
+  return apiFetchAuthed(
+    `/api/v1/classrooms/${encodeURIComponent(classroomId)}/diagnostics`,
+    classroomDiagnosticsSchema,
+    { cache: "no-store" },
+  );
+}
+
+export async function loadAssignmentItemAnalysis(
+  assignmentId: string,
+): Promise<AssignmentItemAnalysis> {
+  return apiFetchAuthed(
+    `/api/v1/classrooms/assignments/${encodeURIComponent(assignmentId)}/item-analysis`,
+    assignmentItemAnalysisSchema,
+    { cache: "no-store" },
+  );
 }

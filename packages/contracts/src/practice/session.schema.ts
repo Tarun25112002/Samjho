@@ -133,10 +133,36 @@ export const practiceFiltersQuerySchema = z.object({
 export const PRACTICE_COUNT_DEFAULT = 10;
 export const PRACTICE_COUNT_MAX = 50;
 
+/**
+ * Timed-set bounds, in minutes.
+ *
+ * Five is the floor because below it the countdown is the only thing a student
+ * can attend to. One hundred and eighty is the ceiling because that is the
+ * length of the actual board paper — a practice set claiming to be longer than
+ * the exam it rehearses is not rehearsing anything.
+ */
+export const PRACTICE_TIME_LIMIT_MIN_MINUTES = 5;
+export const PRACTICE_TIME_LIMIT_MAX_MINUTES = 180;
+
+export const practiceTimeLimitSchema = z
+  .int()
+  .min(PRACTICE_TIME_LIMIT_MIN_MINUTES)
+  .max(PRACTICE_TIME_LIMIT_MAX_MINUTES);
+
 export const createPracticeSessionSchema = z.object({
   mode: practiceModeSchema,
   filters: practiceFiltersSchema.default({ unseenOnly: false }),
   count: z.int().min(1).max(PRACTICE_COUNT_MAX).default(PRACTICE_COUNT_DEFAULT),
+  /**
+   * Sit this set against a clock. Omitted means untimed, which stays the
+   * default: practice is not assessment, and a countdown on every set would
+   * turn revision into a thing students avoid opening.
+   *
+   * What the server does with it is compute a deadline once, at creation. The
+   * client counts down to that deadline rather than from this number — see
+   * `practiceSessionSchema.deadlineAt`.
+   */
+  timeLimitMinutes: practiceTimeLimitSchema.optional(),
 });
 
 export type CreatePracticeSessionInput = z.infer<typeof createPracticeSessionSchema>;
@@ -283,6 +309,37 @@ export const practiceSessionSchema = z.object({
   currentIndex: z.int().nonnegative(),
   startedAt: z.iso.datetime(),
   completedAt: z.iso.datetime().nullable(),
+  /**
+   * The practice API's current clock when it shaped this session. The
+   * browser pairs it with `deadlineAt` and monotonic elapsed time; a phone's
+   * editable wall clock must never decide when a timed set ends.
+   */
+  serverNow: z.iso.datetime(),
+
+  /**
+   * The clock, when there is one. Both null on an untimed set.
+   *
+   * `deadlineAt` is an absolute instant computed by the server at creation. The
+   * runner pairs it with an API-issued time anchor and uses monotonic browser
+   * elapsed time, rather than adding `timeLimitSeconds` to `startedAt` or trusting
+   * the device wall clock. A device whose clock is twenty minutes fast therefore
+   * cannot make a student set end twenty minutes early.
+   *
+   * The server still refuses late submissions regardless of what the display
+   * showed. That is the same division of labour as the exam engine (docs/04 §3),
+   * one notch less defended because a practice set is not a board exam.
+   */
+  timeLimitSeconds: z.int().positive().nullable(),
+  deadlineAt: z.iso.datetime().nullable(),
+  /**
+   * Whether the clock ran out on this set rather than the student finishing it.
+   *
+   * Worth its own field: "you scored 6/20" reads as a verdict on the student,
+   * and "you scored 6/20 — time ran out with 9 unanswered" reads as a verdict on
+   * their pacing, which is the thing a timed set is actually teaching.
+   */
+  expired: z.boolean(),
+
   totals: practiceTotalsSchema,
   items: z.array(practiceItemSchema),
 });
@@ -294,6 +351,7 @@ export const practiceSessionSummarySchema = practiceSessionSchema.omit({
   items: true,
   filters: true,
   currentIndex: true,
+  serverNow: true,
 });
 
 export type PracticeSessionSummary = z.infer<typeof practiceSessionSummarySchema>;

@@ -10,13 +10,16 @@ import type { ActivityDay } from "@/lib/dashboard";
  * This stays deliberately small and dependency-free, but it is not a decorative
  * SVG: hovering or focusing a day updates the real data summary above it, the
  * two lines use distinct stroke and marker systems, and mobile receives a
- * taller chart rather than a compressed desktop graphic.
+ * taller chart rather than a compressed desktop graphic. The summary is the
+ * chart's tooltip rather than an SVG `<title>`, so the one visible, live
+ * summary is the sole rendering path for the focused day's result.
  */
 export function WeeklyTrend({ days }: { days: ActivityDay[] }) {
   const todayIndex = days.findIndex((day) => day.isToday);
   const [activeIndex, setActiveIndex] = useState(todayIndex >= 0 ? todayIndex : days.length - 1);
   const activeDay = days[activeIndex] ?? days.at(-1);
   const chartId = useId().replace(/:/g, "");
+  const summaryId = `${chartId}-summary`;
 
   if (activeDay === undefined) return null;
 
@@ -28,15 +31,16 @@ export function WeeklyTrend({ days }: { days: ActivityDay[] }) {
       className="min-w-0"
       aria-label="Questions attempted and correct answers over the last seven days"
     >
-      <div className="flex flex-wrap items-end justify-between gap-x-5 gap-y-1.5">
+      <div
+        id={summaryId}
+        aria-live="polite"
+        className="flex flex-wrap items-end justify-between gap-x-5 gap-y-1.5"
+      >
         <div>
           <p className="text-text text-sm font-semibold">{activeDay.label}</p>
           <p className="text-text-faint mt-0.5 text-xs">Hover or focus a day to inspect it</p>
         </div>
-        <div
-          aria-live="polite"
-          className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm tabular-nums"
-        >
+        <div className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm tabular-nums">
           <span className="text-text font-semibold">{String(activeDay.answered)} attempted</span>
           <span className="text-tick-700 font-semibold">{String(activeDay.correct)} correct</span>
           {accuracy !== null ? <span className="text-text-soft">{String(accuracy)}%</span> : null}
@@ -48,6 +52,7 @@ export function WeeklyTrend({ days }: { days: ActivityDay[] }) {
           days={days}
           activeIndex={activeIndex}
           id={`${chartId}-mobile`}
+          summaryId={summaryId}
           width={390}
           height={220}
           onActiveIndexChange={setActiveIndex}
@@ -58,6 +63,7 @@ export function WeeklyTrend({ days }: { days: ActivityDay[] }) {
           days={days}
           activeIndex={activeIndex}
           id={`${chartId}-desktop`}
+          summaryId={summaryId}
           width={760}
           height={160}
           onActiveIndexChange={setActiveIndex}
@@ -79,6 +85,7 @@ function TrendGraphic({
   days,
   activeIndex,
   id,
+  summaryId,
   width,
   height,
   onActiveIndexChange,
@@ -86,6 +93,7 @@ function TrendGraphic({
   days: ActivityDay[];
   activeIndex: number;
   id: string;
+  summaryId: string;
   width: number;
   height: number;
   onActiveIndexChange: (index: number) => void;
@@ -189,12 +197,11 @@ function TrendGraphic({
           <g
             key={day.key}
             tabIndex={0}
+            aria-label="Show this day's activity"
+            aria-describedby={summaryId}
             onFocus={() => onActiveIndexChange(index)}
             onMouseEnter={() => onActiveIndexChange(index)}
           >
-            <title>
-              {day.label}: {String(day.answered)} attempted, {String(day.correct)} correct
-            </title>
             <rect
               x={x(index) - step / 2}
               y={plot.top}

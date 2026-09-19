@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/page";
 import { Card } from "@/components/ui/surface";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 
 /**
  * The teacher overview.
@@ -224,6 +225,7 @@ function FirstRun() {
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     hour: "numeric",
