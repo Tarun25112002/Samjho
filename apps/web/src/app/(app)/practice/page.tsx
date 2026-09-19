@@ -1,4 +1,4 @@
-import { PRACTICE_MODE_LABELS } from "@samjho/contracts";
+import { PRACTICE_MODE_LABELS } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ComponentType } from "react";

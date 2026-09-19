@@ -2,7 +2,7 @@ import {
   importQuestionsInputSchema,
   type DraftedQuestions,
   type DraftQuestionsInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { NotFoundError, ValidationError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";

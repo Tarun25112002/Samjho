@@ -149,8 +149,8 @@ const envSchema = z.object({
     .default(5 * 60_000),
 
   /** Sent to OpenRouter as attribution headers. Cosmetic; helps their dashboard. */
-  AI_SITE_URL: z.string().default("https://samjho.app"),
-  AI_SITE_NAME: z.string().default("Samjho"),
+  AI_SITE_URL: z.string().default("https://medhavi.app"),
+  AI_SITE_NAME: z.string().default("Medhavi"),
 
   // "silent" is a real Pino level, used to keep test output readable.
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
@@ -189,7 +189,7 @@ function loadConfig() {
     databaseUrl: env.DATABASE_URL,
     corsOrigins,
     logLevel: env.LOG_LEVEL,
-    service: "samjho-api",
+    service: "medhavi-api",
     version: process.env["npm_package_version"] ?? "0.1.0",
 
     ai: {

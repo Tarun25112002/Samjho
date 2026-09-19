@@ -1,4 +1,4 @@
-import { meResponseSchema, successResponseSchema } from "@samjho/contracts";
+import { meResponseSchema, successResponseSchema } from "@medhavi/contracts";
 import express from "express";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";

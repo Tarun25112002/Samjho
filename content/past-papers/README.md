@@ -11,7 +11,7 @@ The goal is every CBSE Class 10 paper from 2001 to 2026. That is a content
 project of several thousand questions, and the only way to do it honestly is one
 real paper at a time.
 
-The database already knows the shape of the work: `pnpm --filter @samjho/api
+The database already knows the shape of the work: `pnpm --filter @medhavi/api
 db:seed` registers every sitting in the range as a `PastPaper` row with no
 questions behind it, so `/api/v1/admin/past-papers/coverage?subjectId=…` will
 show a 26-year grid at zero. Each file added here fills in part of that grid.
@@ -84,10 +84,10 @@ Three fields are worth dwelling on:
 
 ```bash
 # Dry run. Validates every row, resolves every slug, writes nothing.
-pnpm --filter @samjho/api ingest:paper content/past-papers/2024-maths-30-1-1.json
+pnpm --filter @medhavi/api ingest:paper content/past-papers/2024-maths-30-1-1.json
 
 # Write it, as drafts.
-pnpm --filter @samjho/api ingest:paper content/past-papers/2024-maths-30-1-1.json --write
+pnpm --filter @medhavi/api ingest:paper content/past-papers/2024-maths-30-1-1.json --write
 ```
 
 The dry run is not a formality either — it is where a mistyped chapter slug, a

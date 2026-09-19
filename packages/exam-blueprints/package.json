@@ -1,5 +1,5 @@
 {
-  "name": "@samjho/exam-blueprints",
+  "name": "@medhavi/exam-blueprints",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -24,11 +24,11 @@
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@samjho/contracts": "workspace:*",
+    "@medhavi/contracts": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@samjho/config": "workspace:*",
+    "@medhavi/config": "workspace:*",
     "@types/node": "^26.2.0",
     "eslint": "^10.8.1",
     "rimraf": "^6.1.3",

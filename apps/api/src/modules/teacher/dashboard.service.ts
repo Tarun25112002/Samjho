@@ -1,4 +1,4 @@
-import type { TeacherDashboard } from "@samjho/contracts";
+import type { TeacherDashboard } from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 import { bankService } from "./bank.service.js";

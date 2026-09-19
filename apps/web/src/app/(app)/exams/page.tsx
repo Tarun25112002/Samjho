@@ -1,4 +1,4 @@
-import type { ExamAttemptSummary, ExamPaperStructure } from "@samjho/contracts";
+import type { ExamAttemptSummary, ExamPaperStructure } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 

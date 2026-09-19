@@ -5,7 +5,7 @@ import {
   teacherQuestionStatusSchema,
   updateExtractedQuestionSchema,
   uploadPaperInputSchema,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import express, { Router } from "express";
 import { z } from "zod";
 

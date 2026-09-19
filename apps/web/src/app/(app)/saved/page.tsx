@@ -1,6 +1,6 @@
-import { bookmarkWithQuestionSchema, paginatedSchema } from "@samjho/contracts";
-import type { BookmarkWithQuestion } from "@samjho/contracts";
-import { QuestionRenderer } from "@samjho/ui";
+import { bookmarkWithQuestionSchema, paginatedSchema } from "@medhavi/contracts";
+import type { BookmarkWithQuestion } from "@medhavi/contracts";
+import { QuestionRenderer } from "@medhavi/ui";
 import type { Metadata } from "next";
 
 import { BookmarkIcon } from "@/components/icons";

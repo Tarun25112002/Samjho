@@ -5,7 +5,7 @@ import {
   type CreatePracticeSessionInput,
   type PracticeFilters,
   type PracticeMode,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,7 +22,7 @@ import { sendJson } from "@/lib/client-api";
  * one place that knows how a session starts.
  *
  * The failure worth designing for is not a server error — it is an empty bank.
- * Samjho's questions are being written from zero (docs/07 R1), so "nothing
+ * Medhavi's questions are being written from zero (docs/07 R1), so "nothing
  * matches those filters yet" is the *normal* outcome for months, and it gets a
  * plain sentence next to the button rather than a red error box.
  */

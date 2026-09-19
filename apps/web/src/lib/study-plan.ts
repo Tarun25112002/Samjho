@@ -3,7 +3,7 @@ import {
   weeklyStudyPlanSchema,
   type DailyStudyPlan,
   type WeeklyStudyPlan,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

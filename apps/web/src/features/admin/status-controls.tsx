@@ -5,7 +5,7 @@ import {
   QUESTION_STATUS_TRANSITIONS,
   type AdminQuestion,
   type QuestionStatus,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

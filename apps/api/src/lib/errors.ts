@@ -1,4 +1,4 @@
-import { ERROR_CODES, type ErrorCode } from "@samjho/contracts";
+import { ERROR_CODES, type ErrorCode } from "@medhavi/contracts";
 
 /**
  * Typed application errors.

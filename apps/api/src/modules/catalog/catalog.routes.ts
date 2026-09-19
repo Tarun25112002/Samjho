@@ -1,4 +1,4 @@
-import { listSubjectsQuerySchema, type SubjectListResponse } from "@samjho/contracts";
+import { listSubjectsQuerySchema, type SubjectListResponse } from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

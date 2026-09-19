@@ -5,7 +5,7 @@ import {
   setMistakeReasonSchema,
   submitAttemptSchema,
   updateSessionSchema,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

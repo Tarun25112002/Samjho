@@ -4,7 +4,7 @@ import {
   practiceResultSchema,
   practiceSessionSchema,
   successResponseSchema,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

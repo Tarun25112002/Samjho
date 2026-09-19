@@ -1,6 +1,6 @@
 "use client";
 
-import { CURRENT_TERMS_VERSION, type SubjectSummary } from "@samjho/contracts";
+import { CURRENT_TERMS_VERSION, type SubjectSummary } from "@medhavi/contracts";
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -213,8 +213,8 @@ function SubjectsStep({
     return (
       <Card pad="roomy">
         <p className="text-text-soft text-sm leading-relaxed">
-          No subjects are available for Class {wizard.draft.classLevel} yet. Samjho currently covers
-          Class 10 Mathematics and Science. Go back to choose Class 10.
+          No subjects are available for Class {wizard.draft.classLevel} yet. Medhavi currently
+          covers Class 10 Mathematics and Science. Go back to choose Class 10.
         </p>
       </Card>
     );
@@ -331,7 +331,7 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
             className="accent-brand-500 mt-0.5 size-4"
           />
           <span className="text-text leading-relaxed">
-            A parent or guardian knows about this account and permits me to use Samjho.
+            A parent or guardian knows about this account and permits me to use Medhavi.
           </span>
         </label>
         <FieldError errors={wizard.errors} name="consent.parentalConsentAcknowledged" />
@@ -360,8 +360,8 @@ function GuardianStep({ wizard }: { wizard: Wizard }) {
         product should not imply otherwise to the person making it.
       */}
       <Hint>
-        Samjho is in a closed pilot. We record your declaration that a guardian permits you to use
-        this account; we do not yet ask your guardian to confirm it directly. Samjho contains no
+        Medhavi is in a closed pilot. We record your declaration that a guardian permits you to use
+        this account; we do not yet ask your guardian to confirm it directly. Medhavi contains no
         advertising or behavioural-tracking scripts.
       </Hint>
     </fieldset>

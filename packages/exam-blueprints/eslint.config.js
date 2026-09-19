@@ -1,3 +1,3 @@
-import base from "@samjho/config/eslint/base";
+import base from "@medhavi/config/eslint/base";
 
 export default base;

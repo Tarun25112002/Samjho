@@ -8,8 +8,8 @@ import {
   type PracticeItem,
   type PracticeSession,
   type StudentAnswer,
-} from "@samjho/contracts";
-import { MathText, QuestionRenderer } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { MathText, QuestionRenderer } from "@medhavi/ui";
 import Link from "next/link";
 
 import { BookmarkIcon, ChevronLeft, ChevronRight, LightbulbIcon } from "@/components/icons";
@@ -148,7 +148,7 @@ export function PracticeRunner({
 
         {runner.exhausted ? (
           <p className="rounded-control border-line bg-raised text-text-soft border px-4 py-3 text-sm">
-            Samjho has run out of suitable questions for this sitting. Finish here — everything you
+            Medhavi has run out of suitable questions for this sitting. Finish here — everything you
             have answered still counts.
           </p>
         ) : null}

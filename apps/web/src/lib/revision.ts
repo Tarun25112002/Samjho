@@ -1,4 +1,4 @@
-import { revisionQueueSchema, type RevisionQueue } from "@samjho/contracts";
+import { revisionQueueSchema, type RevisionQueue } from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

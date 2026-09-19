@@ -14,7 +14,7 @@ import {
   type AdminSubject,
   type Paginated,
   type QuestionRevision,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 import { z } from "zod";
 

@@ -1,4 +1,4 @@
-import { boardSchema, classLevelSchema, questionTypeSchema } from "@samjho/contracts";
+import { boardSchema, classLevelSchema, questionTypeSchema } from "@medhavi/contracts";
 import { z } from "zod";
 
 /**

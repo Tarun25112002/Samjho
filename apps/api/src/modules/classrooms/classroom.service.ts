@@ -8,7 +8,7 @@ import type {
   JoinClassroomInput,
   StudentClassroom,
   TeacherClassroom,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
@@ -255,7 +255,7 @@ export const classroomService = {
      *    circuit above it.
      *
      * Either bank is allowed: a teacher may mix their own imported questions
-     * with Samjho's, which is exactly what building a paper looks like.
+     * with Medhavi's, which is exactly what building a paper looks like.
      */
     if (sourcePool === "CURATED") {
       const picked = await prisma.question.findMany({
@@ -266,7 +266,7 @@ export const classroomService = {
           status: "PUBLISHED",
           NOT: { source: { licenceStatus: "RESTRICTED" } },
           chapter: { isActive: true, subject: { isActive: true } },
-          // Samjho's bank, or this teacher's own. Not another teacher's.
+          // Medhavi's bank, or this teacher's own. Not another teacher's.
           OR: [{ ownerTeacherId: null }, { ownerTeacherId: teacherId }],
         },
         select: { id: true },

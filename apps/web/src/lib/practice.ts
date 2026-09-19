@@ -8,7 +8,7 @@ import {
   type PracticeResult,
   type PracticeSession,
   type PracticeSessionSummary,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

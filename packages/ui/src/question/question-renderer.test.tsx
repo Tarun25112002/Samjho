@@ -1,4 +1,4 @@
-import { questionTypeSchema, type QuestionType } from "@samjho/contracts";
+import { questionTypeSchema, type QuestionType } from "@medhavi/contracts";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -224,12 +224,12 @@ describe("read-only rendering", () => {
 describe("presentation", () => {
   it("renders maths through KaTeX in the body", () => {
     const { container } = render(<QuestionRenderer question={fixtures.MCQ} />);
-    expect(container.querySelector(".samjho-question__body .katex")).not.toBeNull();
+    expect(container.querySelector(".medhavi-question__body .katex")).not.toBeNull();
   });
 
   it("renders maths inside option text", () => {
     const { container } = render(<QuestionRenderer question={fixtures.MCQ} />);
-    expect(container.querySelector(".samjho-option .katex")).not.toBeNull();
+    expect(container.querySelector(".medhavi-option .katex")).not.toBeNull();
   });
 
   it("renders an asset with its alt text", () => {

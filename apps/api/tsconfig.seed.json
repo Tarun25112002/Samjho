@@ -8,7 +8,7 @@
   // src/ is included as well, because the ingest script imports the service it
   // wraps. Excluding it would leave those imports unresolved and the script
   // effectively unchecked, which is the opposite of the point.
-  "extends": "@samjho/config/tsconfig/node.json",
+  "extends": "@medhavi/config/tsconfig/node.json",
   "compilerOptions": {
     "noEmit": true,
     "composite": false,

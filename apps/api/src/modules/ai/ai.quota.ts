@@ -1,4 +1,4 @@
-import type { AIQuota } from "@samjho/contracts";
+import type { AIQuota } from "@medhavi/contracts";
 
 import type { AIProviderId } from "../../lib/config.js";
 import { config } from "../../lib/config.js";

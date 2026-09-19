@@ -1,4 +1,4 @@
-import { dailyStudyPlanSchema, successResponseSchema } from "@samjho/contracts";
+import { dailyStudyPlanSchema, successResponseSchema } from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

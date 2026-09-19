@@ -6,7 +6,7 @@ import {
   successResponseSchema,
   type AssessmentObjective,
   type PracticeSession,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

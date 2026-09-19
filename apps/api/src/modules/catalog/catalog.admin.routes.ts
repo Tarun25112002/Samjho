@@ -10,7 +10,7 @@ import {
   updateTopicInputSchema,
   type AdminChapterListResponse,
   type AdminSubjectListResponse,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

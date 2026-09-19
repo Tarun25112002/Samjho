@@ -65,7 +65,7 @@ Shared, versioned in the monorepo: **Zod schemas and TypeScript types** (`packag
 **Tooling: pnpm workspaces + Turborepo.** pnpm for strict, disk-efficient, phantom-dependency-free installs. Turborepo for task orchestration and caching — it is the lowest-ceremony option that does the two things that matter (`turbo run build` respecting the dependency graph, and not re-running unchanged work). Nx is more powerful and more to learn; plain pnpm workspaces would work but you re-run everything every time. Turborepo is the right point on that curve here.
 
 ```
-samjho/
+medhavi/
 ├── apps/
 │   ├── web/                       # Next.js 15 · App Router
 │   │   ├── src/app/
@@ -108,7 +108,7 @@ samjho/
 │
 ├── packages/
 │   ├── contracts/                 # ★ Zod schemas + inferred types + API route constants
-│   ├── ui/                        # shadcn/ui primitives + Samjho components (QuestionRenderer, MathText, …)
+│   ├── ui/                        # shadcn/ui primitives + Medhavi components (QuestionRenderer, MathText, …)
 │   ├── config/                    # eslint, tsconfig, tailwind presets
 │   └── exam-blueprints/           # versioned blueprint JSON + their Zod schema + validator
 │

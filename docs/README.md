@@ -1,4 +1,4 @@
-# Samjho — Design Documents
+# Medhavi — Design Documents
 
 CBSE Class 10 & 12 board-exam preparation platform.
 

@@ -1,4 +1,4 @@
-import { AI_CONTEXT_LABELS, type AIConversation } from "@samjho/contracts";
+import { AI_CONTEXT_LABELS, type AIConversation } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -53,7 +53,7 @@ export default async function AITutorPage() {
       <PageHeader
         eyebrow="AI tutor"
         title="Ask about anything you have been stuck on."
-        lede="The tutor works from Samjho's own marking schemes, so it explains the method your paper expects rather than a method that happens to work."
+        lede="The tutor works from Medhavi's own marking schemes, so it explains the method your paper expects rather than a method that happens to work."
       />
 
       {status.available ? null : (

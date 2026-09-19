@@ -7,7 +7,7 @@ import {
   type AIConversationDetail,
   type AIStatus,
   type Paginated,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

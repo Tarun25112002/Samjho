@@ -1,7 +1,7 @@
 "use client";
 
-import { answerTranscriptionSchema, type AnswerTranscription } from "@samjho/contracts";
-import { MathText } from "@samjho/ui";
+import { answerTranscriptionSchema, type AnswerTranscription } from "@medhavi/contracts";
+import { MathText } from "@medhavi/ui";
 import { useRef, useState } from "react";
 
 import { CameraIcon, Check, Cross } from "@/components/icons";

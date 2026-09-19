@@ -1,4 +1,4 @@
-import type { Role } from "@samjho/contracts";
+import type { Role } from "@medhavi/contracts";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 import { ClerkUserError } from "../lib/clerk-user.js";

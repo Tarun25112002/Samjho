@@ -6,7 +6,7 @@ import {
   type AIAction,
   type AIMessage,
   type AIQuota,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { sendJson, type ApiFailure } from "@/lib/client-api";

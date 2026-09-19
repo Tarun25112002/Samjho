@@ -1,4 +1,4 @@
-import { MISTAKE_REASON_LABELS, type WeeklyStudyPlan } from "@samjho/contracts";
+import { MISTAKE_REASON_LABELS, type WeeklyStudyPlan } from "@medhavi/contracts";
 
 import { istDay, toDayKey } from "../../lib/study-day.js";
 import { prisma } from "../../lib/prisma.js";

@@ -39,7 +39,7 @@ export default function NotFound() {
           No giant "404" behind the words any more, and not for want of trying
           to place it. This card is 36rem wide with every line centred in it, so
           a 176px numeral has no corner to live in — centred it sat under the
-          wordmark, and bled into the top right it still crossed the "Samjho".
+          wordmark, and bled into the top right it still crossed the "Medhavi".
           Two things in the same place is not a layer, it is a collision, and
           the eyebrow directly below already says "Page not found".
 
@@ -54,7 +54,7 @@ export default function NotFound() {
         <div className="relative flex flex-col items-center gap-6">
           <Link href="/">
             <Wordmark size="sm" tone="brand" />
-            <span className="sr-only">Samjho home</span>
+            <span className="sr-only">Medhavi home</span>
           </Link>
 
           <div>

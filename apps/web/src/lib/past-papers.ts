@@ -3,7 +3,7 @@ import {
   pastPaperYearOptionSchema,
   type PastPaperCoverage,
   type PastPaperYearOption,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 import { z } from "zod";
 

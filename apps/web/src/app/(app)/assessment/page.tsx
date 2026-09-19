@@ -3,7 +3,7 @@ import {
   ASSESSMENT_OBJECTIVE_BLURBS,
   SELECTION_REASON_LABELS,
   type DiagnosticStage,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -119,7 +119,7 @@ export default async function AssessmentPage() {
                   ? ASSESSMENT_OBJECTIVE_BLURBS.ADAPTIVE_PERSONALISED
                   : `Finish ${String(diagnostics.stages.length - done)} more ${
                       diagnostics.stages.length - done === 1 ? "diagnostic" : "diagnostics"
-                    } and Samjho will have enough to build a sitting around your weak areas rather than around a guess.`}
+                    } and Medhavi will have enough to build a sitting around your weak areas rather than around a guess.`}
               </p>
 
               {ready ? <Blend focusTopics={analysis.weak.slice(0, 3)} /> : null}

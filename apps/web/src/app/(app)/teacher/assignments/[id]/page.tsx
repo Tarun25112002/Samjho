@@ -1,4 +1,4 @@
-import type { AssignmentItemAnalysis } from "@samjho/contracts";
+import type { AssignmentItemAnalysis } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { PageHeader, PageShell, SectionHeading } from "@/components/ui/page";

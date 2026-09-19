@@ -8,7 +8,7 @@ import {
   type AdminQuestion,
   type QuestionType,
   type WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 

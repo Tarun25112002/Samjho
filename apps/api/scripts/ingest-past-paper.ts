@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { ingestPastPaperInputSchema, questionStatusSchema } from "@samjho/contracts";
+import { ingestPastPaperInputSchema, questionStatusSchema } from "@medhavi/contracts";
 import { z } from "zod";
 
 import { disconnectPrisma, prisma } from "../src/lib/prisma.js";
@@ -11,8 +11,8 @@ import { pastPaperIngestService } from "../src/modules/exams/past-paper.ingest.s
 /**
  * Load one previous-year paper from a file on disk.
  *
- *   pnpm --filter @samjho/api ingest:paper content/past-papers/2024-maths-30-1-1.json
- *   pnpm --filter @samjho/api ingest:paper <file> --write
+ *   pnpm --filter @medhavi/api ingest:paper content/past-papers/2024-maths-30-1-1.json
+ *   pnpm --filter @medhavi/api ingest:paper <file> --write
  *
  * ## Why a script and not just the HTTP endpoint
  *

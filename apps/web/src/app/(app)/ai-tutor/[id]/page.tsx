@@ -1,4 +1,4 @@
-import { AI_CONTEXT_LABELS } from "@samjho/contracts";
+import { AI_CONTEXT_LABELS } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

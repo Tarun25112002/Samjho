@@ -1,6 +1,6 @@
 "use client";
 
-import { startAssignmentResponseSchema, type AssignmentProgress } from "@samjho/contracts";
+import { startAssignmentResponseSchema, type AssignmentProgress } from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

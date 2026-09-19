@@ -8,7 +8,7 @@
  */
 process.env["NODE_ENV"] = "test";
 process.env["LOG_LEVEL"] = "silent";
-process.env["DATABASE_URL"] ??= "postgresql://samjho:samjho@localhost:5432/samjho_test";
+process.env["DATABASE_URL"] ??= "postgresql://medhavi:medhavi@localhost:5432/medhavi_test";
 
 /**
  * Clerk placeholders.
@@ -19,6 +19,6 @@ process.env["DATABASE_URL"] ??= "postgresql://samjho:samjho@localhost:5432/samjh
  * verification code runs without a network call. The issuer below is what those
  * fixtures sign against, so it has to match theirs.
  */
-process.env["CLERK_ISSUER_URL"] ??= "https://test.clerk.samjho.invalid";
+process.env["CLERK_ISSUER_URL"] ??= "https://test.clerk.medhavi.invalid";
 process.env["CLERK_SECRET_KEY"] ??= "sk_test_not_a_real_key";
 process.env["CLERK_WEBHOOK_SIGNING_SECRET"] ??= "whsec_c2FtamhvLXRlc3Qtc2lnbmluZy1rZXkh";

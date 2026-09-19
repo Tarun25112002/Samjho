@@ -1,6 +1,6 @@
 "use client";
 
-import type { MasteryPoint } from "@samjho/contracts";
+import type { MasteryPoint } from "@medhavi/contracts";
 import { useId, useState } from "react";
 
 /**

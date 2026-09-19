@@ -1,4 +1,4 @@
-import type { AnalysisInsight, AnalysisSubject, AnalysisTopic } from "@samjho/contracts";
+import type { AnalysisInsight, AnalysisSubject, AnalysisTopic } from "@medhavi/contracts";
 
 import { logger } from "../../lib/logger.js";
 import { aiIsConfigured, completeWithChain } from "../ai/provider/registry.js";

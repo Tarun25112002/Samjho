@@ -3,7 +3,7 @@ import {
   type ClassroomDiagnostics,
   type ClassTopic,
   type ItemAnalysis,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import Link from "next/link";
 
 import { SectionHeading } from "@/components/ui/page";

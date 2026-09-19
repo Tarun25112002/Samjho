@@ -1,4 +1,4 @@
-import { ALL_BLUEPRINTS } from "@samjho/exam-blueprints";
+import { ALL_BLUEPRINTS } from "@medhavi/exam-blueprints";
 
 import { paperService } from "../../src/modules/exams/paper.service.js";
 import type { PrismaClient } from "../../src/generated/prisma/client.js";

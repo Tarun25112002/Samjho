@@ -1,4 +1,4 @@
-import type { DependencyCheck, HealthResponse, ReadinessResponse } from "@samjho/contracts";
+import type { DependencyCheck, HealthResponse, ReadinessResponse } from "@medhavi/contracts";
 
 import { config } from "../../lib/config.js";
 import { logger } from "../../lib/logger.js";

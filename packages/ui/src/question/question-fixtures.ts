@@ -1,4 +1,4 @@
-import type { QuestionType, StudentQuestion, StudentSubPart } from "@samjho/contracts";
+import type { QuestionType, StudentQuestion, StudentSubPart } from "@medhavi/contracts";
 
 /**
  * Fixtures shaped like the real seed data.

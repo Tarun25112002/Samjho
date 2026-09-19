@@ -1,4 +1,4 @@
-import { subjectListResponseSchema } from "@samjho/contracts";
+import { subjectListResponseSchema } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { TeacherShell } from "@/features/teacher/teacher-shell";
@@ -23,7 +23,7 @@ export default async function TeacherUploadsPage() {
   return (
     <TeacherShell
       title="Your papers."
-      blurb="Upload a paper and Samjho writes out its questions — you check the ones it was unsure about."
+      blurb="Upload a paper and Medhavi writes out its questions — you check the ones it was unsure about."
     >
       <UploadList
         uploads={uploadList.uploads}

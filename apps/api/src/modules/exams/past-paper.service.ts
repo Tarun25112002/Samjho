@@ -7,7 +7,7 @@ import {
   type PastPaperYearCoverage,
   type PastPaperYearOption,
   type WritePastPaperInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";

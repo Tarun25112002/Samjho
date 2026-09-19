@@ -3,7 +3,7 @@ import {
   healthResponseSchema,
   readinessResponseSchema,
   successResponseSchema,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -34,7 +34,7 @@ describe("GET /health", () => {
     const parsed = successResponseSchema(healthResponseSchema).parse(response.body);
 
     expect(parsed.data.status).toBe("ok");
-    expect(parsed.data.service).toBe("samjho-api");
+    expect(parsed.data.service).toBe("medhavi-api");
   });
 
   it("does not touch the database", async () => {

@@ -4,7 +4,7 @@ import {
   practiceSessionSchema,
   type AssessmentObjective,
   type StartAssessmentInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

@@ -1,4 +1,4 @@
-import react from "@samjho/config/eslint/react";
+import react from "@medhavi/config/eslint/react";
 
 export default [
   ...react,

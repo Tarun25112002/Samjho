@@ -1,4 +1,4 @@
-import type { AIAction } from "@samjho/contracts";
+import type { AIAction } from "@medhavi/contracts";
 
 /**
  * The tutor's prompts.

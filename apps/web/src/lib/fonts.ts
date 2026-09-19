@@ -1,4 +1,4 @@
-import { Poppins, Source_Serif_4 } from "next/font/google";
+import { Caveat, Poppins, Source_Serif_4 } from "next/font/google";
 
 /**
  * The two families, downloaded at build time and served from our own origin.
@@ -20,7 +20,7 @@ import { Poppins, Source_Serif_4 } from "next/font/google";
  * — 400 for body, 500 for labels, 600 for headings and buttons, 700 for the two
  * or three display lines on a screen.
  *
- * The Devanagari subset is here for one word: `समझो` in the wordmark. Setting
+ * The Devanagari subset is here for one word: `मेधावी` in the wordmark. Setting
  * the product's own name in a fallback the OS picked is the kind of detail that
  * quietly tells an Indian reader the Hindi was an afterthought.
  */
@@ -49,5 +49,23 @@ export const sourceSerif = Source_Serif_4({
   display: "swap",
 });
 
-/** Applied to `<html>` so both custom properties are in scope everywhere. */
-export const fontVariables = `${poppins.variable} ${sourceSerif.variable}`;
+/**
+ * The student's own hand.
+ *
+ * Used for exactly one thing: the answer being marked on the landing page. That
+ * section is a script under an examiner's pen, and an answer set in Source Serif
+ * would be a typeset document rather than something a fifteen-year-old wrote at
+ * a desk — which quietly undoes the only argument the section is making.
+ *
+ * One weight, one surface, and it never reaches the product itself. Handwriting
+ * is not a reading face, so it is deliberately not offered to question text.
+ */
+export const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: "--font-caveat",
+  display: "swap",
+});
+
+/** Applied to `<html>` so the custom properties are in scope everywhere. */
+export const fontVariables = `${poppins.variable} ${sourceSerif.variable} ${caveat.variable}`;

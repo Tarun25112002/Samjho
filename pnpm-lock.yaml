@@ -26,10 +26,10 @@ importers:
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
-      '@samjho/contracts':
+      '@medhavi/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@samjho/exam-blueprints':
+      '@medhavi/exam-blueprints':
         specifier: workspace:*
         version: link:../../packages/exam-blueprints
       cors:
@@ -60,7 +60,7 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@samjho/config':
+      '@medhavi/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@types/cors':
@@ -111,10 +111,10 @@ importers:
       '@clerk/nextjs':
         specifier: ^7.7.1
         version: 7.7.1(next@16.3.0(@babel/core@7.29.7)(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@samjho/contracts':
+      '@medhavi/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@samjho/ui':
+      '@medhavi/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       gsap:
@@ -142,7 +142,7 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@samjho/config':
+      '@medhavi/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@tailwindcss/postcss':
@@ -212,7 +212,7 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@samjho/config':
+      '@medhavi/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -230,14 +230,14 @@ importers:
 
   packages/exam-blueprints:
     dependencies:
-      '@samjho/contracts':
+      '@medhavi/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@samjho/config':
+      '@medhavi/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -258,7 +258,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@samjho/contracts':
+      '@medhavi/contracts':
         specifier: workspace:*
         version: link:../contracts
       katex:
@@ -277,7 +277,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
-      '@samjho/config':
+      '@medhavi/config':
         specifier: workspace:*
         version: link:../config
       '@testing-library/jest-dom':

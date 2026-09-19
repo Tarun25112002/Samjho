@@ -1,4 +1,4 @@
-import type { WriteQuestionInput } from "@samjho/contracts";
+import type { WriteQuestionInput } from "@medhavi/contracts";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

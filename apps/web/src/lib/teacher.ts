@@ -7,7 +7,7 @@ import {
   type PaperUploadList,
   type TeacherBankResponse,
   type TeacherDashboard,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { apiFetchAuthed } from "./api-client";
 

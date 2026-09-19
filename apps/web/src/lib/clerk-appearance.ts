@@ -2,7 +2,7 @@ import type { ClerkProvider } from "@clerk/nextjs";
 import type { ComponentProps } from "react";
 
 /**
- * Samjho's theme for Clerk's hosted components.
+ * Medhavi's theme for Clerk's hosted components.
  *
  * The root layout has carried a note since Phase 2 saying that styling Clerk was
  * deferred until the design tokens stopped being placeholders. They have, so

@@ -1,6 +1,6 @@
 "use client";
 
-import { examAttemptSchema } from "@samjho/contracts";
+import { examAttemptSchema } from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 

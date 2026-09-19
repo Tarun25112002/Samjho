@@ -5,7 +5,7 @@ import {
   type AssessmentObjective,
   type Difficulty,
   type SelectionReason,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 export interface TopicMasteryState {
   topicId: string;

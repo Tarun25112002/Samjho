@@ -46,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="border-line bg-card fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r px-5 py-7 lg:flex">
         <Link href="/home" className="px-3">
           <Wordmark size="sm" />
-          <span className="sr-only">Samjho home</span>
+          <span className="sr-only">Medhavi home</span>
         </Link>
 
         <div className="mt-10 flex-1">
@@ -65,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="flex h-14 items-center gap-3 px-4">
           <Link href="/home">
             <Wordmark size="sm" />
-            <span className="sr-only">Samjho home</span>
+            <span className="sr-only">Medhavi home</span>
           </Link>
           <div className="ml-auto">
             <UserButton />

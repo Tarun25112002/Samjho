@@ -1,4 +1,4 @@
-import { startAssessmentSchema } from "@samjho/contracts";
+import { startAssessmentSchema } from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

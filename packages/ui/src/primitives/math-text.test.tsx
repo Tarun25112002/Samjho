@@ -93,7 +93,7 @@ describe("MathText — content", () => {
   it("wraps tables in a scroll container so a wide table cannot break the page", () => {
     const { container } = render(<MathText>{"| a | b |\n| --- | --- |\n| 1 | 2 |"}</MathText>);
 
-    expect(container.querySelector(".samjho-prose-table-wrap table")).not.toBeNull();
+    expect(container.querySelector(".medhavi-prose-table-wrap table")).not.toBeNull();
   });
 
   it("renders bold, which assertion-reason questions use for their labels", () => {
@@ -107,6 +107,6 @@ describe("MathText — content", () => {
     const { container } = render(<MathText inline>{"$2\\ \\Omega$"}</MathText>);
 
     expect(container.querySelector("p")).toBeNull();
-    expect(container.querySelector("span.samjho-prose")).not.toBeNull();
+    expect(container.querySelector("span.medhavi-prose")).not.toBeNull();
   });
 });

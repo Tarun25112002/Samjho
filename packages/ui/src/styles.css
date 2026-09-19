@@ -1,9 +1,9 @@
 /**
- * Structural styles for @samjho/ui.
+ * Structural styles for @medhavi/ui.
  *
  * Token-driven, and every colour goes through `var(--color-…, fallback)`. The
  * fallback is what lets the package render sensibly in a test, in a host that
- * has not defined Samjho's tokens, and in the two seconds before the app's
+ * has not defined Medhavi's tokens, and in the two seconds before the app's
  * stylesheet lands. The values it falls back to are the light theme's.
  *
  * ## What this file commits to
@@ -30,14 +30,14 @@
  * paper.
  */
 
-.samjho-question {
+.medhavi-question {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
   color: var(--color-text, #251f1a);
 }
 
-.samjho-question__header {
+.medhavi-question__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -46,7 +46,7 @@
   line-height: 1.2;
 }
 
-.samjho-question__number {
+.medhavi-question__number {
   font-weight: 700;
   font-size: 0.9375rem;
   color: var(--color-text, #251f1a);
@@ -58,7 +58,7 @@
  * to know it is being moved, and `margin-left: auto` is what makes the gap a
  * margin rather than a gutter.
  */
-.samjho-question__marks {
+.medhavi-question__marks {
   order: 9;
   margin-left: auto;
   padding-left: 0.75rem;
@@ -69,7 +69,7 @@
   color: var(--color-text-soft, #695e55);
 }
 
-.samjho-question__chip {
+.medhavi-question__chip {
   border-radius: 999px;
   padding: 0.1875rem 0.5rem;
   background: var(--color-raised, #f6f3ef);
@@ -78,44 +78,44 @@
   font-weight: 500;
 }
 
-.samjho-question__provenance {
+.medhavi-question__provenance {
   font-size: 0.75rem;
   color: var(--color-text-faint, #7c7268);
 }
 
-.samjho-question__warning {
+.medhavi-question__warning {
   color: var(--color-marker-600, #cc003a);
   font-size: 0.875rem;
 }
 
 /* ── Prose ───────────────────────────────────────────────────────────────── */
 
-.samjho-prose {
+.medhavi-prose {
   font-family: var(--font-serif, ui-serif, Georgia, "Times New Roman", serif);
   font-size: 1.0625rem;
   line-height: 1.7;
 }
 
-.samjho-prose p + p {
+.medhavi-prose p + p {
   margin-top: 0.75rem;
 }
 
-.samjho-prose table {
+.medhavi-prose table {
   border-collapse: collapse;
   width: max-content;
   min-width: 100%;
   font-size: 0.9375rem;
 }
 
-.samjho-prose th,
-.samjho-prose td {
+.medhavi-prose th,
+.medhavi-prose td {
   border: 1px solid var(--color-line, #e7e2dd);
   padding: 0.4375rem 0.6875rem;
   text-align: left;
   vertical-align: top;
 }
 
-.samjho-prose th {
+.medhavi-prose th {
   background: var(--color-raised, #f6f3ef);
   font-family: var(--font-sans, system-ui, sans-serif);
   font-size: 0.8125rem;
@@ -128,7 +128,7 @@
  * own box keeps the *page* from scrolling sideways — otherwise one wide question
  * breaks the layout of every other question on the screen.
  */
-.samjho-prose-table-wrap {
+.medhavi-prose-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin: 0.5rem 0;
@@ -145,7 +145,7 @@
  * build, which is how it survived unnoticed. `.katex-display` is KaTeX's own
  * class and is already global; there was never anything to escape.
  */
-.samjho-prose .katex-display {
+.medhavi-prose .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.25rem 0;
@@ -153,7 +153,7 @@
 
 /* ── Options ─────────────────────────────────────────────────────────────── */
 
-.samjho-options {
+.medhavi-options {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -165,15 +165,15 @@
 /* True/false is two short choices. Side by side they are two thumb-sized
    targets; stacked they are two full-width bars that look like a four-option
    question with half of it missing. */
-.samjho-options--boolean {
+.medhavi-options--boolean {
   flex-direction: row;
 }
 
-.samjho-options--boolean .samjho-option {
+.medhavi-options--boolean .medhavi-option {
   flex: 1;
 }
 
-.samjho-option {
+.medhavi-option {
   position: relative;
   display: flex;
   align-items: center;
@@ -195,24 +195,24 @@
 }
 
 @media (hover: hover) {
-  .samjho-option:hover {
+  .medhavi-option:hover {
     border-color: var(--color-brand-400, #ff9a2e);
     background: var(--color-raised, #f6f3ef);
   }
 }
 
-.samjho-options:disabled .samjho-option {
+.medhavi-options:disabled .medhavi-option {
   cursor: default;
 }
 
 @media (hover: hover) {
-  .samjho-options:disabled .samjho-option:hover {
+  .medhavi-options:disabled .medhavi-option:hover {
     border-color: var(--color-line-strong, #d2cbc3);
     background: var(--color-card, #ffffff);
   }
 }
 
-.samjho-option[data-selected] {
+.medhavi-option[data-selected] {
   border-color: var(--color-brand-600, #d55c00);
   background: color-mix(in oklab, var(--color-brand-600, #d55c00) 7%, transparent);
   /* A second ring rather than a thicker border: a border that changes width on
@@ -233,7 +233,7 @@
  * way to show focus, so those browsers get the native control back rather than
  * a keyboard trap with no visible position.
  */
-.samjho-option input[type="radio"] {
+.medhavi-option input[type="radio"] {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -241,13 +241,13 @@
   pointer-events: none;
 }
 
-.samjho-option:has(input:focus-visible) {
+.medhavi-option:has(input:focus-visible) {
   outline: 2px solid var(--color-brand-600, #d55c00);
   outline-offset: 2px;
 }
 
 @supports not selector(:has(*)) {
-  .samjho-option input[type="radio"] {
+  .medhavi-option input[type="radio"] {
     position: static;
     width: auto;
     height: auto;
@@ -257,7 +257,7 @@
   }
 }
 
-.samjho-option__label {
+.medhavi-option__label {
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -277,13 +277,13 @@
     border-color 120ms ease;
 }
 
-.samjho-option[data-selected] .samjho-option__label {
+.medhavi-option[data-selected] .medhavi-option__label {
   border-color: var(--color-brand-600, #d55c00);
   background: var(--color-brand-600, #d55c00);
   color: var(--color-on-brand, #ffffff);
 }
 
-.samjho-option__body {
+.medhavi-option__body {
   font-family: var(--font-serif, ui-serif, Georgia, serif);
   font-size: 1rem;
   line-height: 1.55;
@@ -291,13 +291,13 @@
 
 /* ── Free-text response ──────────────────────────────────────────────────── */
 
-.samjho-response {
+.medhavi-response {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.samjho-response__input {
+.medhavi-response__input {
   width: 100%;
   border: 1px solid var(--color-line-strong, #d2cbc3);
   border-radius: var(--radius-control, 0.75rem);
@@ -314,18 +314,18 @@
   transition: border-color 120ms ease;
 }
 
-.samjho-response__input:focus {
+.medhavi-response__input:focus {
   border-color: var(--color-brand-600, #d55c00);
 }
 
-.samjho-response__input:disabled {
+.medhavi-response__input:disabled {
   background: var(--color-raised, #f6f3ef);
   cursor: default;
 }
 
 /* Working, not a tweet. A long answer is several steps of algebra and the field
    should look like it expects them. */
-.samjho-response__input--extended {
+.medhavi-response__input--extended {
   resize: vertical;
   line-height: 1.7;
   font-family: var(--font-serif, ui-serif, Georgia, serif);
@@ -334,7 +334,7 @@
 
 /* ── Sub-parts ───────────────────────────────────────────────────────────── */
 
-.samjho-question__subparts {
+.medhavi-question__subparts {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -343,7 +343,7 @@
   gap: 1.5rem;
 }
 
-.samjho-subpart {
+.medhavi-subpart {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -355,7 +355,7 @@
   padding-left: 1rem;
 }
 
-.samjho-subpart__header {
+.medhavi-subpart__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -367,24 +367,24 @@
 
 /* ── Assets ──────────────────────────────────────────────────────────────── */
 
-.samjho-question__assets {
+.medhavi-question__assets {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.samjho-asset {
+.medhavi-asset {
   margin: 0;
 }
 
-.samjho-asset img {
+.medhavi-asset img {
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-control, 0.75rem);
   border: 1px solid var(--color-line, #e7e2dd);
 }
 
-.samjho-asset figcaption {
+.medhavi-asset figcaption {
   font-size: 0.8125rem;
   color: var(--color-text-faint, #7c7268);
   margin-top: 0.375rem;
@@ -392,7 +392,7 @@
 
 /* ── Data states ─────────────────────────────────────────────────────────── */
 
-.samjho-state {
+.medhavi-state {
   padding: 1.5rem;
   border: 1px solid var(--color-line, #e7e2dd);
   border-radius: var(--radius-panel, 1.375rem);
@@ -400,39 +400,39 @@
   font-size: 0.875rem;
 }
 
-.samjho-state--error {
+.medhavi-state--error {
   border-color: var(--color-marker-200, #ffb9bb);
   background: var(--color-marker-50, #ffefef);
 }
 
-.samjho-state__title {
+.medhavi-state__title {
   font-weight: 600;
   font-size: 1rem;
   color: var(--color-text, #251f1a);
 }
 
-.samjho-state--error .samjho-state__title {
+.medhavi-state--error .medhavi-state__title {
   color: var(--color-marker-700, #a5092f);
 }
 
-.samjho-state__meta {
+.medhavi-state__meta {
   margin-top: 0.375rem;
   font-size: 0.75rem;
   color: var(--color-text-faint, #7c7268);
 }
 
-.samjho-state__body {
+.medhavi-state__body {
   margin-top: 0.5rem;
   color: var(--color-text-soft, #695e55);
   line-height: 1.6;
   max-width: 46ch;
 }
 
-.samjho-state__actions {
+.medhavi-state__actions {
   margin-top: 1rem;
 }
 
-.samjho-state__retry {
+.medhavi-state__retry {
   /* 44px, the same minimum touch target the option rows use. */
   min-height: 2.75rem;
   padding: 0 1.125rem;
@@ -446,26 +446,26 @@
   transition: border-color 120ms ease;
 }
 
-.samjho-state__retry:hover {
+.medhavi-state__retry:hover {
   border-color: var(--color-brand-600, #d55c00);
 }
 
 /* ── Skeletons ───────────────────────────────────────────────────────────── */
 
-.samjho-skeleton {
+.medhavi-skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.samjho-skeleton__line {
+.medhavi-skeleton__line {
   display: block;
   height: 0.875rem;
   border-radius: 0.375rem;
   background: var(--color-raised, #f6f3ef);
 }
 
-.samjho-skeleton__line--short {
+.medhavi-skeleton__line--short {
   width: 60%;
 }
 
@@ -475,12 +475,12 @@
  * are real, and `prefers-reduced-motion` is how someone tells us they have one.
  */
 @media (prefers-reduced-motion: no-preference) {
-  .samjho-skeleton__line {
-    animation: samjho-skeleton-pulse 1.6s ease-in-out infinite;
+  .medhavi-skeleton__line {
+    animation: medhavi-skeleton-pulse 1.6s ease-in-out infinite;
   }
 }
 
-@keyframes samjho-skeleton-pulse {
+@keyframes medhavi-skeleton-pulse {
   50% {
     opacity: 0.55;
   }
@@ -491,7 +491,7 @@
  * accessibility tree entirely, which for a fieldset legend means a screen reader
  * user hears four unlabelled radio buttons.
  */
-.samjho-visually-hidden {
+.medhavi-visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -515,54 +515,54 @@
  * words the glyph sits beside.
  */
 
-.samjho-option[data-verdict] {
+.medhavi-option[data-verdict] {
   cursor: default;
 }
 
-.samjho-option[data-verdict="correct"],
-.samjho-option[data-selected][data-verdict="correct"] {
+.medhavi-option[data-verdict="correct"],
+.medhavi-option[data-selected][data-verdict="correct"] {
   border-color: var(--color-tick-500, #32a064);
   background: var(--color-tick-50, #e9f8ed);
   box-shadow: inset 0 0 0 1px var(--color-tick-500, #32a064);
 }
 
-.samjho-option[data-verdict="incorrect"],
-.samjho-option[data-selected][data-verdict="incorrect"] {
+.medhavi-option[data-verdict="incorrect"],
+.medhavi-option[data-selected][data-verdict="incorrect"] {
   border-color: var(--color-marker-500, #e6284b);
   background: var(--color-marker-50, #ffefef);
   box-shadow: inset 0 0 0 1px var(--color-marker-500, #e6284b);
 }
 
-.samjho-option[data-verdict="correct"] .samjho-option__label {
+.medhavi-option[data-verdict="correct"] .medhavi-option__label {
   border-color: var(--color-tick-600, #1b854f);
   background: var(--color-tick-600, #1b854f);
   color: #ffffff;
 }
 
-.samjho-option[data-verdict="incorrect"] .samjho-option__label {
+.medhavi-option[data-verdict="incorrect"] .medhavi-option__label {
   border-color: var(--color-marker-600, #cc003a);
   background: var(--color-marker-600, #cc003a);
   color: #ffffff;
 }
 
 /* The glyph sits out in the right margin, where the mark on a script does. */
-.samjho-option__verdict {
+.medhavi-option__verdict {
   margin-left: auto;
   flex-shrink: 0;
   width: 1.25rem;
   height: 1.25rem;
 }
 
-.samjho-option__verdict svg {
+.medhavi-option__verdict svg {
   width: 100%;
   height: 100%;
   display: block;
 }
 
-.samjho-option[data-verdict="correct"] .samjho-option__verdict {
+.medhavi-option[data-verdict="correct"] .medhavi-option__verdict {
   color: var(--color-tick-600, #1b854f);
 }
 
-.samjho-option[data-verdict="incorrect"] .samjho-option__verdict {
+.medhavi-option[data-verdict="incorrect"] .medhavi-option__verdict {
   color: var(--color-marker-600, #cc003a);
 }

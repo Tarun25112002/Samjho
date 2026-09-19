@@ -10,7 +10,7 @@ import {
   type TeacherProfile,
   type TeacherProfileUpdateInput,
   type UserStatus,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { fetchClerkUser, toUserSnapshot, type ClerkUserJson } from "../../lib/clerk-user.js";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../../lib/errors.js";

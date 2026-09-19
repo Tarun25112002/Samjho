@@ -1,4 +1,4 @@
-import { MISTAKE_REASON_LABELS, type MistakeReason } from "@samjho/contracts";
+import { MISTAKE_REASON_LABELS, type MistakeReason } from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 

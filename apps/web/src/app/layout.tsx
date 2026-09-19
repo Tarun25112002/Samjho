@@ -6,21 +6,21 @@ import { clerkLocalization } from "@/lib/clerk-localization";
 import { fontVariables } from "@/lib/fonts";
 
 // Imported here rather than from inside the components that need them.
-// `@samjho/ui` is compiled by `tsc`, which cannot emit a `.css` import — and a
+// `@medhavi/ui` is compiled by `tsc`, which cannot emit a `.css` import — and a
 // component that silently pulls in 25KB of KaTeX styling is a component that
 // fights the app's own bundling. The app decides what CSS it ships.
 import "katex/dist/katex.min.css";
-import "@samjho/ui/styles.css";
+import "@medhavi/ui/styles.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Samjho — CBSE Board Exam Preparation",
-    template: "%s · Samjho",
+    default: "Medhavi — CBSE Board Exam Preparation",
+    template: "%s · Medhavi",
   },
   description:
     "Practise CBSE Class 10 and 12 board questions, understand your mistakes, and rehearse the full 3-hour exam before you sit it.",
-  applicationName: "Samjho",
+  applicationName: "Medhavi",
 };
 
 export const viewport: Viewport = {

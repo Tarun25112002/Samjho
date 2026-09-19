@@ -1,4 +1,4 @@
-import type { BloomLevel, LearningMetric } from "@samjho/contracts";
+import type { BloomLevel, LearningMetric } from "@medhavi/contracts";
 
 export interface AttemptSample {
   isCorrect: boolean | null;

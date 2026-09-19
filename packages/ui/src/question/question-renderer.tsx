@@ -6,7 +6,7 @@ import {
   type StudentAnswer,
   type StudentQuestion,
   type StudentSubPart,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useId, type ReactNode } from "react";
 
 import { MathText } from "../primitives/math-text.js";
@@ -122,24 +122,24 @@ export function QuestionRenderer({
 
   return (
     <article
-      className={["samjho-question", className].filter(Boolean).join(" ")}
+      className={["medhavi-question", className].filter(Boolean).join(" ")}
       data-question-type={question.type}
       data-container={question.isContainer ? "true" : undefined}
     >
-      <header className="samjho-question__header">
-        {displayNumber ? <span className="samjho-question__number">{displayNumber}</span> : null}
+      <header className="medhavi-question__header">
+        {displayNumber ? <span className="medhavi-question__number">{displayNumber}</span> : null}
 
-        <span className="samjho-question__marks">{formatMarks(question.marks)}</span>
+        <span className="medhavi-question__marks">{formatMarks(question.marks)}</span>
 
         {hideMeta ? null : (
           <>
-            <span className="samjho-question__chip">{QUESTION_TYPE_LABELS[question.type]}</span>
-            <span className="samjho-question__chip">{DIFFICULTY_LABELS[question.difficulty]}</span>
+            <span className="medhavi-question__chip">{QUESTION_TYPE_LABELS[question.type]}</span>
+            <span className="medhavi-question__chip">{DIFFICULTY_LABELS[question.difficulty]}</span>
           </>
         )}
       </header>
 
-      <MathText className="samjho-question__body">{question.body}</MathText>
+      <MathText className="medhavi-question__body">{question.body}</MathText>
 
       <AssetList assets={question.assets} />
 
@@ -157,9 +157,9 @@ export function QuestionRenderer({
       )}
 
       {question.subParts.length > 0 ? (
-        <ol className="samjho-question__subparts">
+        <ol className="medhavi-question__subparts">
           {question.subParts.map((subPart) => (
-            <li key={subPart.id} className="samjho-question__subpart">
+            <li key={subPart.id} className="medhavi-question__subpart">
               <SubPartRenderer
                 subPart={subPart}
                 value={subPartValues?.[subPart.id] ?? EMPTY_RESPONSE}
@@ -197,12 +197,12 @@ function SubPartRenderer({
   onChange: ((questionId: string, value: QuestionResponse) => void) | undefined;
 }) {
   return (
-    <div className="samjho-subpart" data-question-type={subPart.type}>
-      <header className="samjho-subpart__header">
-        <span className="samjho-question__marks">{formatMarks(subPart.marks)}</span>
+    <div className="medhavi-subpart" data-question-type={subPart.type}>
+      <header className="medhavi-subpart__header">
+        <span className="medhavi-question__marks">{formatMarks(subPart.marks)}</span>
       </header>
 
-      <MathText className="samjho-question__body">{subPart.body}</MathText>
+      <MathText className="medhavi-question__body">{subPart.body}</MathText>
       <AssetList assets={subPart.assets} />
 
       <ResponseArea
@@ -303,15 +303,15 @@ function OptionList({
     // Authored wrong: a choice question with nothing to choose. Say so rather
     // than rendering an empty box a student would stare at.
     return (
-      <p className="samjho-question__warning" role="alert">
+      <p className="medhavi-question__warning" role="alert">
         This question is missing its options.
       </p>
     );
   }
 
   return (
-    <fieldset className="samjho-options" disabled={readOnly}>
-      <legend className="samjho-visually-hidden">Choose one answer</legend>
+    <fieldset className="medhavi-options" disabled={readOnly}>
+      <legend className="medhavi-visually-hidden">Choose one answer</legend>
 
       {question.options.map((option) => {
         const selected = value.optionIds.includes(option.id);
@@ -331,7 +331,7 @@ function OptionList({
         return (
           <label
             key={option.id}
-            className="samjho-option"
+            className="medhavi-option"
             data-selected={selected || undefined}
             data-verdict={verdict}
           >
@@ -344,12 +344,12 @@ function OptionList({
                 onSelect({ optionIds: [option.id], text: "" });
               }}
             />
-            <span className="samjho-option__label" aria-hidden="true">
+            <span className="medhavi-option__label" aria-hidden="true">
               {option.label}
             </span>
             {/* Inline so the option text does not become its own paragraph
                 block beside the radio button. */}
-            <MathText inline className="samjho-option__body">
+            <MathText inline className="medhavi-option__body">
               {option.body}
             </MathText>
 
@@ -358,10 +358,10 @@ function OptionList({
                 the row where being wrong about that matters most. */}
             {verdict ? (
               <>
-                <span className="samjho-visually-hidden">
+                <span className="medhavi-visually-hidden">
                   {verdict === "correct" ? " — correct answer" : " — your answer, not right"}
                 </span>
-                <span className="samjho-option__verdict" aria-hidden="true">
+                <span className="medhavi-option__verdict" aria-hidden="true">
                   {verdict === "correct" ? <TickGlyph /> : <CrossGlyph />}
                 </span>
               </>
@@ -392,13 +392,13 @@ function TrueFalse({
   const groupName = useId();
 
   return (
-    <fieldset className="samjho-options samjho-options--boolean" disabled={readOnly}>
-      <legend className="samjho-visually-hidden">Choose true or false</legend>
+    <fieldset className="medhavi-options medhavi-options--boolean" disabled={readOnly}>
+      <legend className="medhavi-visually-hidden">Choose true or false</legend>
 
       {(["TRUE", "FALSE"] as const).map((choice) => (
         <label
           key={choice}
-          className="samjho-option"
+          className="medhavi-option"
           data-selected={value.text === choice || undefined}
         >
           <input
@@ -410,7 +410,7 @@ function TrueFalse({
               onSelect({ optionIds: [], text: choice });
             }}
           />
-          <span className="samjho-option__body">{choice === "TRUE" ? "True" : "False"}</span>
+          <span className="medhavi-option__body">{choice === "TRUE" ? "True" : "False"}</span>
         </label>
       ))}
     </fieldset>
@@ -436,15 +436,15 @@ function TextResponse({
   const hint = shortAnswerHint(question.type, null);
 
   return (
-    <div className="samjho-response">
-      <label htmlFor={inputId} className="samjho-visually-hidden">
+    <div className="medhavi-response">
+      <label htmlFor={inputId} className="medhavi-visually-hidden">
         {extended ? "Your working and answer" : "Your answer"}
       </label>
 
       {extended ? (
         <textarea
           id={inputId}
-          className="samjho-response__input samjho-response__input--extended"
+          className="medhavi-response__input medhavi-response__input--extended"
           rows={6}
           disabled={readOnly}
           value={value.text}
@@ -457,7 +457,7 @@ function TextResponse({
         <input
           id={inputId}
           type="text"
-          className="samjho-response__input"
+          className="medhavi-response__input"
           disabled={readOnly}
           value={value.text}
           placeholder={hint}
@@ -478,9 +478,9 @@ function AssetList({ assets }: { assets: QuestionAsset[] }) {
   if (assets.length === 0) return null;
 
   return (
-    <div className="samjho-question__assets">
+    <div className="medhavi-question__assets">
       {assets.map((asset) => (
-        <figure key={asset.id} className="samjho-asset">
+        <figure key={asset.id} className="medhavi-asset">
           {/*
             A plain <img>, not next/image. This package must not depend on a
             framework — the exam runner is the obvious consumer today, but the
@@ -508,13 +508,13 @@ function Provenance({ provenance }: { provenance: NonNullable<StudentQuestion["p
 
   if (!label) return null;
 
-  return <p className="samjho-question__provenance">{label}</p>;
+  return <p className="medhavi-question__provenance">{label}</p>;
 }
 
 /**
  * The tick and the cross.
  *
- * Drawn here rather than imported, because `@samjho/ui` deliberately has no
+ * Drawn here rather than imported, because `@medhavi/ui` deliberately has no
  * icon set and two paths is not a reason to start one. They are the same two
  * shapes the app draws elsewhere, at the same stroke weight.
  */

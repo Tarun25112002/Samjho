@@ -8,7 +8,7 @@ import {
   type QuestionCounts,
   type SubjectDetail,
   type SubjectSummary,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { NotFoundError } from "../../lib/errors.js";
 import {

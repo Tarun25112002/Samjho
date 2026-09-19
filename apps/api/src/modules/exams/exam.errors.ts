@@ -1,4 +1,4 @@
-import { ERROR_CODES } from "@samjho/contracts";
+import { ERROR_CODES } from "@medhavi/contracts";
 
 import { AppError } from "../../lib/errors.js";
 

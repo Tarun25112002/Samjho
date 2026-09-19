@@ -1,6 +1,6 @@
 "use client";
 
-import type { SubjectSummary } from "@samjho/contracts";
+import type { SubjectSummary } from "@medhavi/contracts";
 import { useState } from "react";
 
 import { AccountTypeChooser } from "./account-type";

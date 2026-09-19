@@ -1,4 +1,4 @@
-import { recordEventsResultSchema, successResponseSchema } from "@samjho/contracts";
+import { recordEventsResultSchema, successResponseSchema } from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

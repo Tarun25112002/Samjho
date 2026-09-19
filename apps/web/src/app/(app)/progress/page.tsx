@@ -1,4 +1,4 @@
-import type { SubjectProgressSummary, TopicMovement, WeakTopic } from "@samjho/contracts";
+import type { SubjectProgressSummary, TopicMovement, WeakTopic } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -367,7 +367,7 @@ function EmptyProgress() {
     <div className="bg-raised rounded-control mt-5 p-5">
       <p className="text-text font-semibold">Choose your subjects first</p>
       <p className="text-text-soft mt-1 text-sm">
-        Once you add a subject, Samjho can show the evidence from your practice.
+        Once you add a subject, Medhavi can show the evidence from your practice.
       </p>
       <Link
         href="/profile"

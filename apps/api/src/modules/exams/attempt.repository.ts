@@ -1,4 +1,4 @@
-import type { AnswerStatus, ListExamAttemptsQuery, SubmissionReason } from "@samjho/contracts";
+import type { AnswerStatus, ListExamAttemptsQuery, SubmissionReason } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

@@ -6,7 +6,7 @@ import {
   type ImportResult,
   type ImportRowError,
   type WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { z } from "zod";
 
 import { NotFoundError } from "../../lib/errors.js";

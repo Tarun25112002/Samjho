@@ -14,7 +14,7 @@ import { z } from "zod";
  * can produce on demand from a blueprint and the question bank, and for a
  * product whose bank is being written from zero (docs/07 R1) it is the only kind
  * available until real past papers are entered. Keeping the distinction means a
- * student can always tell whether they are sitting CBSE's paper or Samjho's
+ * student can always tell whether they are sitting CBSE's paper or Medhavi's
  * reconstruction of its shape.
  */
 export const paperTypeSchema = z.enum(["PAST_PAPER", "SAMPLE_PAPER", "GENERATED_MOCK"]);

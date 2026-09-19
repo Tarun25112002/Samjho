@@ -1,6 +1,6 @@
 "use client";
 
-import type { AIAction } from "@samjho/contracts";
+import type { AIAction } from "@medhavi/contracts";
 
 import { ActionLadder, FollowUp, QuotaLine, Transcript } from "./tutor-panel";
 import { useTutor, type TutorTurn } from "./use-tutor";

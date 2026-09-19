@@ -4,9 +4,9 @@ import type {
   TeacherBankQuestion,
   TeacherBankResponse,
   TeacherQuestionStatusInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
-import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
@@ -205,7 +205,7 @@ function toWhere(
   const where: Prisma.QuestionWhereInput =
     query.scope === "SHARED"
       ? // Byte for byte the predicate a student's practice uses, spread from the
-        // shared constant rather than restated. A teacher browsing Samjho's bank
+        // shared constant rather than restated. A teacher browsing Medhavi's bank
         // sees exactly what is already published to every student in the country
         // — no drafts, nothing licence-restricted, nothing from a withdrawn
         // chapter — and the guarantee holds because there is one definition of

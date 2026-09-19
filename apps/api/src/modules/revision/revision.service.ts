@@ -5,7 +5,7 @@ import {
   type RevisionSubjectDue,
   type StartRevisionInput,
   type StudyStreak,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";

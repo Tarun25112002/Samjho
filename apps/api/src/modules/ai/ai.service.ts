@@ -12,7 +12,7 @@ import {
   type Paginated,
   type SendMessageInput,
   type StartConversationInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";

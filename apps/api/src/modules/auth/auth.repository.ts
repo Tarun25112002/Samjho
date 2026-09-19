@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import type { Board, ExamPhase, Language } from "@samjho/contracts";
+import type { Board, ExamPhase, Language } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";
@@ -178,7 +178,7 @@ export const authRepository = {
           // Unique columns must stay unique, so they are replaced rather than
           // nulled. The id is retained inside the placeholder so a support
           // request about a deleted account can still be traced.
-          email: `deleted+${user.id}@samjho.invalid`,
+          email: `deleted+${user.id}@medhavi.invalid`,
           clerkId: `deleted_${user.id}`,
           name: null,
           imageUrl: null,

@@ -7,8 +7,8 @@ import {
   type PracticeAttempt,
   type PracticeItem,
   type StudentSubPart,
-} from "@samjho/contracts";
-import { formatMarks, MathText } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { formatMarks, MathText } from "@medhavi/ui";
 
 import { Check, Cross, HalfMark } from "@/components/icons";
 import { Card, Chip, Toggle } from "@/components/ui/surface";

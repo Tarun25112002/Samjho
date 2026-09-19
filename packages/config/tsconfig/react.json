@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Samjho React library",
+  "display": "Medhavi React library",
   "extends": "./base.json",
   "compilerOptions": {
     "module": "esnext",

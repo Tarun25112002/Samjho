@@ -1,4 +1,4 @@
-import type { AdminContentStats } from "@samjho/contracts";
+import type { AdminContentStats } from "@medhavi/contracts";
 import { Router } from "express";
 
 import { authenticated, requireRole } from "../../middleware/auth.js";

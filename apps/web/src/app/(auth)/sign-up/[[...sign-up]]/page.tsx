@@ -12,7 +12,7 @@ export default function SignUpPage() {
       <AuthAside
         eyebrow="Practice the real paper"
         headline="Practise the paper you are actually going to sit."
-        note="Signing up asks for a parent or guardian's email address. Samjho carries no advertising and no behavioural tracking, and every account is treated as belonging to a student under 18."
+        note="Signing up asks for a parent or guardian's email address. Medhavi carries no advertising and no behavioural tracking, and every account is treated as belonging to a student under 18."
       />
 
       <AuthFormColumn

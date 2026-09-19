@@ -1,4 +1,4 @@
-import type { QuestionType, StudentAnswer } from "@samjho/contracts";
+import type { QuestionType, StudentAnswer } from "@medhavi/contracts";
 import { describe, expect, it } from "vitest";
 
 import {

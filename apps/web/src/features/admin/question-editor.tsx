@@ -9,8 +9,8 @@ import {
   type AdminChapter,
   type AdminQuestion,
   type WriteQuestionInput,
-} from "@samjho/contracts";
-import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@medhavi/ui";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ const LICENCE_OPTIONS = licenceStatusSchema.options;
 const SUB_PART_LABELS = ["i", "ii", "iii", "iv", "v", "vi"];
 
 const SOURCE_LABELS: Record<(typeof SOURCE_OPTIONS)[number], string> = {
-  ORIGINAL: "Written for Samjho",
+  ORIGINAL: "Written for Medhavi",
   CBSE_BOARD_PAPER: "CBSE board paper",
   CBSE_SAMPLE_PAPER: "CBSE sample paper",
   NCERT: "NCERT textbook",
@@ -532,7 +532,7 @@ export function QuestionEditor({ chapters, initial, question }: QuestionEditorPr
 
         <Fieldset
           legend="Where it came from"
-          description="Required on every question. If you wrote it, that is “Written for Samjho”."
+          description="Required on every question. If you wrote it, that is “Written for Medhavi”."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Source" error={fieldErrors["source.sourceType"]}>

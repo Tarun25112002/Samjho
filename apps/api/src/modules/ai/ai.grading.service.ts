@@ -4,7 +4,7 @@ import {
   type GradingAgreement,
   type GradingSuggestion,
   type RequestGradingInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";

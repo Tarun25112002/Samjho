@@ -1,7 +1,7 @@
 "use client";
 
-import { AI_ACTION_LABELS, type AIAction, type AIQuota } from "@samjho/contracts";
-import { MathText } from "@samjho/ui";
+import { AI_ACTION_LABELS, type AIAction, type AIQuota } from "@medhavi/contracts";
+import { MathText } from "@medhavi/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { ChevronRight, SparkIcon } from "@/components/icons";

@@ -23,13 +23,13 @@ export interface SkeletonProps {
 
 export function Skeleton({ lines = 3, ragged = true, className }: SkeletonProps) {
   return (
-    <div className={["samjho-skeleton", className].filter(Boolean).join(" ")} aria-hidden="true">
+    <div className={["medhavi-skeleton", className].filter(Boolean).join(" ")} aria-hidden="true">
       {Array.from({ length: lines }, (_, index) => (
         <span
           key={index}
           className={[
-            "samjho-skeleton__line",
-            ragged && index === lines - 1 ? "samjho-skeleton__line--short" : "",
+            "medhavi-skeleton__line",
+            ragged && index === lines - 1 ? "medhavi-skeleton__line--short" : "",
           ]
             .filter(Boolean)
             .join(" ")}

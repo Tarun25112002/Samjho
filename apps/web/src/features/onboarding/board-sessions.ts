@@ -1,4 +1,4 @@
-import { EXAM_PHASE_LABELS, type ExamPhase } from "@samjho/contracts";
+import { EXAM_PHASE_LABELS, type ExamPhase } from "@medhavi/contracts";
 
 /**
  * Which board sittings a student can sensibly aim at right now.

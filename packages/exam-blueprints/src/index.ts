@@ -1,5 +1,5 @@
 /**
- * @samjho/exam-blueprints
+ * @medhavi/exam-blueprints
  *
  * Exam structures as validated configuration rather than code.
  *

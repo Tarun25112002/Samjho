@@ -10,8 +10,8 @@ import {
   type ExtractedQuestion,
   type ImportUploadResult,
   type PaperUploadDetail,
-} from "@samjho/contracts";
-import { MathText } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { MathText } from "@medhavi/ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 

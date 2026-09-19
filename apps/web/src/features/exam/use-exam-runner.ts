@@ -7,7 +7,7 @@ import {
   type ExamAnswerValue,
   type ExamAttempt,
   type ExamItem,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

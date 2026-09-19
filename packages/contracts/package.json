@@ -1,5 +1,5 @@
 {
-  "name": "@samjho/contracts",
+  "name": "@medhavi/contracts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -27,7 +27,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@samjho/config": "workspace:*",
+    "@medhavi/config": "workspace:*",
     "eslint": "^10.8.1",
     "rimraf": "^6.1.3",
     "typescript": "~5.9.3",

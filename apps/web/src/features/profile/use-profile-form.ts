@@ -6,7 +6,7 @@ import {
   type ExamPhase,
   type Language,
   type StudentProfile,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 

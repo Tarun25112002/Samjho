@@ -1,4 +1,4 @@
-import type { AIAction } from "@samjho/contracts";
+import type { AIAction } from "@medhavi/contracts";
 
 import { HISTORY_TOKEN_BUDGET } from "./ai.models.js";
 import type { GroundingRow } from "./ai.repository.js";

@@ -2,7 +2,7 @@ import {
   practiceFiltersQuerySchema,
   type PastPaperYearOption,
   type SubjectDetail,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { PageHeader, PageShell } from "@/components/ui/page";

@@ -10,8 +10,8 @@ import {
   type PracticeFilters,
   type QuestionType,
   type SubjectDetail,
-} from "@samjho/contracts";
-import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@medhavi/ui";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";

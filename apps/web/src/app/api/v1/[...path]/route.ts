@@ -164,7 +164,7 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
     // error envelope means the client's single error handler works here too,
     // rather than meeting Next's HTML error page inside a JSON parser.
     console.error("BFF could not reach the API", error);
-    return fail(503, "SERVICE_UNAVAILABLE", "Samjho is temporarily unavailable.");
+    return fail(503, "SERVICE_UNAVAILABLE", "Medhavi is temporarily unavailable.");
   }
 
   const contentType = response.headers.get("content-type") ?? "application/json";

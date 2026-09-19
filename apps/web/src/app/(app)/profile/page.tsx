@@ -1,4 +1,4 @@
-import { subjectListResponseSchema, type AIStatus } from "@samjho/contracts";
+import { subjectListResponseSchema, type AIStatus } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { Check, SparkIcon } from "@/components/icons";
@@ -157,7 +157,7 @@ function ConsentPanel({
       </dl>
 
       <p className="text-text-faint mt-4 text-xs leading-relaxed">
-        Samjho collects no advertising or behavioural-tracking data. During the closed pilot we
+        Medhavi collects no advertising or behavioural-tracking data. During the closed pilot we
         record your declaration rather than contacting your guardian to confirm it.
       </p>
     </Card>
