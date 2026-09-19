@@ -1,6 +1,7 @@
 import {
   adminListQuestionsQuerySchema,
   changeQuestionStatusInputSchema,
+  draftQuestionsSchema,
   importQuestionsInputSchema,
   writeQuestionInputSchema,
   type ImportResult,
@@ -12,6 +13,7 @@ import { z } from "zod";
 import { authenticated, getAuthUser, requireRole } from "../../middleware/auth.js";
 import { parseBody, validate } from "../../middleware/validate.js";
 import type { TokenVerifier } from "../../lib/token-verifier.js";
+import { aiAuthoringService } from "../ai/ai.authoring.service.js";
 import { questionAdminService } from "./question.admin.service.js";
 import { questionImportService } from "./question.import.service.js";
 
@@ -61,6 +63,22 @@ export function buildQuestionAdminRouter(verifyToken: TokenVerifier): Router {
     const author = getAuthUser(req);
 
     res.status(201).json({ data: await questionAdminService.create(input, author.id) });
+  });
+
+  /**
+   * Draft new questions with a model.
+   *
+   * Registered before `/:id` for the same reason `import` is, and it returns
+   * rows in the import shape for exactly the same reason: accepting them means
+   * posting them to the route below, which is the only place a question is
+   * written. Nothing here writes, and nothing here publishes — the response is
+   * a proposal and the ordinary dry-run report on it.
+   */
+  router.post("/ai-draft", validate({ body: draftQuestionsSchema }), async (req, res) => {
+    const input = parseBody(req, draftQuestionsSchema);
+    const author = getAuthUser(req);
+
+    res.json({ data: await aiAuthoringService.draft(author.id, input) });
   });
 
   /**

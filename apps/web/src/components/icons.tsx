@@ -235,3 +235,97 @@ export function SparkIcon({ className }: IconProps) {
     1.7,
   );
 }
+
+/**
+ * A hint. A bulb, drawn as an outline with a filament rather than as a lit
+ * lamp, because a hint is the idea arriving rather than the answer being handed
+ * over — and a solid glowing bulb beside an unanswered question reads as "here
+ * it is".
+ */
+export function LightbulbIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M9 18h6" />
+      <path d="M10 21.5h4" />
+      <path d="M12 2.5a6 6 0 0 0-3.6 10.8c.6.45.9 1.1.9 1.8V18h5.4v-2.9c0-.7.3-1.35.9-1.8A6 6 0 0 0 12 2.5Z" />
+    </>,
+    className,
+    1.8,
+  );
+}
+
+/**
+ * A measurement. Three ascending marks — the diagnostic ladder, which is what
+ * the three sittings are, rather than a chart or a clipboard.
+ */
+export function GaugeIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M4 20V16" />
+      <path d="M10 20V11" />
+      <path d="M16 20V6" />
+      <path d="M2.5 20h19" />
+    </>,
+    className,
+    1.9,
+  );
+}
+
+/** A target. What an adaptive sitting is aiming at. */
+export function TargetIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1" />
+    </>,
+    className,
+    1.8,
+  );
+}
+
+/** A lock. A stage that is not open yet. */
+export function LockIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+    </>,
+    className,
+    1.8,
+  );
+}
+
+/**
+ * A camera, for photographing a written answer.
+ *
+ * Drawn as a body with a lens rather than as a phone, because what the student
+ * is being asked for is a picture of their page — a phone outline would read as
+ * "open this on your phone", which is the opposite instruction.
+ */
+export function CameraIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <path d="M3 8.5a2 2 0 0 1 2-2h2.2l1.3-2h6l1.3 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <circle cx="12" cy="12.5" r="3.2" />
+    </>,
+    className,
+    1.8,
+  );
+}
+
+/**
+ * A week. A grid with the header ruled off, which is what a planner looks like
+ * — a single date square would read as "today" and this page is deliberately
+ * not about today.
+ */
+export function CalendarIcon({ className }: IconProps) {
+  return svg(
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+    </>,
+    className,
+    1.8,
+  );
+}

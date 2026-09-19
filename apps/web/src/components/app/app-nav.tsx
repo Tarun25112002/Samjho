@@ -4,8 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 
-import { HomeIcon, PenIcon, ProgressIcon, UserIcon } from "@/components/icons";
-import { ClassroomIcon, PaperIcon, StackIcon, TeachingIcon } from "@/components/icons";
+import {
+  CalendarIcon,
+  HomeIcon,
+  PenIcon,
+  ProgressIcon,
+  SparkIcon,
+  TargetIcon,
+  UserIcon,
+} from "@/components/icons";
+import {
+  BookmarkIcon,
+  ClassroomIcon,
+  PaperIcon,
+  StackIcon,
+  TeachingIcon,
+} from "@/components/icons";
 
 /**
  * The signed-in navigation, in its two forms.
@@ -18,8 +32,10 @@ import { ClassroomIcon, PaperIcon, StackIcon, TeachingIcon } from "@/components/
  * across the bottom of the screen remain reachable by thumb, while keeping the
  * live study spaces — practice and progress — one tap away.
  *
- * The same three items become a rail on a wide screen. One source of truth, two
- * layouts, so a destination cannot appear in one and not the other.
+ * The same items become a rail on a wide screen. One source of truth, two
+ * layouts, so a destination cannot appear in one and be forgotten in the other
+ * — with one deliberate exception, `railOnly`, which exists because the bar's
+ * capacity is a physical fact about thumbs rather than a design preference.
  *
  * ## The active rule
  *
@@ -33,12 +49,28 @@ interface Destination {
   label: string;
   icon: ComponentType<{ className?: string }>;
   exact?: boolean;
+  /**
+   * On the desktop rail but not in the phone bar.
+   *
+   * The bar holds five. That is not an arbitrary cap — it is how wide a thumb
+   * is against a 360px screen, and a sixth destination makes every one of them
+   * harder to hit rather than making the sixth reachable. So the two newer
+   * spaces live on the rail, where there is room for a list, and reach the
+   * phone through the places a student is already looking: the assessment band
+   * on the dashboard, and the tutor panel under every question.
+   */
+  railOnly?: boolean;
 }
 
 const DESTINATIONS: Destination[] = [
   { href: "/home", label: "Home", icon: HomeIcon, exact: true },
   { href: "/practice", label: "Practice", icon: PenIcon },
+  { href: "/assessment", label: "Assessment", icon: TargetIcon, railOnly: true },
+  { href: "/exams", label: "Exams", icon: PaperIcon, railOnly: true },
+  { href: "/plan", label: "Your week", icon: CalendarIcon, railOnly: true },
   { href: "/progress", label: "Progress", icon: ProgressIcon },
+  { href: "/ai-tutor", label: "AI tutor", icon: SparkIcon, railOnly: true },
+  { href: "/saved", label: "Saved", icon: BookmarkIcon, railOnly: true },
   { href: "/classroom", label: "Class", icon: ClassroomIcon },
   { href: "/profile", label: "You", icon: UserIcon },
 ];
@@ -115,7 +147,7 @@ export function SideNav({ role }: { role: "STUDENT" | "TEACHER" | "CONTENT_EDITO
  */
 export function BottomNav({ role }: { role: "STUDENT" | "TEACHER" | "CONTENT_EDITOR" | "ADMIN" }) {
   const isActive = useActive();
-  const destinations = destinationsFor(role);
+  const destinations = destinationsFor(role).filter((destination) => destination.railOnly !== true);
 
   return (
     <nav

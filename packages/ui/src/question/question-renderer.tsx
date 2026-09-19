@@ -7,7 +7,7 @@ import {
   type StudentQuestion,
   type StudentSubPart,
 } from "@samjho/contracts";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 import { MathText } from "../primitives/math-text.js";
 import {
@@ -91,6 +91,19 @@ export interface QuestionRendererProps {
    * already has one can produce marked options.
    */
   marking?: Record<string, readonly string[]>;
+  /**
+   * An extra control under an extended-response field, supplied by the caller.
+   *
+   * A render prop rather than a component, because the only thing that wants
+   * one is the photograph capture in the web app — and that needs an API
+   * client, an auth token and a rate-limit error to show. None of that belongs
+   * in a presentational package that also renders inside the admin preview and
+   * the print view, where there is no student and nothing to capture.
+   *
+   * Called per answerable target, so a case study gets one per sub-part rather
+   * than one for the stimulus. Return null where it does not apply.
+   */
+  responseAccessory?: (target: { questionId: string }) => ReactNode;
   className?: string;
 }
 
@@ -102,6 +115,7 @@ export function QuestionRenderer({
   displayNumber,
   hideMeta = false,
   marking,
+  responseAccessory,
   className,
 }: QuestionRendererProps) {
   const readOnly = onChange === undefined;
@@ -138,6 +152,7 @@ export function QuestionRenderer({
           readOnly={readOnly}
           onChange={onChange}
           correctOptionIds={marking?.[question.id]}
+          accessory={responseAccessory}
         />
       )}
 
@@ -151,6 +166,7 @@ export function QuestionRenderer({
                 readOnly={readOnly}
                 onChange={onChange}
                 correctOptionIds={marking?.[subPart.id]}
+                accessory={responseAccessory}
               />
             </li>
           ))}
@@ -168,11 +184,13 @@ function SubPartRenderer({
   readOnly,
   onChange,
   correctOptionIds,
+  accessory,
 }: {
   subPart: StudentSubPart;
   value: QuestionResponse;
   readOnly: boolean;
   correctOptionIds: readonly string[] | undefined;
+  accessory: ((target: { questionId: string }) => ReactNode) | undefined;
   // Explicitly `| undefined` rather than `?`. Under `exactOptionalPropertyTypes`
   // those are different types, and only this form accepts a value that may be
   // undefined being forwarded from the caller.
@@ -193,6 +211,7 @@ function SubPartRenderer({
         readOnly={readOnly}
         onChange={onChange}
         correctOptionIds={correctOptionIds}
+        accessory={accessory}
       />
     </div>
   );
@@ -209,11 +228,13 @@ function ResponseArea({
   readOnly,
   onChange,
   correctOptionIds,
+  accessory,
 }: {
   question: Respondable;
   value: QuestionResponse;
   readOnly: boolean;
   correctOptionIds: readonly string[] | undefined;
+  accessory: ((target: { questionId: string }) => ReactNode) | undefined;
   // Explicitly `| undefined` rather than `?`. Under `exactOptionalPropertyTypes`
   // those are different types, and only this form accepts a value that may be
   // undefined being forwarded from the caller.
@@ -250,6 +271,7 @@ function ResponseArea({
       readOnly={readOnly}
       extended={shape === "EXTENDED"}
       onInput={emit}
+      accessory={shape === "EXTENDED" && !readOnly ? accessory : undefined}
     />
   );
 }
@@ -401,12 +423,14 @@ function TextResponse({
   readOnly,
   extended,
   onInput,
+  accessory,
 }: {
   question: Respondable;
   value: QuestionResponse;
   readOnly: boolean;
   extended: boolean;
   onInput: (next: QuestionResponse) => void;
+  accessory: ((target: { questionId: string }) => ReactNode) | undefined;
 }) {
   const inputId = useId();
   const hint = shortAnswerHint(question.type, null);
@@ -442,6 +466,8 @@ function TextResponse({
           }}
         />
       )}
+
+      {accessory ? accessory({ questionId: question.id }) : null}
     </div>
   );
 }

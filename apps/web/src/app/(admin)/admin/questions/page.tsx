@@ -55,9 +55,17 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
         title="Question bank"
         lede="Drafts included — this is the complete working bank, not the student view."
         action={
-          <ButtonLink href={`/admin/questions/new${subjectId ? `?subjectId=${subjectId}` : ""}`}>
-            New question
-          </ButtonLink>
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink
+              variant="secondary"
+              href={`/admin/questions/draft${subjectId ? `?subjectId=${subjectId}` : ""}`}
+            >
+              Draft with Samjho
+            </ButtonLink>
+            <ButtonLink href={`/admin/questions/new${subjectId ? `?subjectId=${subjectId}` : ""}`}>
+              New question
+            </ButtonLink>
+          </div>
         }
       />
 

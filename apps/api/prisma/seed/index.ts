@@ -3,12 +3,21 @@ import { ALL_BLUEPRINTS } from "@samjho/exam-blueprints";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../../src/generated/prisma/client.js";
+import { class10EnglishChapters } from "./curriculum/english.js";
 import { class10MathsChapters } from "./curriculum/maths.js";
 import { class10ScienceChapters } from "./curriculum/science.js";
+import { class10SocialScienceChapters } from "./curriculum/social-science.js";
 import { seedId, upsertQuestion, type CurriculumIndex } from "./helpers.js";
+import { seedExamPapers } from "./exam-papers.js";
 import { seedPastPapers } from "./past-papers.js";
+import { class10EnglishQuestions } from "./questions/english.js";
 import { class10MathsQuestions } from "./questions/maths.js";
+import { class10MathsPaperPool } from "./questions/maths-paper-pool.js";
+import { class10MathsPastPaperQuestions } from "./questions/maths-pyq.js";
 import { class10ScienceQuestions } from "./questions/science.js";
+import { class10SciencePaperPool } from "./questions/science-paper-pool.js";
+import { class10SciencePastPaperQuestions } from "./questions/science-pyq.js";
+import { class10SocialScienceQuestions } from "./questions/social-science.js";
 import type { SeedChapter, SeedQuestion } from "./types.js";
 import { enrolStudents, seedClassroom, seedPracticeHistory, seedUsers } from "./users.js";
 
@@ -59,7 +68,11 @@ const CLASS_10_SUBJECTS: SubjectSpec[] = [
     hasPractical: false,
     orderIndex: 0,
     chapters: class10MathsChapters,
-    questions: class10MathsQuestions,
+    questions: [
+      ...class10MathsQuestions,
+      ...class10MathsPastPaperQuestions,
+      ...class10MathsPaperPool,
+    ],
   },
   {
     code: "SCI",
@@ -72,7 +85,33 @@ const CLASS_10_SUBJECTS: SubjectSpec[] = [
     hasPractical: true,
     orderIndex: 1,
     chapters: class10ScienceChapters,
-    questions: class10ScienceQuestions,
+    questions: [
+      ...class10ScienceQuestions,
+      ...class10SciencePastPaperQuestions,
+      ...class10SciencePaperPool,
+    ],
+  },
+  {
+    code: "SST",
+    name: "Social Science",
+    slug: "class-10-social-science",
+    theoryMarks: 80,
+    internalMarks: 20,
+    hasPractical: false,
+    orderIndex: 2,
+    chapters: class10SocialScienceChapters,
+    questions: class10SocialScienceQuestions,
+  },
+  {
+    code: "ENG",
+    name: "English",
+    slug: "class-10-english-language-and-literature",
+    theoryMarks: 80,
+    internalMarks: 20,
+    hasPractical: false,
+    orderIndex: 3,
+    chapters: class10EnglishChapters,
+    questions: class10EnglishQuestions,
   },
 ];
 
@@ -243,6 +282,15 @@ async function main(): Promise<void> {
     `  blueprints         ${String(blueprintCount)} written, ` +
       `${String(ALL_BLUEPRINTS.length - blueprintCount)} validated but not stored (no subject)`,
   );
+
+  const papers = await seedExamPapers(prisma);
+  log(
+    `  exam papers        ${String(papers.published)} published and sittable` +
+      (papers.shortfalls.length > 0 ? `, ${String(papers.shortfalls.length)} group(s) short` : ""),
+  );
+  for (const shortfall of papers.shortfalls) {
+    log(`                     ! ${shortfall}`);
+  }
 
   await enrolStudents(prisma, [...subjectIdByCode.values()]);
 

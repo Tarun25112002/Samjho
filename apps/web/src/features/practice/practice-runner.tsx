@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ASSESSMENT_OBJECTIVE_LABELS,
   EMPTY_ANSWER,
   isAnswered,
   PRACTICE_MODE_LABELS,
@@ -8,14 +9,15 @@ import {
   type PracticeSession,
   type StudentAnswer,
 } from "@samjho/contracts";
-import { QuestionRenderer } from "@samjho/ui";
+import { MathText, QuestionRenderer } from "@samjho/ui";
 import Link from "next/link";
 
-import { BookmarkIcon, ChevronLeft, ChevronRight } from "@/components/icons";
+import { BookmarkIcon, ChevronLeft, ChevronRight, LightbulbIcon } from "@/components/icons";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page";
 import { Card } from "@/components/ui/surface";
 import { formatMarksValue, markingFrom } from "@/lib/practice-format";
+import { PhotoAnswer } from "@/features/ai/photo-answer";
 import { TutorPanel } from "@/features/ai/tutor-panel";
 import { FeedbackPanel } from "./feedback-panel";
 import { SessionTimer } from "./session-timer";
@@ -80,7 +82,15 @@ export function PracticeRunner({
 
   const anythingEntered = targets.some((target) => isAnswered(values[target.id] ?? EMPTY_ANSWER));
   const marking = answered ? markingFrom(item.attempts) : undefined;
-  const isLast = index === session.items.length - 1;
+
+  // An adaptive sitting's last *served* question is not its last question until
+  // the engine has nothing more to give. Reading "is this the end" off the
+  // served count alone would put Finish under question one of ten.
+  const adaptive = session.objective !== null;
+  const moreToCome = adaptive
+    ? session.items.length < session.plannedQuestions && !runner.exhausted
+    : index < session.items.length - 1;
+  const isLast = !moreToCome && index === session.items.length - 1;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,9 +122,36 @@ export function PracticeRunner({
                   onChange: (questionId: string, value: StudentAnswer) => {
                     runner.setAnswer(questionId, value);
                   },
+                  // Only on extended-response fields, and only before the answer
+                  // is in — the renderer decides both, so this is passed for
+                  // every question and appears on the two or three that want it.
+                  responseAccessory: ({ questionId }: { questionId: string }) => (
+                    <PhotoAnswer
+                      questionId={questionId}
+                      hasTypedText={(values[questionId]?.text ?? "").trim().length > 0}
+                      onAccept={(text) => {
+                        runner.setAnswer(questionId, { optionIds: [], text });
+                      }}
+                    />
+                  ),
                 })}
           />
         </Card>
+
+        {answered ? null : (
+          <HintPanel
+            hint={runner.hint}
+            pending={runner.hintPending}
+            onAsk={() => void runner.requestHint()}
+          />
+        )}
+
+        {runner.exhausted ? (
+          <p className="rounded-control border-line bg-raised text-text-soft border px-4 py-3 text-sm">
+            Samjho has run out of suitable questions for this sitting. Finish here — everything you
+            have answered still counts.
+          </p>
+        ) : null}
 
         {runner.failure ? (
           <p
@@ -191,12 +228,11 @@ export function PracticeRunner({
           {answered && !isLast ? (
             <Button
               fullWidth
-              onClick={() => {
-                runner.goTo(index + 1);
-              }}
+              disabled={runner.extending}
+              onClick={() => void runner.advance()}
               className="min-w-0"
             >
-              Next question
+              {runner.extending ? "Choosing your next question…" : "Next question"}
             </Button>
           ) : null}
 
@@ -209,7 +245,7 @@ export function PracticeRunner({
             >
               Finish
             </Button>
-          ) : answered ? null : (
+          ) : answered || adaptive ? null : (
             <Button
               variant="secondary"
               size="sm"
@@ -224,6 +260,47 @@ export function PracticeRunner({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The hint, and the deliberate friction in front of it.
+ *
+ * Closed by default and opened by a tap, because a hint on screen beside an
+ * unanswered question is not a hint — it is the first line of the solution, read
+ * before the student has tried. The tap is the whole design: it makes asking a
+ * decision the student makes rather than something that happens to them, and it
+ * is what gives `hintUsed` a meaning worth feeding back into the engine.
+ *
+ * Only ever the authored nudge or its method-level fallback. The ladder from
+ * here to a full worked solution lives in the tutor panel, below the feedback,
+ * where it is only reachable after answering.
+ */
+function HintPanel({
+  hint,
+  pending,
+  onAsk,
+}: {
+  hint: string | null;
+  pending: boolean;
+  onAsk: () => void;
+}) {
+  if (hint !== null) {
+    return (
+      <Card as="aside" tone="brand" pad="tight" aria-label="Hint">
+        <p className="text-brand-700 text-xs font-semibold tracking-wide uppercase">Hint</p>
+        <MathText className="text-text mt-2 text-sm leading-relaxed">{hint}</MathText>
+      </Card>
+    );
+  }
+
+  return (
+    <div>
+      <Button variant="quiet" size="sm" disabled={pending} onClick={onAsk} className="px-0!">
+        <LightbulbIcon className="size-4" />
+        {pending ? "Finding you a hint…" : "Need a hint?"}
+      </Button>
     </div>
   );
 }
@@ -253,7 +330,9 @@ function RunnerHeader({
   clockAnchor: string;
   onExpire: () => void;
 }) {
-  const total = session.items.length;
+  // An adaptive sitting knows how long it will be before it knows what is in
+  // it, and "Question 3 of 3" on a ten-question sitting reads as almost over.
+  const total = Math.max(session.items.length, session.plannedQuestions);
 
   return (
     <header className="border-line bg-card/95 sticky top-0 z-30 border-b backdrop-blur-md">
@@ -270,8 +349,10 @@ function RunnerHeader({
             Question {index + 1} of {total}
           </p>
           <p className="text-text-faint truncate text-xs">
-            {session.focus ?? PRACTICE_MODE_LABELS[session.mode]} ·{" "}
-            {formatMarksValue(session.totals.marksEarned)} /{" "}
+            {session.objective === null
+              ? (session.focus ?? PRACTICE_MODE_LABELS[session.mode])
+              : ASSESSMENT_OBJECTIVE_LABELS[session.objective]}{" "}
+            · {formatMarksValue(session.totals.marksEarned)} /{" "}
             {formatMarksValue(session.totals.marksPossible)} marks
           </p>
         </div>
@@ -342,6 +423,11 @@ function QuestionStrip({
   index: number;
   onJump: (index: number) => void;
 }) {
+  // Placeholders for the questions an adaptive sitting has not chosen yet. A
+  // strip that grows a segment at a time makes a ten-question sitting look like
+  // a two-question one that keeps getting longer.
+  const pending = Math.max(0, session.plannedQuestions - session.items.length);
+
   return (
     <ol className="mx-auto flex w-full max-w-3xl gap-1 px-4 pb-2 sm:px-6">
       {session.items.map((item, position) => {
@@ -374,6 +460,17 @@ function QuestionStrip({
           </li>
         );
       })}
+
+      {Array.from({ length: pending }, (_, offset) => (
+        <li key={`pending-${String(offset)}`} className="flex-1">
+          <span className="flex h-5 w-full items-end">
+            <span className="sr-only">
+              Question {session.items.length + offset + 1}, not chosen yet
+            </span>
+            <span aria-hidden="true" className="bg-line/50 h-1.5 w-full rounded-full" />
+          </span>
+        </li>
+      ))}
     </ol>
   );
 }

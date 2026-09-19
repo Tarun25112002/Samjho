@@ -101,7 +101,7 @@ export function TutorPanel(props: TutorInput) {
  * into free text on this side would throw that away and hand the student a
  * chatbot with a syllabus.
  */
-function ActionLadder({
+export function ActionLadder({
   actions,
   busy,
   onAsk,
@@ -144,7 +144,7 @@ function ActionLadder({
  * question writes LaTeX — the system prompt requires it — and an unrendered
  * `$\frac{1}{2}$` in the middle of an explanation is worse than no explanation.
  */
-function Transcript({ turns }: { turns: TutorTurn[] }) {
+export function Transcript({ turns }: { turns: TutorTurn[] }) {
   const end = useRef<HTMLDivElement>(null);
 
   // Follow the text as it streams, but only within the transcript. `block:
@@ -214,7 +214,7 @@ function Caret() {
  * Capped at 500 characters to match the contract, so the limit is visible here
  * rather than arriving as a validation error.
  */
-function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (text: string) => void }) {
+export function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (text: string) => void }) {
   const [text, setText] = useState("");
   const trimmed = text.trim();
 
@@ -260,7 +260,7 @@ function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (text: string) => voi
  * feels punitive (docs/05 §5.1). The middle is a number that appears when it
  * starts to matter.
  */
-function QuotaLine({ quota }: { quota: AIQuota }) {
+export function QuotaLine({ quota }: { quota: AIQuota }) {
   if (quota.messagesRemaining > 5) return null;
 
   return (

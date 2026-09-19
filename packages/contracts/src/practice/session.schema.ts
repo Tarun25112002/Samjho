@@ -10,6 +10,7 @@ import {
   yearsQuerySchema,
 } from "../question/question.schema.js";
 import { studentAnswerSchema } from "./answer.schema.js";
+import { assessmentObjectiveSchema, questionSelectionSchema } from "./adaptive.schema.js";
 import {
   evaluationModeSchema,
   mistakeReasonSchema,
@@ -340,6 +341,10 @@ export const practiceSessionSchema = z.object({
    */
   expired: z.boolean(),
 
+  objective: assessmentObjectiveSchema.nullable(),
+  plannedQuestions: z.int().nonnegative(),
+  selections: z.record(z.string(), questionSelectionSchema),
+
   totals: practiceTotalsSchema,
   items: z.array(practiceItemSchema),
 });
@@ -352,6 +357,7 @@ export const practiceSessionSummarySchema = practiceSessionSchema.omit({
   filters: true,
   currentIndex: true,
   serverNow: true,
+  selections: true,
 });
 
 export type PracticeSessionSummary = z.infer<typeof practiceSessionSummarySchema>;
@@ -369,6 +375,28 @@ export const attemptOutcomeSchema = z.object({
 
 export type AttemptOutcome = z.infer<typeof attemptOutcomeSchema>;
 
+/**
+ * What extending an adaptive sitting returns.
+ *
+ * The item rides along rather than being fetched afterwards, so the runner can
+ * show question n+1 without a second round trip — the engine has just decided
+ * what it is, and a student waiting between questions is a student who notices.
+ *
+ * All four fields are null when there is nothing more to serve. `exhausted`
+ * tells the two reasons apart: the sitting reached its planned length, or the
+ * bank ran out of anything suitable. The first is success and the second is a
+ * content problem, and the runner says different things about them.
+ */
+export const nextQuestionSchema = z.object({
+  index: z.int().nonnegative().nullable(),
+  selection: questionSelectionSchema.nullable(),
+  exhausted: z.boolean(),
+  item: practiceItemSchema.nullable(),
+  totals: practiceTotalsSchema.nullable(),
+});
+
+export type NextQuestionResult = z.infer<typeof nextQuestionSchema>;
+
 // ── The result page ──────────────────────────────────────────────────────────
 
 export const practiceTopicResultSchema = z.object({
@@ -383,8 +411,56 @@ export const practiceTopicResultSchema = z.object({
 
 export type PracticeTopicResult = z.infer<typeof practiceTopicResultSchema>;
 
+/**
+ * The comparable sitting before this one, if there is one.
+ *
+ * Comparable is doing work: a diagnostic is compared against the same
+ * diagnostic, an adaptive sitting against the last adaptive sitting, and an
+ * ordinary set against the last ordinary set. Telling a student they are down
+ * nine points when the previous number was a different kind of exercise is a
+ * statistic that means nothing and reads like a verdict.
+ */
+export const previousSittingSchema = z.object({
+  sessionId: z.string().min(1),
+  scorePercent: z.number().min(0).max(100),
+  completedAt: z.iso.datetime(),
+});
+
+export type PreviousSitting = z.infer<typeof previousSittingSchema>;
+
+/**
+ * A topic's accuracy in this sitting against the student's accuracy on it
+ * before today.
+ *
+ * `before` is computed from the attempts that pre-date this session rather than
+ * read from `TopicMastery`, and the difference matters: the mastery score is
+ * recency-weighted and has *already absorbed* this session, so comparing
+ * against it would be comparing a number with itself and reporting a movement
+ * smaller than the one that happened.
+ *
+ * Null `before` means the student had never been asked about this topic. That
+ * is shown as "new", not as an improvement from zero.
+ */
+export const topicComparisonSchema = z.object({
+  topicId: z.string().min(1),
+  name: z.string().min(1),
+  chapterName: z.string().min(1),
+  before: z.number().min(0).max(1).nullable(),
+  after: z.number().min(0).max(1),
+  attempted: z.int().positive(),
+});
+
+export type TopicComparison = z.infer<typeof topicComparisonSchema>;
+
 export const practiceResultSchema = z.object({
   session: practiceSessionSchema,
+  /** This sitting's score as a percentage of the marks it was worth. */
+  scorePercent: z.number().min(0).max(100),
+  previous: previousSittingSchema.nullable(),
+  /** Points gained or lost against `previous`. Null when there is none. */
+  deltaPercent: z.number().nullable(),
+  /** Topics that moved, improvements first. */
+  movements: z.array(topicComparisonSchema),
   /**
    * Per-topic performance *within this session*, not lifetime mastery. A
    * student reading a result page wants to know what just happened; lifetime

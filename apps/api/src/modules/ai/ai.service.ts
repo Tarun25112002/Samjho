@@ -17,6 +17,7 @@ import {
 import { AppError, ForbiddenError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";
 import { buildChapterContext, buildQuestionContext, trimHistory } from "./ai.context.js";
+import { aiLearner } from "./ai.learner.js";
 import { profileFor, type ActionProfile } from "./ai.models.js";
 import { buildActionInstruction, buildSystemPrompt, fenceStudentMessage } from "./ai.prompt.js";
 import { aiRepository, type GroundingRow } from "./ai.repository.js";
@@ -251,7 +252,21 @@ async function prepare(
     hasWrongAttempt = attempt?.isCorrect === false;
     classLevel = question.subject.classLevel;
     subjectName = question.subject.name;
-    contextBlock = buildQuestionContext({ action: input.action, question, attempt });
+
+    // Three indexed reads against rollups that already exist. The difference
+    // they make is the difference between a competent stranger and a tutor who
+    // has been watching — see ai.learner.ts.
+    const learner = await aiLearner.profile(
+      userId,
+      question.topics.map((link) => link.topic.id),
+    );
+
+    contextBlock = buildQuestionContext({
+      action: input.action,
+      question,
+      attempt,
+      learner: learner.lines,
+    });
     fallbackText = fallbackFrom(question, input.action);
 
     // SIMILAR looks in the bank before it looks at a model. Not only to save

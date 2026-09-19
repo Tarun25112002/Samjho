@@ -57,12 +57,20 @@ export default async function PracticeHubPage() {
         title="Practice with purpose."
         lede="Build fluency, understand the answer, and return to the questions that still need work."
         action={
-          <Link
-            href="/practice/new"
-            className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
-          >
-            Build a set <ChevronRight className="size-4" />
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              href="/assessment"
+              className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+            >
+              Assessments <ChevronRight className="size-4" />
+            </Link>
+            <Link
+              href="/practice/new"
+              className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+            >
+              Build a set <ChevronRight className="size-4" />
+            </Link>
+          </div>
         }
       />
 

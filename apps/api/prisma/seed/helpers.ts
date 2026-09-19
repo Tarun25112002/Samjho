@@ -244,6 +244,7 @@ async function writeQuestionChildren(
       // literal null, which is a different and much more confusing thing.
       markingScheme: question.answer.markingScheme ?? Prisma.DbNull,
       explanation: question.answer.explanation ?? null,
+      hint: question.answer.hint ?? null,
     };
     await prisma.questionAnswer.upsert({
       where: { questionId },

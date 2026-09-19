@@ -60,19 +60,45 @@ export interface Tutor {
 }
 
 export interface TutorInput {
-  questionId: string;
+  /**
+   * The question this conversation is about. Omitted only for a chapter-
+   * anchored conversation, which is the one kind that is not about a specific
+   * question — see `chapterId`.
+   */
+  questionId?: string | undefined;
+  /**
+   * A chapter to anchor the conversation to instead of a question.
+   *
+   * There is no third option, and that is the grounding rule rather than an
+   * omission: the API refuses a conversation that names neither. An ungrounded
+   * tutor is a general-purpose chatbot, which is not what this is.
+   */
+  chapterId?: string | undefined;
   /** The student has submitted an answer to this question. */
   answered: boolean;
   /** …and it was marked wrong. Gates WHY_WRONG. */
   answeredWrong: boolean;
   /** The attempt to diagnose, when there is one. */
   attemptId?: string | undefined;
+  /**
+   * Resume an existing conversation instead of creating one on first ask.
+   *
+   * Set by the tutor page, which lists conversations a student has already had.
+   * The grounding travels with the conversation server-side, so resuming one
+   * does not re-supply — or get to re-choose — what it is about.
+   */
+  conversationId?: string | undefined;
+  /** The transcript so far, when resuming. */
+  initialTurns?: TutorTurn[] | undefined;
 }
 
 const ALL: AIAction[] = ["HINT", "EXPLAIN", "WHY_WRONG", "STEP_BY_STEP", "SIMPLER", "SIMILAR"];
 
 function offeredActions(input: TutorInput, hasReply: boolean): AIAction[] {
   return ALL.filter((action) => {
+    // A chapter conversation has no attempt to diagnose and no single question
+    // to hint at: it is about the material, so only the two that are.
+    if (input.chapterId !== undefined) return action === "EXPLAIN" || action === "SIMPLER";
     if (action === "WHY_WRONG") return input.answeredWrong;
     if (action === "SIMPLER") return hasReply;
     return true;
@@ -80,8 +106,8 @@ function offeredActions(input: TutorInput, hasReply: boolean): AIAction[] {
 }
 
 export function useTutor(input: TutorInput): Tutor {
-  const [open, setOpen] = useState(false);
-  const [turns, setTurns] = useState<TutorTurn[]>([]);
+  const [open, setOpen] = useState(input.conversationId !== undefined);
+  const [turns, setTurns] = useState<TutorTurn[]>(input.initialTurns ?? []);
   const [quota, setQuota] = useState<AIQuota | null>(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ApiFailure | null>(null);
@@ -94,14 +120,25 @@ export function useTutor(input: TutorInput): Tutor {
    * worse, `ask` would close over a stale copy of it on the turn that created
    * it. The abort controller has the same shape of problem.
    */
-  const conversationId = useRef<string | null>(null);
+  const conversationId = useRef<string | null>(input.conversationId ?? null);
   const inFlight = useRef<AbortController | null>(null);
 
   // A different question is a different conversation. Resetting here rather
   // than remounting the panel from the runner means the panel does not have to
   // be keyed, and the open/closed state survives navigation — which is what a
   // student who is working through a set with the tutor open would expect.
+  //
+  // A resumed conversation is exempt: it arrived with an id and a transcript,
+  // and clearing them because this effect runs once on mount would throw away
+  // the thing the page was opened to show.
+  const resumed = useRef(input.conversationId !== undefined);
+
   useEffect(() => {
+    if (resumed.current) {
+      resumed.current = false;
+      return;
+    }
+
     inFlight.current?.abort();
     inFlight.current = null;
     conversationId.current = null;
@@ -131,13 +168,15 @@ export function useTutor(input: TutorInput): Tutor {
           const created = await sendJson(
             "POST",
             "/api/v1/ai/conversations",
-            {
-              // The context the student is actually in, which is what decides
-              // whether their own attempt is part of the grounding.
-              context: input.answered ? "REVIEW" : "PRACTICE",
-              questionId: input.questionId,
-              ...(input.attemptId ? { questionAttemptId: input.attemptId } : {}),
-            },
+            input.chapterId !== undefined
+              ? { context: "CHAPTER", chapterId: input.chapterId }
+              : {
+                  // The context the student is actually in, which is what decides
+                  // whether their own attempt is part of the grounding.
+                  context: input.answered ? "REVIEW" : "PRACTICE",
+                  questionId: input.questionId,
+                  ...(input.attemptId ? { questionAttemptId: input.attemptId } : {}),
+                },
             aiConversationDetailSchema,
           );
 
@@ -212,7 +251,7 @@ export function useTutor(input: TutorInput): Tutor {
         setBusy(false);
       }
     },
-    [input.answered, input.attemptId, input.questionId],
+    [input.answered, input.attemptId, input.chapterId, input.questionId],
   );
 
   return {

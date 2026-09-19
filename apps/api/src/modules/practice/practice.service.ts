@@ -1,5 +1,6 @@
 import {
   markingStepSchema,
+  questionSelectionSchema,
   practiceFiltersSchema,
   WEAK_TOPIC_MARK_RATIO,
   WEAK_TOPIC_MIN_ATTEMPTS,
@@ -15,13 +16,16 @@ import {
   type PracticeSession,
   type PracticeSessionSummary,
   type PracticeTopicResult,
+  type TopicComparison,
   type QuestionAnswer,
+  type QuestionSelection,
   type SelfEvaluateInput,
   type SetMistakeReasonInput,
   type StudentAnswer,
   type StudentQuestion,
   type SubmitAttemptInput,
 } from "@samjho/contracts";
+import { z } from "zod";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors.js";
@@ -36,6 +40,7 @@ import {
   type GradingRow,
   type SessionRow,
 } from "./practice.repository.js";
+import { analyticsService } from "../analytics/analytics.service.js";
 import { applyFinalisedAttempt, countCompletedSession, type Tx } from "./practice.rollups.js";
 import { practiceSelection } from "./practice.selection.js";
 import { correctLatestLapseSchedule } from "../revision/revision.scheduler.js";
@@ -102,6 +107,18 @@ export const practiceService = {
         {
           path: "body.mode",
           message: "this session type can only be started from its revision queue or assignment",
+        },
+      ]);
+    }
+
+    // An adaptive or diagnostic sitting has an objective and a ladder, and both
+    // arrive through `/assessments`. Building one here would produce a filtered
+    // random set wearing the label of a measurement.
+    if (input.mode === "DIAGNOSTIC" || input.mode === "ADAPTIVE") {
+      throw new ValidationError("Request validation failed", [
+        {
+          path: "body.mode",
+          message: "this session type is started from /assessments",
         },
       ]);
     }
@@ -318,7 +335,26 @@ export const practiceService = {
       await recomputeTotals(tx, session);
     });
 
-    return this.itemOutcome(userId, sessionId, input.questionId);
+    const outcome = await this.itemOutcome(userId, sessionId, input.questionId);
+
+    void analyticsService.record({
+      userId,
+      type: "ANSWER_SUBMITTED",
+      sessionId,
+      questionId: input.questionId,
+      props: {
+        index: session.questionIds.indexOf(input.questionId),
+        total: session.totalQuestions,
+        dwellMs: input.timeSpentMs,
+        // Every part right, which is the same rule the session totals use.
+        correct: outcome.item.attempts.every((attempt) => attempt.isCorrect === true),
+        ...(readSelections(session)[input.questionId]?.targetLevel === undefined
+          ? {}
+          : { targetLevel: readSelections(session)[input.questionId]?.targetLevel }),
+      },
+    });
+
+    return outcome;
   },
 
   /**
@@ -495,6 +531,16 @@ export const practiceService = {
     // IN_PROGRESS session is one the student is choosing to finish.
     if (session.status === "IN_PROGRESS") {
       await closeSession(sessionId, userId, new Date());
+
+      // Only on the transition. `complete` is idempotent by design — a
+      // double-tapped Finish returns the same result — and an event per tap
+      // would make "how many sets get finished" a count of taps.
+      void analyticsService.record({
+        userId,
+        type: "ASSESSMENT_COMPLETED",
+        sessionId,
+        props: { index: session.answered, total: session.totalQuestions },
+      });
     }
 
     return this.result(userId, sessionId);
@@ -511,8 +557,56 @@ export const practiceService = {
       .filter((item) => item.attempts.some((attempt) => attempt.isCorrect === false))
       .map((item) => item.question.id);
 
+    const scorePercent =
+      session.marksPossible > 0 ? (session.marksEarned / session.marksPossible) * 100 : 0;
+
+    const previousRow = await practiceRepository.findPreviousComparable({
+      userId,
+      sessionId: session.id,
+      mode: session.mode,
+      objective: session.objective,
+      startedAt: session.startedAt,
+    });
+
+    const previous =
+      previousRow === null
+        ? null
+        : {
+            sessionId: previousRow.id,
+            scorePercent: round1((previousRow.marksEarned / previousRow.marksPossible) * 100),
+            completedAt: (previousRow.completedAt ?? session.startedAt).toISOString(),
+          };
+
+    const history = await practiceRepository.findTopicHistoryBefore({
+      userId,
+      topicIds: topics.map((topic) => topic.topicId),
+      before: session.startedAt,
+    });
+
+    const movements: TopicComparison[] = topics
+      .map((topic) => {
+        const prior = history.get(topic.topicId);
+
+        return {
+          topicId: topic.topicId,
+          name: topic.name,
+          chapterName: topic.chapterName,
+          before: prior && prior.possible > 0 ? clamp01(prior.earned / prior.possible) : null,
+          after: topic.marksPossible > 0 ? clamp01(topic.marksEarned / topic.marksPossible) : 0,
+          attempted: topic.attempted,
+        };
+      })
+      // Biggest improvement first: the point of this list is to show a student
+      // that the work moved something, so the thing that moved most goes on top.
+      // A topic with no prior history sorts last — it is news, not progress.
+      .sort((left, right) => movementOf(right) - movementOf(left));
+
     return {
       session: hydrated,
+      scorePercent: round1(scorePercent),
+      previous,
+      deltaPercent: previous === null ? null : round1(round1(scorePercent) - previous.scorePercent),
+      movements,
       topics,
       weakTopics: topics.filter(
         (topic) =>
@@ -562,7 +656,7 @@ export const practiceService = {
  * deadline directly, so an answer sent thirty seconds late is rejected whether
  * or not anything has swept.
  */
-async function loadSession(userId: string, sessionId: string): Promise<SessionRow> {
+export async function loadSession(userId: string, sessionId: string): Promise<SessionRow> {
   const session = await practiceRepository.findById(sessionId, userId);
   if (!session) throw new NotFoundError("Practice session");
 
@@ -632,7 +726,7 @@ async function closeSession(sessionId: string, userId: string, at: Date): Promis
  * row. The set gets shorter and the totals still add up, which is a better
  * outcome than showing a student a question an editor has flagged as wrong.
  */
-async function hydrateSession(session: SessionRow): Promise<PracticeSession> {
+export async function hydrateSession(session: SessionRow): Promise<PracticeSession> {
   const [questions, attempts] = [
     await practiceRepository.findSessionQuestions(session.questionIds),
     await practiceRepository.findAttempts(session.id),
@@ -703,6 +797,9 @@ function toSession(
       session.deadlineAt !== null &&
       session.completedAt !== null &&
       session.completedAt.getTime() >= session.deadlineAt.getTime(),
+    objective: session.objective,
+    plannedQuestions: session.plannedQuestions,
+    selections: readSelections(session),
     totals: {
       totalQuestions: session.totalQuestions,
       answered: session.answered,
@@ -776,6 +873,13 @@ function readAnswer(value: Prisma.JsonValue | null): StudentAnswer {
 function readFilters(session: Pick<SessionRow, "filtersJson">): PracticeFilters {
   const parsed = practiceFiltersSchema.safeParse(session.filtersJson);
   return parsed.success ? parsed.data : { unseenOnly: false };
+}
+
+export function readSelections(
+  session: Pick<SessionRow, "selectionsJson">,
+): Record<string, QuestionSelection> {
+  const parsed = z.record(z.string(), questionSelectionSchema).safeParse(session.selectionsJson);
+  return parsed.success ? parsed.data : {};
 }
 
 // ── Grading inputs ───────────────────────────────────────────────────────────
@@ -951,7 +1055,7 @@ async function countPendingBySession(sessionIds: string[]): Promise<Map<string, 
 }
 
 /** Marks the set is worth, summed over graded units rather than over items. */
-async function sumGradableMarks(questionIds: string[]): Promise<number> {
+export async function sumGradableMarks(questionIds: string[]): Promise<number> {
   const rows = await prisma.question.findMany({
     where: { id: { in: questionIds } },
     select: { marks: true, isContainer: true, subParts: { select: { marks: true } } },
@@ -1072,4 +1176,16 @@ function collect(
 async function itemIdFor(questionId: string): Promise<string> {
   const owners = await practiceRepository.findItemOwners([questionId]);
   return owners.get(questionId) ?? questionId;
+}
+
+function movementOf(comparison: TopicComparison): number {
+  return comparison.before === null ? -Infinity : comparison.after - comparison.before;
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
 }

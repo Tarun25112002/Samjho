@@ -38,7 +38,15 @@ export default async function PracticeResultPage({ params }: PageProps) {
   await requireOnboarded();
 
   const result = await loadResultOr404(id);
-  const { session, topics, weakTopics, mistakeQuestionIds } = result;
+  const { session, topics, weakTopics, mistakeQuestionIds, previous, deltaPercent, movements } =
+    result;
+
+  // Only topics that actually moved, and only where there is a "before" to move
+  // from. A topic the student has never met before is news rather than progress,
+  // and listing it as "0% → 60%" claims an improvement that did not happen.
+  const improvements = movements.filter(
+    (movement) => movement.before !== null && movement.after > movement.before,
+  );
 
   const accuracy =
     session.totals.answered > 0
@@ -73,6 +81,12 @@ export default async function PracticeResultPage({ params }: PageProps) {
               </span>
             </p>
 
+            <ScoreChange
+              scorePercent={result.scorePercent}
+              deltaPercent={deltaPercent}
+              previous={previous}
+            />
+
             {/*
               Three figures stay three figures at 360px — a score a student reads
               as one line should not become a column — so the type shrinks rather
@@ -102,6 +116,39 @@ export default async function PracticeResultPage({ params }: PageProps) {
           </p>
         ) : null}
       </section>
+
+      {improvements.length > 0 ? (
+        <section aria-labelledby="improvements-heading" className="flex flex-col gap-4">
+          <SectionHeading
+            id="improvements-heading"
+            eyebrow="What moved"
+            title="You improved on these"
+            lede="This set against everything you had answered on the same topics before it."
+          />
+
+          <Card pad="flush" className="overflow-hidden">
+            <ul className="divide-line divide-y">
+              {improvements.map((movement) => (
+                <li
+                  key={movement.topicId}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-4 sm:px-6"
+                >
+                  <div className="min-w-0">
+                    <p className="text-text truncate text-sm font-medium">{movement.name}</p>
+                    <p className="text-text-faint truncate text-xs">{movement.chapterName}</p>
+                  </div>
+
+                  <p className="text-text shrink-0 text-sm tabular-nums">
+                    <span className="text-text-soft">{toPercent(movement.before)}</span>
+                    <span className="text-text-faint mx-2">→</span>
+                    <span className="text-tick-700 font-semibold">{toPercent(movement.after)}</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      ) : null}
 
       {topics.length > 0 ? (
         <section aria-labelledby="topics-heading" className="flex flex-col gap-4">
@@ -224,4 +271,56 @@ async function loadResultOr404(id: string) {
     if (error instanceof ApiClientError && error.status === 404) notFound();
     throw error;
   }
+}
+
+/**
+ * The score, and how it compares to last time.
+ *
+ * Only ever against a *comparable* sitting — the API matches on objective where
+ * there is one and on mode otherwise — because "down 9%" against a different
+ * kind of exercise is a number that means nothing and lands like a verdict.
+ *
+ * A first sitting says so rather than showing a flat zero change. There is
+ * nothing discouraging about "this is your first", and a lot discouraging about
+ * an arrow pointing nowhere.
+ */
+function ScoreChange({
+  scorePercent,
+  deltaPercent,
+  previous,
+}: {
+  scorePercent: number;
+  deltaPercent: number | null;
+  previous: { scorePercent: number } | null;
+}) {
+  const rounded = Math.round(scorePercent);
+
+  if (previous === null || deltaPercent === null) {
+    return (
+      <p className="text-text-soft mt-3 text-sm">
+        <span className="text-text font-semibold tabular-nums">{rounded}%</span> · your first set of
+        this kind, so there is nothing to compare it with yet.
+      </p>
+    );
+  }
+
+  const moved = Math.round(deltaPercent);
+  const tone = moved > 0 ? "text-tick-700" : moved < 0 ? "text-marker-700" : "text-text-soft";
+
+  return (
+    <p className="text-text-soft mt-3 flex flex-wrap items-baseline gap-x-2 text-sm">
+      <span className="text-text font-semibold tabular-nums">{rounded}%</span>
+      <span className={`${tone} font-semibold tabular-nums`}>
+        {moved > 0 ? "↑" : moved < 0 ? "↓" : "="} {Math.abs(moved)}%
+      </span>
+      <span>
+        {moved === 0 ? "level with" : "from"} your previous{" "}
+        <span className="tabular-nums">{Math.round(previous.scorePercent)}%</span>
+      </span>
+    </p>
+  );
+}
+
+function toPercent(value: number | null): string {
+  return value === null ? "—" : `${String(Math.round(value * 100))}%`;
 }

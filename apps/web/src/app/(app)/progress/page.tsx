@@ -1,11 +1,13 @@
-import type { SubjectProgressSummary, WeakTopic } from "@samjho/contracts";
+import type { SubjectProgressSummary, TopicMovement, WeakTopic } from "@samjho/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BookmarkIcon, ChevronRight, ProgressIcon, RedoIcon } from "@/components/icons";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
-import { Card, IconTile, Meter } from "@/components/ui/surface";
+import { Card, flushBandClass, IconTile, Meter } from "@/components/ui/surface";
+import { MasteryTrend } from "@/features/progress/mastery-trend";
+import { loadTrend } from "@/lib/assessment";
 import { requireStudent } from "@/lib/me";
 import { loadProgressOverview } from "@/lib/progress";
 import { formatMarksValue, practiceHref } from "@/lib/practice-format";
@@ -24,7 +26,19 @@ export const dynamic = "force-dynamic";
  */
 export default async function ProgressPage() {
   await requireStudent();
-  const overview = await loadProgressOverview();
+
+  const [overview, trend] = await Promise.all([
+    loadProgressOverview(),
+    // A band on this page rather than the page itself. A trend endpoint that is
+    // temporarily unavailable should cost a student one chart, not their whole
+    // progress space - the same rule the dashboard applies to its own bands.
+    loadTrend().catch(() => null),
+  ]);
+
+  // Only topics with something to compare against. A topic first met this week
+  // has no fortnight-ago figure, and printing it as a movement from zero would
+  // claim an improvement that did not happen.
+  const movements = (trend?.topics ?? []).filter((topic) => topic.previous !== null);
   const attempted = overview.subjects.reduce((sum, subject) => sum + subject.attempted, 0);
   const correct = overview.subjects.reduce((sum, subject) => sum + subject.correct, 0);
   const accuracy = attempted === 0 ? null : Math.round((correct / attempted) * 100);
@@ -35,7 +49,17 @@ export default async function ProgressPage() {
         eyebrow="Learning evidence"
         title="Your progress"
         lede="See the work you have done, spot what needs another look, and turn it into a focused set."
-        action={<ButtonLink href="/practice/new">Build a focused set</ButtonLink>}
+        action={
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/analysis"
+              className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+            >
+              Your report <ChevronRight className="size-4" />
+            </Link>
+            <ButtonLink href="/practice/new">Build a focused set</ButtonLink>
+          </div>
+        }
       />
 
       <section aria-label="Progress summary" className="grid gap-4 sm:grid-cols-3">
@@ -62,6 +86,47 @@ export default async function ProgressPage() {
           warning={overview.openMistakes > 0}
         />
       </section>
+
+      {trend !== null && trend.points.length > 1 ? (
+        <Card aria-labelledby="trend-heading">
+          <SectionHeading
+            id="trend-heading"
+            eyebrow="Over time"
+            title="How your marks have moved"
+            lede="Marks earned as a share of marks attempted, on each day you practised."
+            action={
+              trend.currentStreakDays > 0 ? (
+                <span className="text-text-faint text-xs font-medium tabular-nums">
+                  {trend.currentStreakDays} day streak
+                </span>
+              ) : undefined
+            }
+          />
+
+          <div className="mt-5">
+            <MasteryTrend points={trend.points} />
+          </div>
+        </Card>
+      ) : null}
+
+      {movements.length > 0 ? (
+        <Card aria-labelledby="movement-heading" pad="flush" className="overflow-hidden">
+          <div className={flushBandClass}>
+            <SectionHeading
+              id="movement-heading"
+              eyebrow="Topic by topic"
+              title="Current against a fortnight ago"
+              lede="The earlier figure is rebuilt from what you answered before then, so it is a comparison rather than a restatement."
+            />
+          </div>
+
+          <ul className="divide-line divide-y border-t border-line">
+            {movements.map((topic) => (
+              <TopicMovementRow key={topic.id} topic={topic} />
+            ))}
+          </ul>
+        </Card>
+      ) : null}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
         <Card aria-labelledby="subjects-heading">
@@ -311,5 +376,52 @@ function EmptyProgress() {
         Manage subjects <ChevronRight className="size-4" />
       </Link>
     </div>
+  );
+}
+
+/**
+ * One topic's current mastery against where it was a fortnight ago.
+ *
+ * The arrow and the two figures rather than a percentage-point delta, because
+ * "61% → 73%" is a sentence a student can check against their own memory and
+ * "+12pp" is a statistic. The colour is carried by a word as well, since a
+ * green number and a red number are the same number in greyscale.
+ */
+function TopicMovementRow({ topic }: { topic: TopicMovement }) {
+  const previous = topic.previous ?? 0;
+  const delta = topic.current - previous;
+  const improved = delta > 0.005;
+  const worsened = delta < -0.005;
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-4 sm:px-6">
+      <div className="min-w-0">
+        <p className="text-text truncate text-sm font-medium">{topic.name}</p>
+        <p className="text-text-faint mt-0.5 truncate text-xs">
+          {topic.subjectName} · {topic.chapterName}
+        </p>
+      </div>
+
+      <p className="shrink-0 text-sm tabular-nums">
+        <span className="text-text-soft">{Math.round(previous * 100)}%</span>
+        <span className="text-text-faint mx-2" aria-hidden="true">
+          →
+        </span>
+        <span
+          className={
+            improved
+              ? "text-tick-700 font-semibold"
+              : worsened
+                ? "text-marker-700 font-semibold"
+                : "text-text font-semibold"
+          }
+        >
+          {Math.round(topic.current * 100)}%
+        </span>
+        <span className="sr-only">
+          {improved ? ", improved" : worsened ? ", fallen" : ", unchanged"}
+        </span>
+      </p>
+    </li>
   );
 }

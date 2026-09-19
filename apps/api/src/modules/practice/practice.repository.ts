@@ -1,4 +1,13 @@
-import type { ListPracticeSessionsQuery, PracticeFilters, PracticeMode } from "@samjho/contracts";
+import type {
+  AssessmentObjective,
+  Difficulty,
+  ListPracticeSessionsQuery,
+  PracticeFilters,
+  PracticeMode,
+  QuestionSelection,
+  QuestionType,
+  SessionStatus,
+} from "@samjho/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";
@@ -122,6 +131,9 @@ const sessionSelect = {
   timeSpentMs: true,
   timeLimitSeconds: true,
   deadlineAt: true,
+  objective: true,
+  plannedQuestions: true,
+  selectionsJson: true,
 } satisfies Prisma.PracticeSessionSelect;
 
 export type SessionRow = Prisma.PracticeSessionGetPayload<{ select: typeof sessionSelect }>;
@@ -137,6 +149,7 @@ const attemptSelect = {
   mistakeReason: true,
   timeSpentMs: true,
   attemptedAt: true,
+  hintUsed: true,
 } satisfies Prisma.QuestionAttemptSelect;
 
 export type AttemptRow = Prisma.QuestionAttemptGetPayload<{ select: typeof attemptSelect }>;
@@ -151,6 +164,9 @@ export interface CreateSessionData {
   /** Both or neither — the service computes the deadline from the limit. */
   timeLimitSeconds?: number;
   deadlineAt?: Date;
+  objective?: AssessmentObjective;
+  plannedQuestions?: number;
+  selections?: Record<string, QuestionSelection>;
 }
 
 export const practiceRepository = {
@@ -167,8 +183,193 @@ export const practiceRepository = {
         marksPossible: data.marksPossible,
         ...(data.timeLimitSeconds === undefined ? {} : { timeLimitSeconds: data.timeLimitSeconds }),
         ...(data.deadlineAt === undefined ? {} : { deadlineAt: data.deadlineAt }),
+        ...(data.objective === undefined ? {} : { objective: data.objective }),
+        ...(data.plannedQuestions === undefined ? {} : { plannedQuestions: data.plannedQuestions }),
+        ...(data.selections === undefined
+          ? {}
+          : { selectionsJson: data.selections as unknown as Prisma.InputJsonValue }),
       },
       select: sessionSelect,
+    });
+  },
+
+  appendQuestion(data: {
+    sessionId: string;
+    questionIds: string[];
+    marksPossible: number;
+    selections: Record<string, QuestionSelection>;
+  }): Promise<SessionRow> {
+    return prisma.practiceSession.update({
+      where: { id: data.sessionId },
+      data: {
+        questionIds: data.questionIds,
+        totalQuestions: data.questionIds.length,
+        marksPossible: data.marksPossible,
+        selectionsJson: data.selections as unknown as Prisma.InputJsonValue,
+      },
+      select: sessionSelect,
+    });
+  },
+
+  async findTopicMasteryStates(
+    userId: string,
+    subjectIds: string[],
+  ): Promise<TopicMasteryStateRow[]> {
+    const topics = await prisma.topic.findMany({
+      where: {
+        isActive: true,
+        chapter: {
+          isActive: true,
+          ...(subjectIds.length > 0 ? { subjectId: { in: subjectIds } } : {}),
+          subject: { isActive: true },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        chapter: { select: { subjectId: true } },
+        mastery: {
+          where: { userId },
+          select: { masteryScore: true, attempted: true, unrepairedMistakes: true },
+        },
+      },
+      orderBy: { id: "asc" },
+    });
+
+    return topics.map((topic) => {
+      const mastery = topic.mastery[0];
+      return {
+        topicId: topic.id,
+        topicName: topic.name,
+        subjectId: topic.chapter.subjectId,
+        masteryScore: mastery?.masteryScore ?? 0,
+        attempted: mastery?.attempted ?? 0,
+        unrepairedMistakes: mastery?.unrepairedMistakes ?? 0,
+      };
+    });
+  },
+
+  findEnrolledSubjectIds(userId: string): Promise<{ subjectId: string }[]> {
+    return prisma.subjectEnrolment.findMany({
+      where: { isActive: true, profile: { userId }, subject: { isActive: true } },
+      select: { subjectId: true },
+      orderBy: { subjectId: "asc" },
+    });
+  },
+
+  findHint(questionId: string): Promise<HintRow | null> {
+    return prisma.question.findFirst({
+      where: { id: questionId },
+      select: {
+        id: true,
+        type: true,
+        difficulty: true,
+        answer: { select: { hint: true } },
+        topics: {
+          where: { isPrimary: true },
+          select: { topic: { select: { name: true } } },
+          take: 1,
+        },
+      },
+    });
+  },
+
+  markHintUsed(sessionId: string, questionId: string): Promise<unknown> {
+    return prisma.questionAttempt.updateMany({
+      where: { practiceSessionId: sessionId, questionId },
+      data: { hintUsed: true },
+    });
+  },
+
+  /**
+   * The sitting this one should be measured against.
+   *
+   * Matched on objective when there is one and on mode otherwise, so a
+   * diagnostic is compared with the same diagnostic rather than with whatever
+   * the student happened to do last. Returns null when this is the first of its
+   * kind, which the result page reports as such instead of against zero.
+   */
+  findPreviousComparable(data: {
+    userId: string;
+    sessionId: string;
+    mode: PracticeMode;
+    objective: AssessmentObjective | null;
+    startedAt: Date;
+  }): Promise<PreviousSittingRow | null> {
+    return prisma.practiceSession.findFirst({
+      where: {
+        userId: data.userId,
+        id: { not: data.sessionId },
+        status: "COMPLETED",
+        startedAt: { lt: data.startedAt },
+        marksPossible: { gt: 0 },
+        ...(data.objective === null
+          ? { mode: data.mode, objective: null }
+          : { objective: data.objective }),
+      },
+      select: { id: true, marksEarned: true, marksPossible: true, completedAt: true },
+      orderBy: { startedAt: "desc" },
+    });
+  },
+
+  /**
+   * How the student did on these topics before this session started.
+   *
+   * Scoped by `attemptedAt`, not by session id, because "before" means before in
+   * time — attempts from any earlier set count, which is what makes the
+   * comparison a statement about the student rather than about two sittings.
+   */
+  async findTopicHistoryBefore(data: {
+    userId: string;
+    topicIds: string[];
+    before: Date;
+  }): Promise<Map<string, { earned: number; possible: number }>> {
+    if (data.topicIds.length === 0) return new Map();
+
+    const rows = await prisma.questionAttempt.findMany({
+      where: {
+        userId: data.userId,
+        evaluationMode: { not: "PENDING" },
+        attemptedAt: { lt: data.before },
+        question: { topics: { some: { isPrimary: true, topicId: { in: data.topicIds } } } },
+      },
+      select: {
+        marksAwarded: true,
+        marksPossible: true,
+        question: {
+          select: { topics: { where: { isPrimary: true }, select: { topicId: true }, take: 1 } },
+        },
+      },
+    });
+
+    const totals = new Map<string, { earned: number; possible: number }>();
+
+    for (const row of rows) {
+      const topicId = row.question.topics[0]?.topicId;
+      if (topicId === undefined) continue;
+
+      const entry = totals.get(topicId) ?? { earned: 0, possible: 0 };
+      entry.earned += row.marksAwarded;
+      entry.possible += row.marksPossible;
+      totals.set(topicId, entry);
+    }
+
+    return totals;
+  },
+
+  findDiagnosticSessions(userId: string): Promise<DiagnosticSessionRow[]> {
+    return prisma.practiceSession.findMany({
+      where: { userId, objective: { not: null } },
+      select: {
+        id: true,
+        objective: true,
+        status: true,
+        completedAt: true,
+        startedAt: true,
+        marksEarned: true,
+        marksPossible: true,
+      },
+      orderBy: { startedAt: "asc" },
     });
   },
 
@@ -392,4 +593,38 @@ export interface TopicRef {
   id: string;
   name: string;
   chapterName: string;
+}
+
+export interface TopicMasteryStateRow {
+  topicId: string;
+  topicName: string;
+  subjectId: string;
+  masteryScore: number;
+  attempted: number;
+  unrepairedMistakes: number;
+}
+
+export interface HintRow {
+  id: string;
+  type: QuestionType;
+  difficulty: Difficulty;
+  answer: { hint: string | null } | null;
+  topics: { topic: { name: string } }[];
+}
+
+export interface DiagnosticSessionRow {
+  id: string;
+  objective: AssessmentObjective | null;
+  status: SessionStatus;
+  completedAt: Date | null;
+  startedAt: Date;
+  marksEarned: number;
+  marksPossible: number;
+}
+
+export interface PreviousSittingRow {
+  id: string;
+  marksEarned: number;
+  marksPossible: number;
+  completedAt: Date | null;
 }

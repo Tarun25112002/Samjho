@@ -11,11 +11,16 @@ import { logger } from "./lib/logger.js";
 import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
+import { buildAIGradingRouter } from "./modules/ai/ai.grading.routes.js";
 import { buildAIRouter } from "./modules/ai/ai.routes.js";
+import { buildAnalysisRouter } from "./modules/analysis/analysis.routes.js";
+import { buildEventRouter } from "./modules/analytics/analytics.routes.js";
+import { buildAssessmentRouter } from "./modules/assessments/assessment.routes.js";
 import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { buildExamPaperAdminRouter } from "./modules/exams/paper.admin.routes.js";
+import { buildExamAttemptRouter } from "./modules/exams/attempt.routes.js";
 import { buildExamPaperRouter } from "./modules/exams/paper.routes.js";
 import { buildPastPaperAdminRouter } from "./modules/exams/past-paper.admin.routes.js";
 import { buildPastPaperRouter } from "./modules/exams/past-paper.routes.js";
@@ -142,18 +147,23 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/catalog", buildCatalogRouter(verifyToken));
   router.use("/questions", buildQuestionRouter(verifyToken));
   router.use("/practice-sessions", buildPracticeRouter(verifyToken));
+  router.use("/assessments", buildAssessmentRouter(verifyToken));
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
   router.use("/progress", buildProgressRouter(verifyToken));
+  router.use("/analysis", buildAnalysisRouter(verifyToken));
+  router.use("/events", buildEventRouter(verifyToken));
   router.use("/revision", buildRevisionRouter(verifyToken));
   router.use("/study-plan", buildStudyPlanRouter(verifyToken));
   router.use("/classrooms", buildClassroomRouter(verifyToken));
   router.use("/ai", buildAIRouter(verifyToken));
+  router.use("/ai/grading", buildAIGradingRouter(verifyToken));
 
   // Its own prefix rather than extra verbs on `/admin/questions`, so a teacher
   // token never reaches the shared bank's routes. See the router for why the
   // two blast radii want two surfaces.
   router.use("/teacher", buildTeacherRouter(verifyToken));
   router.use("/exam-papers", buildExamPaperRouter(verifyToken));
+  router.use("/exam-attempts", buildExamAttemptRouter(verifyToken));
   router.use("/past-papers", buildPastPaperRouter(verifyToken));
 
   // Mounted under its own prefix rather than as extra verbs on /catalog, so the
