@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Samjho Next.js",
+  "display": "Medhavi Next.js",
   "extends": "./base.json",
   "compilerOptions": {
     "module": "esnext",

@@ -1,6 +1,6 @@
 "use client";
 
-import type { StudentProfile, SubjectSummary } from "@samjho/contracts";
+import type { StudentProfile, SubjectSummary } from "@medhavi/contracts";
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";

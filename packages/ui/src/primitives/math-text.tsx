@@ -33,7 +33,7 @@ import type { Components } from "react-markdown";
  * It does not import KaTeX's stylesheet. A `.css` import inside a package
  * compiled by `tsc` is not something `tsc` can emit, and a component that
  * silently pulls in 25KB of CSS is a component that fights the app's own
- * bundling. The app imports it once — see `@samjho/ui/styles.css`.
+ * bundling. The app imports it once — see `@medhavi/ui/styles.css`.
  *
  * It does not memoise. `react-markdown` re-parses on every render, which sounds
  * wasteful until you count: a question body is a few hundred characters, and the
@@ -62,7 +62,7 @@ export interface MathTextProps {
  */
 const blockComponents: Components = {
   table: ({ children, ...props }) => (
-    <div className="samjho-prose-table-wrap">
+    <div className="medhavi-prose-table-wrap">
       <table {...props}>{children}</table>
     </div>
   ),
@@ -112,7 +112,7 @@ export function MathText({ children, inline = false, className }: MathTextProps)
   const source = inline ? children : promoteDisplayMath(children);
 
   return (
-    <Tag className={["samjho-prose", className].filter(Boolean).join(" ")}>
+    <Tag className={["medhavi-prose", className].filter(Boolean).join(" ")}>
       <Markdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[

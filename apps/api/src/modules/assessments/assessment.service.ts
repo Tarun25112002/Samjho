@@ -10,7 +10,7 @@ import {
   type PracticeSession,
   type QuestionSelection,
   type StartAssessmentInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
@@ -101,7 +101,7 @@ export const assessmentService = {
 
     if (questionId === null) {
       throw new NotFoundError(
-        "Samjho has no questions for this assessment yet — the question bank",
+        "Medhavi has no questions for this assessment yet — the question bank",
       );
     }
 

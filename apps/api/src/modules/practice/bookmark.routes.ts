@@ -1,4 +1,4 @@
-import { createBookmarkSchema, cursorPaginationQuerySchema } from "@samjho/contracts";
+import { createBookmarkSchema, cursorPaginationQuerySchema } from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

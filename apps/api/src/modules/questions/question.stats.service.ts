@@ -3,7 +3,7 @@ import type {
   AdminSubjectStats,
   LicenceStatus,
   QuestionStatus,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 import { questionAdminRepository } from "./question.admin.repository.js";

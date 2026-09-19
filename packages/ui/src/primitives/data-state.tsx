@@ -87,14 +87,14 @@ export function DataState<T>({
   // is a lie, and the kind that makes someone stop trusting a number they see.
   if (error) {
     return (
-      <div role="alert" className={classes("samjho-state", "samjho-state--error", className)}>
-        <p className="samjho-state__title">{error.message}</p>
+      <div role="alert" className={classes("medhavi-state", "medhavi-state--error", className)}>
+        <p className="medhavi-state__title">{error.message}</p>
 
         {error.requestId ? (
           // The id from the API's error envelope. A student can quote it and it
           // pins the exact request in the logs — which is the entire reason
           // requestId exists.
-          <p className="samjho-state__meta">
+          <p className="medhavi-state__meta">
             Reference: <code>{error.requestId}</code>
           </p>
         ) : null}
@@ -104,8 +104,8 @@ export function DataState<T>({
           under a 404 teaches people that buttons here do nothing.
         */}
         {onRetry && error.retryable ? (
-          <p className="samjho-state__actions">
-            <button type="button" className="samjho-state__retry" onClick={onRetry}>
+          <p className="medhavi-state__actions">
+            <button type="button" className="medhavi-state__retry" onClick={onRetry}>
               {retryLabel}
             </button>
           </p>
@@ -119,8 +119,12 @@ export function DataState<T>({
       // `role="status"` with polite live semantics, so a screen reader announces
       // the wait instead of leaving the user in silence while the skeleton — which
       // is aria-hidden — does the visual work.
-      <div role="status" aria-live="polite" className={classes("samjho-state--loading", className)}>
-        <span className="samjho-visually-hidden">{loadingLabel}</span>
+      <div
+        role="status"
+        aria-live="polite"
+        className={classes("medhavi-state--loading", className)}
+      >
+        <span className="medhavi-visually-hidden">{loadingLabel}</span>
         {loadingFallback ?? <Skeleton />}
       </div>
     );
@@ -128,10 +132,10 @@ export function DataState<T>({
 
   if (data === null || data === undefined || isEmpty(data)) {
     return (
-      <div className={classes("samjho-state", "samjho-state--empty", className)}>
-        <p className="samjho-state__title">{emptyTitle}</p>
-        {emptyBody ? <div className="samjho-state__body">{emptyBody}</div> : null}
-        {emptyAction ? <div className="samjho-state__actions">{emptyAction}</div> : null}
+      <div className={classes("medhavi-state", "medhavi-state--empty", className)}>
+        <p className="medhavi-state__title">{emptyTitle}</p>
+        {emptyBody ? <div className="medhavi-state__body">{emptyBody}</div> : null}
+        {emptyAction ? <div className="medhavi-state__actions">{emptyAction}</div> : null}
       </div>
     );
   }

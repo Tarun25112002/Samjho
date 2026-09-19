@@ -1,7 +1,7 @@
 "use client";
 
-import { EMPTY_ANSWER, type PracticeSession } from "@samjho/contracts";
-import { QuestionRenderer } from "@samjho/ui";
+import { EMPTY_ANSWER, type PracticeSession } from "@medhavi/contracts";
+import { QuestionRenderer } from "@medhavi/ui";
 
 import { Card } from "@/components/ui/surface";
 import { TutorPanel } from "@/features/ai/tutor-panel";

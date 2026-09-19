@@ -1,4 +1,4 @@
-import { ERROR_CODES, type ErrorResponse } from "@samjho/contracts";
+import { ERROR_CODES, type ErrorResponse } from "@medhavi/contracts";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 

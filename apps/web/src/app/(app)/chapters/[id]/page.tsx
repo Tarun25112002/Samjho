@@ -1,4 +1,4 @@
-import { DataState, QUESTION_TYPE_LABELS, QuestionRenderer } from "@samjho/ui";
+import { DataState, QUESTION_TYPE_LABELS, QuestionRenderer } from "@medhavi/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -162,7 +162,7 @@ export default async function ChapterPage({ params }: PageProps) {
         <DataState
           data={questions.items}
           emptyTitle="No questions here yet"
-          emptyBody="Samjho's question bank is being written from scratch, chapter by chapter. This one has not been filled in."
+          emptyBody="Medhavi's question bank is being written from scratch, chapter by chapter. This one has not been filled in."
           emptyAction={
             <Link
               href={`/subjects/${chapter.subject.slug}`}

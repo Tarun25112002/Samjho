@@ -1,4 +1,4 @@
-import { REVIEW_DAILY_CAP, type RevisionQueue } from "@samjho/contracts";
+import { REVIEW_DAILY_CAP, type RevisionQueue } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";

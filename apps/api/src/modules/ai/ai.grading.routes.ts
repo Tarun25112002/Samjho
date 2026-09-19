@@ -1,4 +1,4 @@
-import { confirmGradingSchema, requestGradingSchema } from "@samjho/contracts";
+import { confirmGradingSchema, requestGradingSchema } from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

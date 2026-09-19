@@ -1,4 +1,4 @@
-import { meResponseSchema, type MeResponse } from "@samjho/contracts";
+import { meResponseSchema, type MeResponse } from "@medhavi/contracts";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 

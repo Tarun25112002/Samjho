@@ -17,9 +17,9 @@ import { createTokenVerifier, type TokenVerifier } from "../lib/token-verifier.j
  * config-driven code paths read that.
  */
 
-export const TEST_ISSUER = "https://test.clerk.samjho.invalid";
+export const TEST_ISSUER = "https://test.clerk.medhavi.invalid";
 export const TEST_AUTHORIZED_PARTY = "http://localhost:3000";
-const TEST_KID = "samjho-test-key";
+const TEST_KID = "medhavi-test-key";
 
 const ours = await generateKeyPair("RS256", { extractable: true });
 /** A second key pair that the JWKS does *not* publish — for forgery tests. */

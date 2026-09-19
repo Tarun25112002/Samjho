@@ -6,8 +6,8 @@ import {
   STEP_VERDICT_LABELS,
   type GradedStep,
   type GradingSuggestion,
-} from "@samjho/contracts";
-import { MathText } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { MathText } from "@medhavi/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -123,7 +123,7 @@ export function MarkingPanel({
       <div className="border-line mt-4 border-t pt-4">
         <Button variant="secondary" size="sm" disabled={loading} onClick={() => void load()}>
           <SparkIcon className="size-4" />
-          {loading ? "Marking your answer…" : "Mark this with Samjho's help"}
+          {loading ? "Marking your answer…" : "Mark this with Medhavi's help"}
         </Button>
 
         {failure ? (
@@ -158,7 +158,7 @@ export function MarkingPanel({
       <p className="text-text-faint mt-2 text-xs leading-relaxed">
         {suggestion.generated
           ? "These are suggestions, not your marks. Change any of them you disagree with — you decide what you scored."
-          : "Samjho could not mark this one. Compare your answer with the scheme and award the marks yourself."}
+          : "Medhavi could not mark this one. Compare your answer with the scheme and award the marks yourself."}
       </p>
 
       {suggestion.caveat ? (

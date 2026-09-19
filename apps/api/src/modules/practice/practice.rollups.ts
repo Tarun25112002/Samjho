@@ -1,4 +1,4 @@
-import type { MistakeReason } from "@samjho/contracts";
+import type { MistakeReason } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { istDay } from "../../lib/study-day.js";

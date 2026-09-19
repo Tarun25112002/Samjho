@@ -86,7 +86,7 @@ describe("createTokenVerifier", () => {
   });
 
   it("rejects a token minted for a different origin", async () => {
-    expect(await reasonFor(await mintToken({ azp: "https://not-samjho.example" }))).toBe(
+    expect(await reasonFor(await mintToken({ azp: "https://not-medhavi.example" }))).toBe(
       "azp_mismatch",
     );
   });
@@ -124,7 +124,7 @@ describe("createTokenVerifier", () => {
     const multi = createTokenVerifier({
       jwks: testJwks,
       issuer: TEST_ISSUER,
-      authorizedParties: ["https://samjho.app", TEST_AUTHORIZED_PARTY],
+      authorizedParties: ["https://medhavi.app", TEST_AUTHORIZED_PARTY],
     });
 
     await expect(multi(await mintToken())).resolves.toMatchObject({

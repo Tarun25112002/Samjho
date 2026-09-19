@@ -1,5 +1,5 @@
 {
-  "extends": "@samjho/config/tsconfig/next.json",
+  "extends": "@medhavi/config/tsconfig/next.json",
   "compilerOptions": {
     // No `baseUrl`: since TS 4.4 `paths` resolve relative to this file's
     // directory, which is what we want, and `baseUrl` is on its way out.

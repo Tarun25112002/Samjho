@@ -1,5 +1,5 @@
-import type { ExamResultItem, ExamScore, ExamSectionResult } from "@samjho/contracts";
-import { MathText, QuestionRenderer } from "@samjho/ui";
+import type { ExamResultItem, ExamScore, ExamSectionResult } from "@medhavi/contracts";
+import { MathText, QuestionRenderer } from "@medhavi/ui";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

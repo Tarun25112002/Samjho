@@ -4,7 +4,7 @@ import {
   type GradedStep,
   type GradingSuggestion,
   type MarkingStep,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { z } from "zod";
 
 import { logger } from "../../lib/logger.js";

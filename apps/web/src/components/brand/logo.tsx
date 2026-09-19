@@ -1,5 +1,5 @@
 /**
- * The Samjho mark and wordmark.
+ * The Medhavi mark and wordmark.
  *
  * ## What the mark is
  *
@@ -65,11 +65,11 @@ export function Mark({
  * navigation wordmark would not, so the app chrome uses `ink`. One prop, two
  * legitimate uses, and no way to pick the illegible combination by accident.
  *
- * `समझो` sits under the latin name at the largest size only. It is not
- * decoration — the word *is* the product's promise, and a good share of the
- * audience reads it faster than they read "Samjho". Poppins carries Devanagari,
- * so both lines are set in the same family rather than in whatever face the
- * operating system happened to substitute.
+ * `मेधावी` sits under the latin name at the largest size only. It is not
+ * decoration — it is the name, and a good share of the audience reads it faster
+ * in this script than in latin. Poppins carries Devanagari, so both lines are
+ * set in the same family rather than in whatever face the operating system
+ * happened to substitute.
  */
 export function Wordmark({
   size = "md",
@@ -92,10 +92,10 @@ export function Wordmark({
     >
       <Mark className={mark} variant={variant} />
       <span className="flex flex-col leading-none">
-        <span className={`${type} font-semibold tracking-[-0.03em]`}>Samjho</span>
+        <span className={`${type} font-semibold tracking-[-0.03em]`}>Medhavi</span>
         {size === "lg" ? (
           <span className="mt-1.5 text-sm font-medium opacity-70" lang="hi">
-            समझो
+            मेधावी
           </span>
         ) : null}
       </span>

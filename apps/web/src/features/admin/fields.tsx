@@ -8,7 +8,7 @@ import { cardClass } from "@/components/ui/surface";
 /**
  * Form primitives for the admin area.
  *
- * Local to `features/admin` rather than promoted to `@samjho/ui`, deliberately.
+ * Local to `features/admin` rather than promoted to `@medhavi/ui`, deliberately.
  * These carry no design opinion worth sharing and exist only to stop the
  * question editor being nine hundred lines of repeated label/input/error markup.
  * A shared package earns a component when a *second* consumer exists (docs/02

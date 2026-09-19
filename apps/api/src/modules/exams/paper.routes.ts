@@ -1,4 +1,4 @@
-import { listExamPapersQuerySchema } from "@samjho/contracts";
+import { listExamPapersQuerySchema } from "@medhavi/contracts";
 import { Router } from "express";
 import { z } from "zod";
 

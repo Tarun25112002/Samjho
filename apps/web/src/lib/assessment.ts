@@ -5,7 +5,7 @@ import {
   type DiagnosticProgress,
   type PreparationAnalysis,
   type ProgressTrend,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

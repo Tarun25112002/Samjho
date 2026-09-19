@@ -1,4 +1,4 @@
-import { recordEventsSchema } from "@samjho/contracts";
+import { recordEventsSchema } from "@medhavi/contracts";
 import { Router } from "express";
 
 import { authenticated, getAuthUser } from "../../middleware/auth.js";

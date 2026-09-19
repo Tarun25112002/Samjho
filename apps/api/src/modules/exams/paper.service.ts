@@ -1,4 +1,4 @@
-import { examBlueprintSchema, type ExamBlueprint } from "@samjho/exam-blueprints";
+import { examBlueprintSchema, type ExamBlueprint } from "@medhavi/exam-blueprints";
 import type {
   AdminPaperSummary,
   ExamPaperStructure,
@@ -9,7 +9,7 @@ import type {
   PaperPlan,
   PaperStatus,
   QuestionType,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { planPaper, type PaperPlanResult } from "./paper.planner.js";

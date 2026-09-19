@@ -1,5 +1,5 @@
 {
-  "extends": "@samjho/config/tsconfig/node.json",
+  "extends": "@medhavi/config/tsconfig/node.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",

@@ -1,5 +1,5 @@
 /**
- * @samjho/ui
+ * @medhavi/ui
  *
  * Genuinely reusable, app-agnostic pieces: design primitives and the question
  * renderer. Anything that knows about routing or app state stays in
@@ -7,7 +7,7 @@
  * actually exists — premature extraction into a shared package is the classic
  * monorepo mistake (docs/02 §2).
  *
- * Consumers must import `@samjho/ui/styles.css` once, and KaTeX's stylesheet
+ * Consumers must import `@medhavi/ui/styles.css` once, and KaTeX's stylesheet
  * alongside it. Neither is imported from a component: a `.css` import inside a
  * package compiled by `tsc` is not something `tsc` can emit.
  */

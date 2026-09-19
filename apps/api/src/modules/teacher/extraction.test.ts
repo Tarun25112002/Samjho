@@ -1,4 +1,4 @@
-import { extractionResultSchema, QUESTION_TYPE_RULES, type QuestionType } from "@samjho/contracts";
+import { extractionResultSchema, QUESTION_TYPE_RULES, type QuestionType } from "@medhavi/contracts";
 import { describe, expect, it } from "vitest";
 
 import { buildExtractionSystemPrompt, EXTRACTION_JSON_SCHEMA } from "./extraction.prompt.js";

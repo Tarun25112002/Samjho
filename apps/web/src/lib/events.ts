@@ -4,7 +4,7 @@ import {
   recordEventsResultSchema,
   type ClientEventType,
   type LearningEventProps,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 /**
  * Reporting what a student did, without ever getting in their way.

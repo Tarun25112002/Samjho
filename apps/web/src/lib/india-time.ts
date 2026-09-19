@@ -1,4 +1,4 @@
-/** The calendar used for every Samjho classroom deadline. */
+/** The calendar used for every Medhavi classroom deadline. */
 export const INDIA_TIME_ZONE = "Asia/Kolkata";
 
 // India has no daylight-saving transition, so a local classroom deadline can

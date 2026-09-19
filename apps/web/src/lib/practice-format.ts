@@ -1,4 +1,4 @@
-import type { PracticeFilters } from "@samjho/contracts";
+import type { PracticeFilters } from "@medhavi/contracts";
 
 /**
  * Pure presentation helpers for practice.

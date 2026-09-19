@@ -1,4 +1,4 @@
-import type { Board } from "@samjho/contracts";
+import type { Board } from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 import type { Prisma } from "../../generated/prisma/client.js";

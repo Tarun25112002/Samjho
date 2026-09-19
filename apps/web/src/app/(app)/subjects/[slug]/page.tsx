@@ -1,4 +1,4 @@
-import { DataState } from "@samjho/ui";
+import { DataState } from "@medhavi/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  *
  * ## Why the counts are so prominent
  *
- * Samjho's bank is being written from zero (docs/07 R1), so most chapters are
+ * Medhavi's bank is being written from zero (docs/07 R1), so most chapters are
  * empty most of the time and will be for months. A chapter row that shows "0
  * questions" is telling the truth; one that shows nothing lets a student tap in,
  * find an empty page, and conclude the app is broken. The empty rows are also

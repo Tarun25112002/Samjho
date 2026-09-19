@@ -2,7 +2,7 @@ import {
   extractionResultSchema,
   type ExtractedQuestionPayload,
   type PaperUploadSourceKind,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { logger } from "../../lib/logger.js";
 import { completeWithChain } from "../ai/provider/registry.js";

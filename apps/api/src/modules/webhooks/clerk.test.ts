@@ -67,7 +67,7 @@ function send(body: unknown, options: { tamper?: boolean; messageId?: string } =
 afterEach(async () => {
   await prisma.user.deleteMany({ where: { clerkId: { startsWith: PREFIX } } });
   await prisma.user.deleteMany({
-    where: { clerkId: { startsWith: `deleted_` }, email: { contains: "@samjho.invalid" } },
+    where: { clerkId: { startsWith: `deleted_` }, email: { contains: "@medhavi.invalid" } },
   });
 });
 

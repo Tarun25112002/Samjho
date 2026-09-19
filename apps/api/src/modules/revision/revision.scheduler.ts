@@ -2,7 +2,7 @@ import {
   REVIEW_GRADUATION_STREAK,
   REVIEW_INTERVAL_LADDER,
   REVIEW_MIN_EASE,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 /**
  * When should this student see this question again?

@@ -8,7 +8,7 @@ import {
   type PreparationAnalysis,
   type ProgressTrend,
   type TopicMovement,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 import { toDayKey } from "../../lib/study-day.js";

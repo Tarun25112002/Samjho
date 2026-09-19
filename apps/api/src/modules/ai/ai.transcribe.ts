@@ -2,7 +2,7 @@ import {
   answerTranscriptionSchema,
   type AnswerImage,
   type AnswerTranscription,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { z } from "zod";
 
 import { logger } from "../../lib/logger.js";

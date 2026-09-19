@@ -1,4 +1,4 @@
-import { aiConversationDetailSchema, aiReplySchema } from "@samjho/contracts";
+import { aiConversationDetailSchema, aiReplySchema } from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

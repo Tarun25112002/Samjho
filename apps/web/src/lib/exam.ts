@@ -10,7 +10,7 @@ import {
   type ExamResult,
   type ListExamPapersQuery,
   type Paginated,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { z } from "zod";
 import { cache } from "react";
 

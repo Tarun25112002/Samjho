@@ -9,7 +9,7 @@ import {
   type SubjectDetail,
   type SubjectProgressSummary,
   type SubjectSummary,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -1155,7 +1155,7 @@ function formatPracticeDate(value: string): string {
 /**
  * A subject, with what is actually in it.
  *
- * The question count is the honest part. Samjho's bank is being written from
+ * The question count is the honest part. Medhavi's bank is being written from
  * zero (docs/07 R1), so a subject with 40 questions in 14 chapters should say
  * so — a card that only shows a name lets a student tap into an empty chapter
  * and conclude the app is broken.
@@ -1327,7 +1327,7 @@ function AssessmentBand({ diagnostics }: { diagnostics: DiagnosticProgress }) {
           <p className="text-text-soft mt-2 max-w-xl text-sm leading-relaxed">
             {ready
               ? "Ten questions chosen from what you have already answered — four on your weakest topics, three to reinforce, two at your level and one stretch."
-              : "Three short sittings tell Samjho what is solid, what is shaky and what has not been learned yet. Everything else is built from them."}
+              : "Three short sittings tell Medhavi what is solid, what is shaky and what has not been learned yet. Everything else is built from them."}
           </p>
         </div>
       </div>

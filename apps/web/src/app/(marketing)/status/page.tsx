@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { readinessResponseSchema, type ReadinessResponse } from "@samjho/contracts";
+import { readinessResponseSchema, type ReadinessResponse } from "@medhavi/contracts";
 
 import { cardClass } from "@/components/ui/surface";
 import { ApiClientError, ApiParseError, apiFetch } from "@/lib/api-client";
@@ -53,7 +53,7 @@ async function probeApi(): Promise<ProbeResult> {
       return {
         ok: false,
         title: "Contract mismatch",
-        detail: "The API replied in a shape that does not match @samjho/contracts.",
+        detail: "The API replied in a shape that does not match @medhavi/contracts.",
       };
     }
     return {
@@ -102,7 +102,7 @@ export default async function StatusPage() {
               </p>
               <p className="text-sand-600 mt-1 text-sm leading-relaxed">
                 {operational
-                  ? "Samjho is ready for practice."
+                  ? "Medhavi is ready for practice."
                   : "See the detailed check below for the current issue."}
               </p>
             </div>
@@ -166,7 +166,7 @@ export default async function StatusPage() {
           <p className="text-brand-700 text-eyebrow uppercase">What this checks</p>
           <h2 className="text-text text-heading mt-3">A short, honest signal</h2>
           <p className="text-text-soft mt-3 text-sm leading-relaxed">
-            The status page confirms that the web app can reach Samjho&apos;s API and that the API
+            The status page confirms that the web app can reach Medhavi&apos;s API and that the API
             can reach its required services. It does not inspect your account or practice data.
           </p>
           <div className="border-line mt-6 border-t pt-5">

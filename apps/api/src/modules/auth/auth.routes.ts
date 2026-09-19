@@ -3,7 +3,7 @@ import {
   profileUpdateInputSchema,
   teacherOnboardingInputSchema,
   teacherProfileUpdateInputSchema,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { Router } from "express";
 
 import { authenticated, getAuthUser } from "../../middleware/auth.js";

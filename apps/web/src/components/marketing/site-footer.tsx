@@ -40,7 +40,7 @@ export function SiteFooter() {
 
       <div className="border-desk-line border-t">
         <p className="text-on-desk-faint mx-auto max-w-6xl px-5 py-5 text-xs sm:px-8">
-          Samjho is a closed pilot. Not affiliated with or endorsed by CBSE.
+          Medhavi is a closed pilot. Not affiliated with or endorsed by CBSE.
         </p>
       </div>
     </footer>

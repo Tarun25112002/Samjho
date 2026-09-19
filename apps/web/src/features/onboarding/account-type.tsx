@@ -4,7 +4,7 @@ import {
   meResponseSchema,
   teacherOnboardingInputSchema,
   type TeacherOnboardingFormValues,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -46,8 +46,8 @@ export function AccountTypeChooser({ onChooseStudent }: { onChooseStudent: () =>
 
   return (
     <div>
-      <p className="text-brand-700 text-sm font-semibold">Welcome to Samjho</p>
-      <h1 className="text-text text-title mt-1">How will you use Samjho?</h1>
+      <p className="text-brand-700 text-sm font-semibold">Welcome to Medhavi</p>
+      <h1 className="text-text text-title mt-1">How will you use Medhavi?</h1>
       <p className="text-text-soft mt-2 text-sm leading-relaxed">
         This sets up your account. It cannot be changed later, so pick the one that matches what you
         are here to do.
@@ -63,7 +63,7 @@ export function AccountTypeChooser({ onChooseStudent }: { onChooseStudent: () =>
         />
         <ChoiceCard
           title="I teach"
-          blurb="Make a classroom, set practice, upload your own papers and let Samjho pull the questions out of them."
+          blurb="Make a classroom, set practice, upload your own papers and let Medhavi pull the questions out of them."
           note="A teaching account has no practice history or progress of its own."
           cta="Set up as a teacher"
           onClick={() => setChoice("teacher")}

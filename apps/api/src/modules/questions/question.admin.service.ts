@@ -16,7 +16,7 @@ import {
   type QuestionRevision,
   type SubPartInput,
   type WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { z } from "zod";
 
 import type { Prisma } from "../../generated/prisma/client.js";

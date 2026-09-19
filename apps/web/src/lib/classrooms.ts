@@ -9,7 +9,7 @@ import {
   type ClassroomDiagnostics,
   type StudentClassroom,
   type TeacherClassroom,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { apiFetchAuthed } from "./api-client";
 

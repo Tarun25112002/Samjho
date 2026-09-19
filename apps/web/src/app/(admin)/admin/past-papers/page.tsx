@@ -1,4 +1,4 @@
-import type { PastPaperCoverage, PastPaperYearCoverage } from "@samjho/contracts";
+import type { PastPaperCoverage, PastPaperYearCoverage } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -167,7 +167,7 @@ function Footnote({ coverage }: { coverage: PastPaperCoverage }) {
   return (
     <p className="border-line bg-raised text-text-faint rounded-panel border p-4 text-xs leading-relaxed sm:p-5">
       Papers are loaded from files with{" "}
-      <code className="text-text-soft">pnpm --filter @samjho/api ingest:paper &lt;file&gt;</code> —
+      <code className="text-text-soft">pnpm --filter @medhavi/api ingest:paper &lt;file&gt;</code> —
       see <code className="text-text-soft">content/past-papers/README.md</code>. Nothing on this
       page is generated: a question here came off a paper somebody had in front of them.
       {uncounted > 0

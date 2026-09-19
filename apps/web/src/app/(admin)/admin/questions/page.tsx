@@ -1,4 +1,4 @@
-import { DataState, MathText, QUESTION_TYPE_LABELS } from "@samjho/ui";
+import { DataState, MathText, QUESTION_TYPE_LABELS } from "@medhavi/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -60,7 +60,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps) {
               variant="secondary"
               href={`/admin/questions/draft${subjectId ? `?subjectId=${subjectId}` : ""}`}
             >
-              Draft with Samjho
+              Draft with Medhavi
             </ButtonLink>
             <ButtonLink href={`/admin/questions/new${subjectId ? `?subjectId=${subjectId}` : ""}`}>
               New question

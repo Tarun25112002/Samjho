@@ -1,5 +1,5 @@
-import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
-import type { Difficulty, ListQuestionsQuery, QuestionType } from "@samjho/contracts";
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@medhavi/contracts";
+import type { Difficulty, ListQuestionsQuery, QuestionType } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           className="mx-auto flex min-h-16 w-full max-w-[90rem] items-center gap-1 px-5 text-sm sm:px-8 xl:px-10"
         >
           <Link href="/admin" className="text-text mr-3 shrink-0 font-semibold tracking-[-0.02em]">
-            Samjho <span className="text-text-soft font-normal">Content</span>
+            Medhavi <span className="text-text-soft font-normal">Content</span>
           </Link>
 
           <Link

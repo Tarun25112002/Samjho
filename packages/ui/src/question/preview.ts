@@ -5,7 +5,7 @@ import type {
   StudentSubPart,
   SubPartInput,
   WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 /**
  * Project a question an editor is *writing* into the shape a student would

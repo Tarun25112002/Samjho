@@ -1,4 +1,4 @@
-import type { WeeklyFocus, WeeklyPlanDay } from "@samjho/contracts";
+import type { WeeklyFocus, WeeklyPlanDay } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { PaperIcon, PenIcon, RedoIcon, SparkIcon } from "@/components/icons";
@@ -74,8 +74,8 @@ export default async function WeekPage() {
         <SparkIcon className="mt-0.5 size-3.5 shrink-0" />
         <span>
           {plan.generated
-            ? "The days, the topics and the counts come from your own answers. Only the sentences are written by Samjho."
-            : "Written from your own answers. Samjho could not add its notes this time, so the plan is here in plain form."}
+            ? "The days, the topics and the counts come from your own answers. Only the sentences are written by Medhavi."
+            : "Written from your own answers. Medhavi could not add its notes this time, so the plan is here in plain form."}
         </span>
       </p>
     </PageShell>

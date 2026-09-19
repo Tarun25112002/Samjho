@@ -36,7 +36,7 @@ import {
   type Role,
   type SessionStatus,
   type UserStatus,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -65,7 +65,7 @@ import {
  * The database enum and the wire enum must agree.
  *
  * These enums are declared twice: once in schema.prisma, because Postgres needs
- * a real enum type, and once in @samjho/contracts, because the web app must not
+ * a real enum type, and once in @medhavi/contracts, because the web app must not
  * import the Prisma client. Neither can be derived from the other — Prisma
  * generates from the schema, and contracts has no database dependency by design.
  *

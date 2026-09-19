@@ -3,7 +3,7 @@ import {
   type LearningEventProps,
   type LearningEventType,
   type RecordEventsInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { logger } from "../../lib/logger.js";

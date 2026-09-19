@@ -15,7 +15,7 @@ import {
   type UpdateExtractedQuestionInput,
   type UploadPaperInput,
   type WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { z } from "zod";
 
 import type { Prisma } from "../../generated/prisma/client.js";

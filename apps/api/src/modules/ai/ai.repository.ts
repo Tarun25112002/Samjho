@@ -1,4 +1,4 @@
-import type { AIAction, AIContext, AIRole } from "@samjho/contracts";
+import type { AIAction, AIContext, AIRole } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

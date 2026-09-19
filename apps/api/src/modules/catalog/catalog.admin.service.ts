@@ -9,7 +9,7 @@ import type {
   UpdateChapterInput,
   UpdateSubjectInput,
   UpdateTopicInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { logger } from "../../lib/logger.js";

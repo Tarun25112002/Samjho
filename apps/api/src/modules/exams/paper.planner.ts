@@ -1,5 +1,5 @@
-import type { PaperShortfall, QuestionType } from "@samjho/contracts";
-import type { BlueprintGroup, BlueprintSection, ExamBlueprint } from "@samjho/exam-blueprints";
+import type { PaperShortfall, QuestionType } from "@medhavi/contracts";
+import type { BlueprintGroup, BlueprintSection, ExamBlueprint } from "@medhavi/exam-blueprints";
 
 import { shuffle } from "../../lib/random.js";
 

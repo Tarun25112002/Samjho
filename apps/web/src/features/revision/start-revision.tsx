@@ -1,6 +1,6 @@
 "use client";
 
-import { practiceSessionSchema, type StartRevisionInput } from "@samjho/contracts";
+import { practiceSessionSchema, type StartRevisionInput } from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

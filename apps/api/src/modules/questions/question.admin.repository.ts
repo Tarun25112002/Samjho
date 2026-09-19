@@ -3,7 +3,7 @@ import type {
   QuestionStatus,
   SubPartInput,
   WriteQuestionInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

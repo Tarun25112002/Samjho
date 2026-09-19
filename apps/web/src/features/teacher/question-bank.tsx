@@ -4,8 +4,8 @@ import {
   teacherQuestionStatusSchema,
   type TeacherBankResponse,
   type TeacherBankQuestion,
-} from "@samjho/contracts";
-import { MathText } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { MathText } from "@medhavi/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -292,7 +292,7 @@ function Empty({ filtered }: { filtered: boolean }) {
       <p className="text-text-soft mx-auto mt-2 max-w-md text-sm leading-relaxed">
         {filtered
           ? "Widen the filters, or upload another paper to fill the gap."
-          : "Upload a question paper and Samjho pulls the questions out of it, sorted by chapter and difficulty."}
+          : "Upload a question paper and Medhavi pulls the questions out of it, sorted by chapter and difficulty."}
       </p>
     </Card>
   );

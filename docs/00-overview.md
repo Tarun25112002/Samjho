@@ -1,4 +1,4 @@
-# Samjho — Product Overview & Scope
+# Medhavi — Product Overview & Scope
 
 > **Status:** Phase 1 specification. Awaiting approval before implementation.
 > **Last updated:** 2026-08-08
@@ -7,7 +7,7 @@
 
 ## 1. Refined product vision
 
-**One-line:** Samjho is a CBSE board-exam preparation platform that turns every wrong answer into a targeted next step, and lets a student rehearse the real 3-hour exam before they sit it.
+**One-line:** Medhavi is a CBSE board-exam preparation platform that turns every wrong answer into a targeted next step, and lets a student rehearse the real 3-hour exam before they sit it.
 
 The brief described "a question bank plus an exam simulator plus AI." That combination is available from a dozen vendors. The thing that is genuinely scarce, and therefore what this product should be organised around, is this loop:
 
@@ -17,7 +17,7 @@ Practice  →  Get it wrong  →  Understand WHY (not just "what")  →  Re-prac
    └──────────────────  measurably fewer errors next time  ───────────────┘
 ```
 
-Most Indian ed-tech products break this loop at step three. They show a correct answer and a paragraph of explanation, the student nods, and nothing changes. Samjho's differentiator is that **the mistake is a first-class object in the system**, not a row in an attempts log:
+Most Indian ed-tech products break this loop at step three. They show a correct answer and a paragraph of explanation, the student nods, and nothing changes. Medhavi's differentiator is that **the mistake is a first-class object in the system**, not a row in an attempts log:
 
 - Every wrong attempt is tagged with a _reason_ (conceptual gap / calculation slip / misread question / ran out of time / didn't attempt), partly by the student, partly inferred.
 - The AI tutor's job is to identify which of those it was and address that specific failure, rather than re-teaching the chapter.
@@ -28,7 +28,7 @@ Most Indian ed-tech products break this loop at step three. They show a correct 
 
 ### Why the name matters to the product
 
-"Samjho" (समझो) = "understand." It is a useful internal test: if a feature does not increase understanding, it is decoration. This is the tiebreaker for scope arguments.
+"Medhavi" (मेधावी) = "understand." It is a useful internal test: if a feature does not increase understanding, it is decoration. This is the tiebreaker for scope arguments.
 
 ---
 

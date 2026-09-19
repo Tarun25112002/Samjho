@@ -19,7 +19,7 @@ import {
   type StartExamAttemptInput,
   type SubmissionReason,
   type SubmitExamAttemptInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";

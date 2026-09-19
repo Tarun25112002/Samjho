@@ -1,4 +1,4 @@
-import type { AuthorableType, Difficulty } from "@samjho/contracts";
+import type { AuthorableType, Difficulty } from "@medhavi/contracts";
 import { z } from "zod";
 
 import { logger } from "../../lib/logger.js";

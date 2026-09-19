@@ -7,7 +7,7 @@ import type {
   QuestionSelection,
   QuestionType,
   SessionStatus,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

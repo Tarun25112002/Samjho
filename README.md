@@ -1,4 +1,4 @@
-# Samjho
+# Medhavi
 
 CBSE Class 10 & 12 board-exam preparation platform.
 
@@ -44,10 +44,10 @@ cp apps/web/.env.example apps/web/.env
 # to start without them, which is the config validation working as intended.
 
 pnpm db:up                                  # Postgres 18 in Docker
-pnpm --filter @samjho/api db:generate       # generate the Prisma client
-pnpm --filter @samjho/api db:migrate        # apply migrations
-pnpm --filter @samjho/api db:seed           # curriculum, questions, demo students
-pnpm --filter @samjho/api db:test:prepare   # migrate the separate test database
+pnpm --filter @medhavi/api db:generate       # generate the Prisma client
+pnpm --filter @medhavi/api db:migrate        # apply migrations
+pnpm --filter @medhavi/api db:seed           # curriculum, questions, demo students
+pnpm --filter @medhavi/api db:test:prepare   # migrate the separate test database
 
 pnpm dev
 ```
@@ -87,12 +87,12 @@ Run from the repo root; Turborepo fans them out in dependency order.
 | `pnpm typecheck` / `lint` / `test` / `build` | Individually                                                             |
 | `pnpm format` / `format:check`               | Prettier                                                                 |
 | `pnpm db:up` / `db:down` / `db:logs`         | Local Postgres                                                           |
-| `pnpm --filter @samjho/api db:generate`      | Regenerate the Prisma client                                             |
-| `pnpm --filter @samjho/api db:migrate`       | Create/apply a migration                                                 |
-| `pnpm --filter @samjho/api db:seed`          | Seed dev data — idempotent, safe to re-run                               |
-| `pnpm --filter @samjho/api db:reset`         | Drop, re-migrate and re-seed                                             |
-| `pnpm --filter @samjho/api db:test:prepare`  | Migrate `samjho_test`, needed by the constraint tests                    |
-| `pnpm --filter @samjho/api db:studio`        | Browse the database                                                      |
+| `pnpm --filter @medhavi/api db:generate`     | Regenerate the Prisma client                                             |
+| `pnpm --filter @medhavi/api db:migrate`      | Create/apply a migration                                                 |
+| `pnpm --filter @medhavi/api db:seed`         | Seed dev data — idempotent, safe to re-run                               |
+| `pnpm --filter @medhavi/api db:reset`        | Drop, re-migrate and re-seed                                             |
+| `pnpm --filter @medhavi/api db:test:prepare` | Migrate `medhavi_test`, needed by the constraint tests                   |
+| `pnpm --filter @medhavi/api db:studio`       | Browse the database                                                      |
 
 ## Layout
 
@@ -173,8 +173,8 @@ reports, the bank. Only the upload screen changes, and it says plainly that
 reading papers is not switched on rather than offering a button that fails. See
 the AI section of `apps/api/.env.example`.
 
-Demo data: `pnpm --filter @samjho/api db:seed` creates the teacher
-`meera.demo@samjho.test` with a Class 10 Science classroom (join code `SAMJHO`)
+Demo data: `pnpm --filter @medhavi/api db:seed` creates the teacher
+`meera.demo@medhavi.test` with a Class 10 Science classroom (join code `MEDHAVI`)
 that both demo students are already in.
 
 ## Stack notes

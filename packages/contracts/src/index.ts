@@ -1,5 +1,5 @@
 /**
- * @samjho/contracts
+ * @medhavi/contracts
  *
  * The single source of truth for everything that crosses the network boundary
  * between apps/web and apps/api.

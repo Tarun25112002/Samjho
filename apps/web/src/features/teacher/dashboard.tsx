@@ -1,4 +1,4 @@
-import type { TeacherDashboard } from "@samjho/contracts";
+import type { TeacherDashboard } from "@medhavi/contracts";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button";
@@ -172,8 +172,8 @@ function BankBreakdown({ bank }: { bank: TeacherDashboard["bank"] }) {
       {bank.total === 0 ? (
         <>
           <p className="text-text-soft mt-3 text-sm leading-relaxed">
-            Upload a question paper and Samjho pulls the questions out of it — sorted by chapter and
-            difficulty, ready for you to check.
+            Upload a question paper and Medhavi pulls the questions out of it — sorted by chapter
+            and difficulty, ready for you to check.
           </p>
           <ButtonLink href="/teacher/uploads" className="mt-4" size="sm" variant="secondary">
             Upload a paper
@@ -209,7 +209,7 @@ function FirstRun() {
         <p className="text-text text-heading">Start with one class.</p>
         <p className="text-text-soft mt-2 text-sm leading-relaxed">
           Make a classroom for a subject and share its code. Then set a short practice set — or
-          upload one of your own papers and let Samjho pull the questions out of it, sorted by
+          upload one of your own papers and let Medhavi pull the questions out of it, sorted by
           chapter and difficulty for you to check.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">

@@ -13,7 +13,7 @@ import {
   type PracticeItem,
   type PracticeSession,
   type StudentAnswer,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 

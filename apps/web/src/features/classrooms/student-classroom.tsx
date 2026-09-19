@@ -5,7 +5,7 @@ import {
   joinClassroomSchema,
   type StudentAssignment,
   type StudentClassroom,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

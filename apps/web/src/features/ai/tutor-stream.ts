@@ -1,4 +1,4 @@
-import { aiStreamEventSchema, type AIStreamEvent, type SendMessageInput } from "@samjho/contracts";
+import { aiStreamEventSchema, type AIStreamEvent, type SendMessageInput } from "@medhavi/contracts";
 
 import { toFailure, type ApiFailure } from "@/lib/client-api";
 

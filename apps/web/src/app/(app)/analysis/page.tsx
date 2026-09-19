@@ -3,7 +3,7 @@ import {
   type AnalysisTopic,
   type LearningMetric,
   type MasteryBand,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { GaugeIcon, SparkIcon } from "@/components/icons";
@@ -162,7 +162,7 @@ export default async function AnalysisPage() {
               <p className="text-text mt-3 leading-relaxed text-pretty">{analysis.insight.text}</p>
               <p className="text-text-faint mt-4 text-xs">
                 {analysis.insight.generated
-                  ? "Written by Samjho's AI from the figures above, and from nothing else."
+                  ? "Written by Medhavi's AI from the figures above, and from nothing else."
                   : "Summarised from the figures above."}
               </p>
             </div>
@@ -264,8 +264,8 @@ function EmptyReport({ completed }: { completed: number }) {
         <div>
           <h2 className="text-text text-heading">Start with the first diagnostic.</h2>
           <p className="text-text-soft mt-2 max-w-xl text-sm leading-relaxed">
-            Three short sittings are enough for Samjho to tell what is solid, what is shaky and what
-            has not been learned yet. You have finished {completed} of them.
+            Three short sittings are enough for Medhavi to tell what is solid, what is shaky and
+            what has not been learned yet. You have finished {completed} of them.
           </p>
         </div>
         <ButtonLink href="/assessment" size="lg">

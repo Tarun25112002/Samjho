@@ -1,4 +1,4 @@
-import { chapterListResponseSchema, subjectListResponseSchema } from "@samjho/contracts";
+import { chapterListResponseSchema, subjectListResponseSchema } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { QuestionBank } from "@/features/teacher/question-bank";

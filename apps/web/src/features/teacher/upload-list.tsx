@@ -1,6 +1,6 @@
 "use client";
 
-import type { PaperUploadSummary } from "@samjho/contracts";
+import type { PaperUploadSummary } from "@medhavi/contracts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -209,7 +209,7 @@ function Empty() {
     <Card pad="roomy">
       <p className="text-text text-heading">Turn a paper into a question bank.</p>
       <p className="text-text-soft mt-2 max-w-2xl text-sm leading-relaxed">
-        Upload a PDF or a photo of a question paper. Samjho reads it, writes out each question with
+        Upload a PDF or a photo of a question paper. Medhavi reads it, writes out each question with
         its options and marking scheme, and files it under a chapter with a difficulty. You check
         the ones it was unsure about, and the rest is done.
       </p>

@@ -1,4 +1,4 @@
-import next from "@samjho/config/eslint/next";
+import next from "@medhavi/config/eslint/next";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default [

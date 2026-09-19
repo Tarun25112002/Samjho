@@ -1,4 +1,4 @@
-import { REVIEW_GRADUATION_STREAK, REVIEW_MIN_EASE } from "@samjho/contracts";
+import { REVIEW_GRADUATION_STREAK, REVIEW_MIN_EASE } from "@medhavi/contracts";
 import { describe, expect, it } from "vitest";
 
 import {

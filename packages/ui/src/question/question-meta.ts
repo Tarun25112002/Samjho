@@ -1,4 +1,4 @@
-import type { Difficulty, QuestionType } from "@samjho/contracts";
+import type { Difficulty, QuestionType } from "@medhavi/contracts";
 
 /**
  * Display labels and behavioural facts about question types.

@@ -1,4 +1,4 @@
-import type { PracticeSessionSummary, TargetExam } from "@samjho/contracts";
+import type { PracticeSessionSummary, TargetExam } from "@medhavi/contracts";
 
 /**
  * The dashboard's arithmetic.

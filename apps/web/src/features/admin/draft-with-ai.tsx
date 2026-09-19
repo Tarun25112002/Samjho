@@ -8,8 +8,8 @@ import {
   type Difficulty,
   type DraftedQuestions,
   type ImportResult,
-} from "@samjho/contracts";
-import { DIFFICULTY_LABELS, MathText, QUESTION_TYPE_LABELS } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { DIFFICULTY_LABELS, MathText, QUESTION_TYPE_LABELS } from "@medhavi/ui";
 import { useState } from "react";
 
 import { SparkIcon } from "@/components/icons";
@@ -151,7 +151,7 @@ export function DraftWithAI({
     <Card as="section">
       <div className="flex flex-wrap items-center gap-2">
         <SparkIcon className="text-brand-600 size-5" />
-        <h2 className="text-text text-base font-semibold">Draft questions with Samjho</h2>
+        <h2 className="text-text text-base font-semibold">Draft questions with Medhavi</h2>
       </div>
 
       <p className="text-text-faint mt-2 text-sm leading-relaxed">
@@ -318,7 +318,7 @@ function DraftReview({
   if (!result.generated) {
     return (
       <p className="text-text-faint mt-4 text-sm">
-        Nothing came back. Samjho could not write these just now — the brief is still here, so try
+        Nothing came back. Medhavi could not write these just now — the brief is still here, so try
         again in a moment.
       </p>
     );

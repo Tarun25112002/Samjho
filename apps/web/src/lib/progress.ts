@@ -1,4 +1,4 @@
-import { progressOverviewSchema, type ProgressOverview } from "@samjho/contracts";
+import { progressOverviewSchema, type ProgressOverview } from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

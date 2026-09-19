@@ -2,7 +2,7 @@ import {
   MARKING_SCHEME_REQUIRED_FROM_MARKS,
   QUESTION_TYPE_RULES,
   type QuestionType,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 /**
  * The prompt that turns a scanned paper into structured questions.

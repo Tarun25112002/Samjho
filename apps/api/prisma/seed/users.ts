@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { CURRENT_TERMS_VERSION } from "@samjho/contracts";
+import { CURRENT_TERMS_VERSION } from "@medhavi/contracts";
 
 import type { PrismaClient } from "../../src/generated/prisma/client.js";
 import { seedId } from "./helpers.js";
@@ -23,7 +23,7 @@ const DEMO_STUDENTS = [
   {
     key: "aarav",
     clerkId: "user_seed_aarav_demo",
-    email: "aarav.demo@samjho.test",
+    email: "aarav.demo@medhavi.test",
     name: "Aarav Sharma",
     school: "Delhi Public School, Bengaluru",
     /** Roughly the share of questions this student gets right. */
@@ -34,7 +34,7 @@ const DEMO_STUDENTS = [
   {
     key: "diya",
     clerkId: "user_seed_diya_demo",
-    email: "diya.demo@samjho.test",
+    email: "diya.demo@medhavi.test",
     name: "Diya Patel",
     school: "Kendriya Vidyalaya, Pune",
     accuracy: 0.41,
@@ -67,12 +67,12 @@ function stableUnitValue(...parts: string[]): number {
 const DEMO_TEACHER = {
   key: "meera",
   clerkId: "user_seed_meera_demo",
-  email: "meera.demo@samjho.test",
+  email: "meera.demo@medhavi.test",
   name: "Meera Iyer",
   school: "Delhi Public School, Bengaluru",
   subjectsTaught: "Class 10 Science and Mathematics",
   /** Fixed rather than generated, so the code in a screenshot stays valid. */
-  joinCode: "SAMJHO",
+  joinCode: "MEDHAVI",
 } as const;
 
 export interface SeededUsers {
@@ -85,8 +85,8 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeededUsers> {
   const adminId = seedId("user", "admin");
   const admin = {
     clerkId: "user_seed_admin",
-    email: "admin@samjho.test",
-    name: "Samjho Admin",
+    email: "admin@medhavi.test",
+    name: "Medhavi Admin",
     role: "ADMIN" as const,
     status: "ACTIVE" as const,
   };
@@ -156,7 +156,7 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeededUsers> {
       // Demo accounts carry a recorded parental consent because every Class 10
       // user is a minor under the DPDP Act. Seeding them without one would model
       // a state the real signup flow must never produce.
-      parentEmail: `parent.${student.key}@samjho.test`,
+      parentEmail: `parent.${student.key}@medhavi.test`,
       parentConsentAt: new Date("2026-07-01T00:00:00.000Z"),
     };
     await prisma.studentProfile.upsert({

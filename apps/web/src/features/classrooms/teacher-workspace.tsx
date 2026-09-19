@@ -9,7 +9,7 @@ import {
   type PastPaperYearOption,
   type TeacherBankQuestion,
   type TeacherClassroom,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -532,7 +532,7 @@ function AssignmentForm({
           }}
           className={selectClass}
         >
-          <option value="SHARED">Samjho&rsquo;s bank, drawn at random</option>
+          <option value="SHARED">Medhavi&rsquo;s bank, drawn at random</option>
           <option value="TEACHER_BANK">My own questions, drawn at random</option>
           <option value="CURATED">Questions I pick myself, including CBSE PYQs</option>
         </select>

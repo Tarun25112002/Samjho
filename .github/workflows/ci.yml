@@ -24,13 +24,13 @@ jobs:
       postgres:
         image: postgres:18-alpine
         env:
-          POSTGRES_USER: samjho
-          POSTGRES_PASSWORD: samjho
-          POSTGRES_DB: samjho_test
+          POSTGRES_USER: medhavi
+          POSTGRES_PASSWORD: medhavi
+          POSTGRES_DB: medhavi_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U samjho"
+          --health-cmd "pg_isready -U medhavi"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -39,7 +39,7 @@ jobs:
       # CI has no .env files — the whole point of validating config at boot is
       # that the platform can inject these instead. Anything that *requires* a
       # .env file on disk is a bug, and this job is what catches it.
-      DATABASE_URL: "postgresql://samjho:samjho@localhost:5432/samjho_test?schema=public"
+      DATABASE_URL: "postgresql://medhavi:medhavi@localhost:5432/medhavi_test?schema=public"
       API_URL: "http://localhost:4000"
       NEXT_PUBLIC_API_URL: "http://localhost:4000"
 
@@ -58,7 +58,7 @@ jobs:
       # Clerk, it will fail here — loudly, which is correct.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dGVzdC5jbGVyay5hY2NvdW50cy5kZXYk"
       CLERK_SECRET_KEY: "sk_test_ci_placeholder_not_a_real_key"
-      CLERK_ISSUER_URL: "https://test.clerk.samjho.invalid"
+      CLERK_ISSUER_URL: "https://test.clerk.medhavi.invalid"
       CLERK_WEBHOOK_SIGNING_SECRET: "whsec_c2FtamhvLXRlc3Qtc2lnbmluZy1rZXkh"
 
     steps:
@@ -81,14 +81,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @samjho/api db:generate
+        run: pnpm --filter @medhavi/api db:generate
 
       # The database-constraint tests need a migrated schema. Applying the
       # migrations here also verifies that they run cleanly from scratch — the
       # one thing a developer's incrementally-migrated local database can never
       # tell you, and the failure mode that only surfaces during a deploy.
       - name: Apply migrations
-        run: pnpm --filter @samjho/api db:deploy
+        run: pnpm --filter @medhavi/api db:deploy
 
       # Identical to what `pnpm check` runs locally — format, then one turbo
       # invocation so tasks run in dependency order and in parallel where they

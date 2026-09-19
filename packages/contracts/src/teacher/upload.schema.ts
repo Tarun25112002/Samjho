@@ -448,7 +448,7 @@ export const createUploadResponseSchema = z.object({ uploadId: z.string().min(1)
  *
  * `MINE` is the questions they imported from their own papers — the original
  * behaviour, and still the default so no existing call changes meaning.
- * `SHARED` is Samjho's own reviewed bank: the chapter-wise previous-year
+ * `SHARED` is Medhavi's own reviewed bank: the chapter-wise previous-year
  * collection, browsable by the same filters.
  *
  * ## Why teachers can now read the shared bank at all

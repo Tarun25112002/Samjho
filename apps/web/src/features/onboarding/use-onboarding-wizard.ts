@@ -5,7 +5,7 @@ import {
   onboardingInputSchema,
   type ExamPhase,
   type Language,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 

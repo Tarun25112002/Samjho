@@ -4,7 +4,7 @@ import {
   transcribeAnswerSchema,
   type AIStreamEvent,
   type ErrorResponse,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { Router, type Response } from "express";
 import { z } from "zod";
 

@@ -1,4 +1,8 @@
-import { adminQuestionSchema, importResultSchema, questionRevisionSchema } from "@samjho/contracts";
+import {
+  adminQuestionSchema,
+  importResultSchema,
+  questionRevisionSchema,
+} from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

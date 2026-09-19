@@ -3,7 +3,7 @@ import {
   type EvaluationMode,
   type QuestionType,
   type StudentAnswer,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 /**
  * Deciding whether an answer is right.

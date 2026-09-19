@@ -4,205 +4,98 @@ import type { Metadata } from "next";
 import { Check } from "@/components/icons";
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
+import { InsideBento } from "@/components/marketing/inside-bento";
+import { MarkedScript } from "@/components/marketing/marked-script";
 import { ButtonLink } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/page";
-import { cardClass } from "@/components/ui/surface";
 
 export const metadata: Metadata = {
-  title: { absolute: "Samjho — CBSE Class 10 board exam practice" },
+  title: { absolute: "Medhavi — CBSE Class 10 board exam practice" },
   description:
     "Practise CBSE Class 10 Maths and Science question by question. Every question comes with its marking scheme, so you find out where the marks went — not just whether you were right.",
 };
 
+/**
+ * The landing page.
+ *
+ * ## The shape of the argument
+ *
+ * Answer a question → see what the paper is → watch a mark land → understand
+ * the loop → see what is inside → read what we promise your parents → begin.
+ *
+ * The third of those is the one that matters. Every competitor's page claims to
+ * explain mistakes, so the claim is worth nothing; `MarkedScript` marks a real
+ * three-mark proof in front of the reader instead, and the rest of the page was
+ * deliberately quietened around it. One section is allowed to be the memorable
+ * one.
+ */
 export default function LandingPage() {
   return (
     <>
       <Hero />
-      <SignalStrip />
+      <ThePaper />
+      <MarkedScript />
       <HowItWorks />
-      <Inside />
+      <InsideBento />
       <ForParents />
       <FinalCall />
     </>
   );
 }
 
-/** A compact promise sheet immediately after the first interaction. */
-function SignalStrip() {
-  const signals = [
-    ["The right paper", "Class 10 Maths and Science, on the CBSE pattern."],
-    ["The whole answer", "The marking scheme explains where each mark belongs."],
-    ["The next attempt", "Your mistakes shape what returns in revision."],
-  ] as const;
-
-  return (
-    <section aria-label="How Samjho is different" className="bg-desk text-on-desk">
-      <div className="divide-desk-line mx-auto grid max-w-6xl divide-y px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
-        {signals.map(([title, body], index) => (
-          <div key={title} className="flex gap-4 py-6 md:px-6 md:first:pl-0 md:last:pr-0 lg:py-7">
-            <span className="text-brand-300 pt-0.5 text-xs font-semibold tabular-nums">
-              0{index + 1}
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold">{title}</h2>
-              <p className="text-on-desk-soft mt-1.5 max-w-[25ch] text-sm leading-relaxed">
-                {body}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Inside() {
-  return (
-    <section id="inside" className="bg-raised border-line scroll-mt-24 border-y py-24 lg:py-36">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
-          <div className="lg:col-span-7">
-            <Eyebrow>Made for the marks that matter</Eyebrow>
-            <h2 className="text-display mt-4 max-w-[13ch]">
-              A question bank does not know what you need next.
-            </h2>
-          </div>
-          <p className="text-text-soft max-w-[40ch] leading-relaxed lg:col-span-5 lg:pb-1">
-            Samjho treats every answer like a marked script. The question, the working, the marks
-            and the revision all live in the same place.
-          </p>
-        </div>
-
-        <div className="mt-14 grid gap-8 lg:grid-cols-12 lg:items-start">
-          <div className="lg:col-span-7">
-            <MarkingScheme />
-          </div>
-          <FeatureLedger />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const FEATURES = [
-  {
-    title: "All ten question types",
-    body: "MCQs, assertion and reason, case studies, numericals, match the following and the rest — shaped like the paper, with proper maths throughout.",
-  },
-  {
-    title: "Previous-year context",
-    body: "Questions carry the paper and year they came from, so a familiar question arrives with the context that makes it useful.",
-  },
-  {
-    title: "Mistake-aware revision",
-    body: "A calculation slip, a misread, or a gap in learning do not need the same next question. Your revision set knows the difference.",
-  },
-  {
-    title: "Questions worth keeping",
-    body: "Save the proofs, numericals and traps you want to see again. Your own difficult-question notebook, already organised.",
-  },
+/**
+ * The exam, in four numbers.
+ *
+ * Facts about the *paper*, not about us. A pilot with no students yet has no
+ * honest metrics of its own, and "10,000 questions solved" on a page that also
+ * promises not to manipulate anyone would be the first lie on it. These four are
+ * the shape of the thing a reader is actually afraid of, and every one is
+ * checkable against the CBSE sample paper.
+ */
+const PAPER = [
+  { figure: "80", label: "marks in the theory paper" },
+  { figure: "5", label: "sections, A through E" },
+  { figure: "3h", label: "on the day, start to finish" },
+  { figure: "10", label: "question types, all of them" },
 ] as const;
 
-function FeatureLedger() {
+function ThePaper() {
   return (
-    <div className="lg:col-span-5 lg:pt-1">
-      <Eyebrow tone="muted" className="border-line border-b pb-4">
-        In your working copy
-      </Eyebrow>
-      <ol className="divide-line divide-y">
-        {FEATURES.map((feature, index) => (
-          <li
-            key={feature.title}
-            className="group grid grid-cols-[2.75rem_1fr] gap-3 py-5 first:pt-6"
-          >
-            <span className="text-brand-700 pt-0.5 text-sm font-semibold tabular-nums">
-              0{index + 1}
-            </span>
-            <div>
-              <h3 className="text-text text-subheading group-hover:text-brand-700 transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-text-soft mt-2 text-sm leading-relaxed">{feature.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <p className="border-half-200 bg-half-50 text-half-700 rounded-control mt-5 border px-4 py-3 text-sm leading-relaxed">
-        Full three-hour papers are being built with the real internal choices and section rules.
-      </p>
-    </div>
-  );
-}
-
-function MarkingScheme() {
-  return (
-    <figure className={`${cardClass({ pad: "flush" })} shadow-pop m-0 overflow-hidden`}>
-      <div className="border-line flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-5 py-4 sm:px-6">
-        <span className="text-text text-sm font-semibold">Section D · Question 20</span>
-        <span className="text-text-faint text-sm">Written answer</span>
-        <span className="marks-margin text-text-soft ml-auto text-sm font-medium">3 marks</span>
-      </div>
-
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_10rem]">
-        <div className="flex flex-col gap-6 px-5 py-6 sm:px-7 sm:py-8">
-          <div>
-            <Eyebrow>The question</Eyebrow>
-            <p className="text-text mt-3 font-serif text-xl leading-[1.55] sm:text-2xl">
-              Prove that <span className="whitespace-nowrap">√5</span> is irrational.
-            </p>
-          </div>
-
-          <div>
-            <div className="flex items-baseline justify-between gap-4">
-              <h3 className="text-text text-sm font-semibold">The marking scheme</h3>
-              <span className="text-text-faint text-xs">Read it like an examiner</span>
-            </div>
-            <ol className="mt-3 flex flex-col">
-              {SCHEME.map((step) => (
-                <li
-                  key={step.text}
-                  className="border-line flex items-start gap-4 border-b py-4 last:border-0"
-                >
-                  <span className="text-brand-700 mt-0.5 text-xs font-semibold tabular-nums">
-                    {step.id}
-                  </span>
-                  <span className="text-text-soft flex-1 font-serif leading-[1.6]">
-                    {step.text}
-                  </span>
-                  <span className="marks-margin text-text shrink-0 text-sm font-semibold">
-                    {step.marks}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
+    <section aria-labelledby="the-paper" className="px-5 py-16 sm:px-8 lg:py-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-3">
+          <h2 id="the-paper" className="text-text text-heading">
+            The paper you are preparing for
+          </h2>
+          <p className="text-text-faint text-sm">CBSE Class 10 · Maths, Science</p>
         </div>
 
-        <figcaption className="border-line bg-brand-50 flex flex-col justify-between gap-8 border-t px-5 py-6 sm:px-7 lg:border-t-0 lg:border-l lg:px-5">
-          <div>
-            <Eyebrow>The point</Eyebrow>
-            <p className="text-text mt-3 text-sm leading-relaxed">
-              You do not just see the answer. You can see what earns each mark.
-            </p>
-          </div>
-          <p className="text-brand-700 text-sm font-semibold">Mark it. Learn it. Meet it again.</p>
-        </figcaption>
+        <dl className="border-line mt-8 grid grid-cols-2 gap-y-8 border-t pt-8 sm:grid-cols-4">
+          {PAPER.map((fact) => (
+            <div
+              key={fact.label}
+              className="border-line px-1 sm:border-l sm:px-6 sm:first:border-l-0 sm:first:pl-1"
+            >
+              <dd className="text-text text-figure-lg tabular-nums">{fact.figure}</dd>
+              <dt className="text-text-soft mt-2 max-w-[22ch] text-sm leading-snug">
+                {fact.label}
+              </dt>
+            </div>
+          ))}
+        </dl>
       </div>
-    </figure>
+    </section>
   );
 }
-
-const SCHEME = [
-  { id: "A", text: "Assume √5 = p/q, where p and q are coprime and q ≠ 0", marks: "1" },
-  { id: "B", text: "Show that 5 divides p, and write p = 5m", marks: "1" },
-  { id: "C", text: "Show that 5 divides q, contradicting coprimality", marks: "1" },
-];
 
 function ForParents() {
   return (
-    <section id="parents" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-36">
+    <section id="parents" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:py-32">
       <div className="rounded-panel bg-desk text-on-desk relative mx-auto max-w-6xl overflow-hidden px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
-        <div aria-hidden="true" className="parent-stamp absolute -top-12 -right-10 hidden lg:block">
+        {/* Far enough out that only the arc grazes the corner. It used to sit
+            at -right-10, where the commitments list ran straight through it and
+            the stamp read as a rendering fault rather than as stationery. */}
+        <div aria-hidden="true" className="parent-stamp absolute -top-20 -right-32 hidden lg:block">
           <span>FOR STUDENTS</span>
           <span>FOR STUDENTS</span>
           <span>FOR STUDENTS</span>
@@ -223,20 +116,12 @@ function ForParents() {
           </div>
 
           <ul className="divide-desk-line divide-y lg:col-span-7">
-            {COMMITMENTS.map((item, index) => (
-              <li
-                key={item.title}
-                className="grid grid-cols-[2.5rem_1fr] gap-4 py-5 first:pt-0 last:pb-0"
-              >
-                <span className="text-brand-300 text-sm font-semibold tabular-nums">
-                  0{index + 1}
-                </span>
-                <div>
-                  <h3 className="text-base font-semibold">{item.title}</h3>
-                  <p className="text-on-desk-soft mt-2 max-w-[52ch] text-sm leading-relaxed">
-                    {item.body}
-                  </p>
-                </div>
+            {COMMITMENTS.map((item) => (
+              <li key={item.title} className="py-5 first:pt-0 last:pb-0">
+                <h3 className="text-base font-semibold">{item.title}</h3>
+                <p className="text-on-desk-soft mt-2 max-w-[52ch] text-sm leading-relaxed">
+                  {item.body}
+                </p>
               </li>
             ))}
           </ul>
@@ -261,17 +146,17 @@ const COMMITMENTS = [
   },
   {
     title: "A guardian’s email is requested during onboarding",
-    body: "We ask for a parent or guardian’s email because the students using Samjho are usually under 18. The pilot is clear about what it does and does not verify.",
+    body: "We ask for a parent or guardian’s email because the students using Medhavi are usually under 18. The pilot is clear about what it does and does not verify.",
   },
   {
     title: "Nothing is being sold inside the product",
-    body: "Samjho is free during the pilot. There is no subscription prompt in the middle of a set and no payment method stored on an account.",
+    body: "Medhavi is free during the pilot. There is no subscription prompt in the middle of a set and no payment method stored on an account.",
   },
 ];
 
 function FinalCall() {
   return (
-    <section className="px-5 pb-24 sm:px-8 lg:pb-36">
+    <section className="px-5 pb-24 sm:px-8 lg:pb-32">
       <div className="final-sheet relative mx-auto grid max-w-6xl overflow-hidden rounded-panel bg-brand-500 px-6 py-8 sm:px-10 sm:py-12 lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-14 lg:py-16">
         <div
           aria-hidden="true"
@@ -288,8 +173,7 @@ function FinalCall() {
         </div>
 
         <div className="relative pt-8 lg:col-span-9 lg:pt-0">
-          <p className="text-sand-800 text-eyebrow uppercase">Start with the paper</p>
-          <h2 className="text-on-brand text-display mt-3 max-w-[14ch]">
+          <h2 className="text-on-brand text-display max-w-[14ch]">
             Sit down with the question you need.
           </h2>
           <p className="text-sand-800 mt-5 max-w-[48ch] leading-relaxed">

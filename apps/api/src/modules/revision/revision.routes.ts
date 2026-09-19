@@ -1,4 +1,4 @@
-import { startRevisionSchema } from "@samjho/contracts";
+import { startRevisionSchema } from "@medhavi/contracts";
 import { Router } from "express";
 
 import type { TokenVerifier } from "../../lib/token-verifier.js";

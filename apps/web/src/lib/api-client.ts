@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { errorResponseSchema, type ApiError } from "@samjho/contracts";
+import { errorResponseSchema, type ApiError } from "@medhavi/contracts";
 import type { z } from "zod";
 
 // No `.js` extension here, unlike apps/api. The web app resolves modules the

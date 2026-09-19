@@ -8,7 +8,7 @@ import {
   UPLOAD_ACCEPT_ATTRIBUTE,
   uploadPaperInputSchema,
   type PaperUploadSourceKind,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 

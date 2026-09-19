@@ -28,7 +28,7 @@ export default async function UploadReviewPage({ params }: { params: Promise<{ i
   return (
     <TeacherShell
       title="Check what was read."
-      blurb="The questions Samjho was least sure about come first. Nothing reaches your bank until you accept it."
+      blurb="The questions Medhavi was least sure about come first. Nothing reaches your bank until you accept it."
       action={<BackLink href="/teacher/uploads">All papers</BackLink>}
     >
       <UploadReview upload={upload} />

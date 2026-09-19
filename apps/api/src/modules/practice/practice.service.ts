@@ -24,7 +24,7 @@ import {
   type StudentAnswer,
   type StudentQuestion,
   type SubmitAttemptInput,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { z } from "zod";
 
 import type { Prisma } from "../../generated/prisma/client.js";
@@ -151,7 +151,7 @@ export const practiceService = {
       // wording is a student-facing string rather than a diagnostic.
       throw new NotFoundError(
         options.ownerTeacherId === undefined
-          ? "No questions match those filters yet — Samjho's bank"
+          ? "No questions match those filters yet — Medhavi's bank"
           : "Your teacher has not published questions for this yet — their question bank",
       );
     }

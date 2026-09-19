@@ -6,7 +6,7 @@ import {
   type TeacherBankFacets,
   type TeacherBankQuestion,
   type PastPaperYearOption,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import { Chip } from "@/components/ui/surface";
  * every student sat different questions, their marks are not comparable and the
  * item analysis on the report page is arithmetic performed on nothing.
  *
- * It was also the only option. A teacher could draw from Samjho's bank without
+ * It was also the only option. A teacher could draw from Medhavi's bank without
  * ever seeing what was in it, and could only *browse* questions they had
  * personally scanned and imported. The reviewed, chapter-tagged, previous-year
  * collection sat in the same database being served to their students, and the
@@ -31,7 +31,7 @@ import { Chip } from "@/components/ui/surface";
  *
  * ## The two banks are one list with a switch
  *
- * `scope` toggles between Samjho's reviewed bank and the teacher's own imports,
+ * `scope` toggles between Medhavi's reviewed bank and the teacher's own imports,
  * and a picked set may mix the two — which is what building a paper actually
  * looks like. The server decides what each scope means; this component only
  * names which one it wants.
@@ -125,7 +125,7 @@ export function QuestionPicker({
         setPageInfo(parsed.data.pageInfo);
       } catch {
         if (requestId === requestIdRef.current) {
-          setMessage("Could not reach Samjho. Check your connection.");
+          setMessage("Could not reach Medhavi. Check your connection.");
         }
       } finally {
         if (requestId === requestIdRef.current) setLoading(false);
@@ -194,7 +194,7 @@ export function QuestionPicker({
             onChange={(event) => changeScope(event.target.value === "MINE" ? "MINE" : "SHARED")}
             className={selectClass}
           >
-            <option value="SHARED">Samjho&rsquo;s reviewed bank</option>
+            <option value="SHARED">Medhavi&rsquo;s reviewed bank</option>
             <option value="MINE">My imported papers</option>
           </select>
         </label>
@@ -334,7 +334,7 @@ export function QuestionPicker({
           <li className="text-text-soft py-6 text-center text-sm">
             {scope === "MINE"
               ? "You have not published any questions matching this yet. Import a paper from Papers first."
-              : "Nothing in Samjho's bank matches this filter yet."}
+              : "Nothing in Medhavi's bank matches this filter yet."}
           </li>
         ) : (
           items.map((question) => {

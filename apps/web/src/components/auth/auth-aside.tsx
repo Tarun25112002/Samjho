@@ -10,7 +10,7 @@ import { Check, Cross } from "@/components/icons";
  *
  * Every ed-tech sign-in page in this market puts a smiling stock student, a
  * gradient blob or a wall of logos here. None of them tells you what the product
- * does. This one shows the exact thirty seconds Samjho exists for: you answered,
+ * does. This one shows the exact thirty seconds Medhavi exists for: you answered,
  * you were wrong, and here is why — which is what the name means.
  *
  * The question is a real NCERT Class 10 one (Light, concave mirrors) with a real

@@ -1,4 +1,4 @@
-import { ALL_BLUEPRINTS } from "@samjho/exam-blueprints";
+import { ALL_BLUEPRINTS } from "@medhavi/exam-blueprints";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -247,7 +247,7 @@ async function main(): Promise<void> {
     process.stdout.write(`${message}\n`);
   };
 
-  log("Seeding Samjho development data…\n");
+  log("Seeding Medhavi development data…\n");
 
   const { adminId, teacherId, studentIds } = await seedUsers(prisma);
   log(`  users              1 admin, 1 teacher, ${String(studentIds.length)} demo students`);
@@ -315,7 +315,7 @@ async function main(): Promise<void> {
       subjectId: scienceId,
       chapterId: firstChapter?.id ?? null,
     });
-    log("  classroom          10B Science, code SAMJHO, both students joined, 1 assignment set");
+    log("  classroom          10B Science, code MEDHAVI, both students joined, 1 assignment set");
   }
 
   log(`\nDone in ${String(Date.now() - startedAt)} ms.`);

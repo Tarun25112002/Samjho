@@ -1,4 +1,4 @@
-import type { ListExamPapersQuery } from "@samjho/contracts";
+import type { ListExamPapersQuery } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

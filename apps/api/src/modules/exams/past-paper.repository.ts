@@ -1,5 +1,5 @@
-import type { ListPastPapersQuery, WritePastPaperInput } from "@samjho/contracts";
-import { PREVIOUS_YEAR_SOURCE_TYPES } from "@samjho/contracts";
+import type { ListPastPapersQuery, WritePastPaperInput } from "@medhavi/contracts";
+import { PREVIOUS_YEAR_SOURCE_TYPES } from "@medhavi/contracts";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/prisma.js";

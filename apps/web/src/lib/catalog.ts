@@ -8,7 +8,7 @@ import {
   type Paginated,
   type StudentQuestion,
   type SubjectDetail,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 import { cache } from "react";
 
 import { apiFetchAuthed } from "./api-client";

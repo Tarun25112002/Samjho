@@ -1,6 +1,6 @@
 "use client";
 
-import { PRACTICE_MODE_LABELS, type DailyStudyPlanItem } from "@samjho/contracts";
+import { PRACTICE_MODE_LABELS, type DailyStudyPlanItem } from "@medhavi/contracts";
 import Link from "next/link";
 
 import { StartAssignment } from "@/features/classrooms/start-assignment";

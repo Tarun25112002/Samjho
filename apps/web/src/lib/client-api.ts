@@ -1,4 +1,4 @@
-import { errorResponseSchema } from "@samjho/contracts";
+import { errorResponseSchema } from "@medhavi/contracts";
 import type { z } from "zod";
 
 /**
@@ -48,7 +48,7 @@ export async function sendJson<T extends z.ZodType>(
     return {
       ok: false,
       failure: {
-        message: "Could not reach Samjho. Check your connection and try again.",
+        message: "Could not reach Medhavi. Check your connection and try again.",
         fieldErrors: {},
       },
     };
@@ -67,7 +67,7 @@ export async function sendJson<T extends z.ZodType>(
     return {
       ok: false,
       failure: {
-        message: "Samjho replied in an unexpected format. Please try again.",
+        message: "Medhavi replied in an unexpected format. Please try again.",
         fieldErrors: {},
       },
     };

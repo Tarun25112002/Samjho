@@ -1,4 +1,4 @@
-import { draftedQuestionsSchema, successResponseSchema } from "@samjho/contracts";
+import { draftedQuestionsSchema, successResponseSchema } from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

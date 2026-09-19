@@ -1,4 +1,4 @@
-import { subjectListResponseSchema, type PastPaperYearOption } from "@samjho/contracts";
+import { subjectListResponseSchema, type PastPaperYearOption } from "@medhavi/contracts";
 import type { Metadata } from "next";
 
 import { TeacherWorkspace } from "@/features/classrooms/teacher-workspace";

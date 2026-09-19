@@ -1,4 +1,4 @@
-import type { ProgressOverview, SubjectProgressSummary, WeakTopic } from "@samjho/contracts";
+import type { ProgressOverview, SubjectProgressSummary, WeakTopic } from "@medhavi/contracts";
 
 import { prisma } from "../../lib/prisma.js";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@samjho/api",
+  "name": "@medhavi/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,14 +18,14 @@
     "db:seed": "prisma db seed",
     "ingest:paper": "node --import tsx scripts/ingest-past-paper.ts",
     "db:reset": "prisma migrate reset --force",
-    "db:test:prepare": "cross-env DATABASE_URL=postgresql://samjho:samjho@localhost:5432/samjho_test prisma migrate deploy",
+    "db:test:prepare": "cross-env DATABASE_URL=postgresql://medhavi:medhavi@localhost:5432/medhavi_test prisma migrate deploy",
     "clean": "rimraf dist src/generated *.tsbuildinfo"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
-    "@samjho/contracts": "workspace:*",
-    "@samjho/exam-blueprints": "workspace:*",
+    "@medhavi/contracts": "workspace:*",
+    "@medhavi/exam-blueprints": "workspace:*",
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
@@ -37,7 +37,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@samjho/config": "workspace:*",
+    "@medhavi/config": "workspace:*",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",

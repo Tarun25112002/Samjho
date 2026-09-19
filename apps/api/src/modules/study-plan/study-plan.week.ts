@@ -1,4 +1,4 @@
-import type { WeeklyFocus, WeeklyPlanDay } from "@samjho/contracts";
+import type { WeeklyFocus, WeeklyPlanDay } from "@medhavi/contracts";
 
 import { shiftDay, toDayKey } from "../../lib/study-day.js";
 

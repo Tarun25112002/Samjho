@@ -12,7 +12,7 @@ import { PrismaClient } from "../generated/prisma/client.js";
  * rewrite that file and silently drop them, and nothing else in the system would
  * notice. This test is what notices.
  *
- * It needs a migrated database — `pnpm --filter @samjho/api db:test:prepare`
+ * It needs a migrated database — `pnpm --filter @medhavi/api db:test:prepare`
  * locally, and a dedicated CI step. If that has not happened, the test fails
  * with an explanation rather than skipping, because a constraint test that
  * quietly skips is worse than no constraint test at all: it reports green.
@@ -45,7 +45,7 @@ describe("hand-written CHECK constraints", () => {
     } catch (error) {
       throw new Error(
         `Could not reach the test database at ${databaseUrl ?? "(DATABASE_URL unset)"}. ` +
-          "Run `pnpm db:up` and `pnpm --filter @samjho/api db:test:prepare` first.",
+          "Run `pnpm db:up` and `pnpm --filter @medhavi/api db:test:prepare` first.",
         { cause: error },
       );
     }
@@ -100,7 +100,7 @@ describe("hand-written CHECK constraints", () => {
       `;
         await tx.$executeRaw`
         INSERT INTO users (id, "clerkId", email, "updatedAt")
-        VALUES ('ct-user', 'user_ct', 'ct@samjho.test', now())
+        VALUES ('ct-user', 'user_ct', 'ct@medhavi.test', now())
       `;
         result = await statement(tx);
         throw new Rollback();

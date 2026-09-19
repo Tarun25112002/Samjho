@@ -1,4 +1,4 @@
-import { meResponseSchema, teacherBankResponseSchema } from "@samjho/contracts";
+import { meResponseSchema, teacherBankResponseSchema } from "@medhavi/contracts";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

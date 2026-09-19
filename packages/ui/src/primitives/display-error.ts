@@ -32,7 +32,7 @@ export interface DisplayError {
 const GENERIC =
   "Something went wrong at our end. It is not something you did — please try again in a moment.";
 
-const OFFLINE = "We could not reach Samjho. Check your connection and try again.";
+const OFFLINE = "We could not reach Medhavi. Check your connection and try again.";
 
 const NOT_FOUND = "We could not find that. It may have been moved or renamed.";
 

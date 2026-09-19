@@ -1,7 +1,7 @@
 "use client";
 
-import type { AdminChapter, WriteQuestionInput } from "@samjho/contracts";
-import { QuestionRenderer, toPreviewQuestion } from "@samjho/ui";
+import type { AdminChapter, WriteQuestionInput } from "@medhavi/contracts";
+import { QuestionRenderer, toPreviewQuestion } from "@medhavi/ui";
 
 /**
  * Preview-as-student.

@@ -9,6 +9,7 @@ import { ButtonLink } from "@/components/ui/button";
 const LINKS = [
   // These links are rendered on `/status` too. Absolute fragments keep them
   // useful there instead of pointing at IDs that only exist on the home page.
+  { href: "/#marking", label: "See a mark land" },
   { href: "/#how", label: "How it works" },
   { href: "/#inside", label: "What you get" },
   { href: "/#parents", label: "For parents" },
@@ -38,7 +39,7 @@ export async function SiteHeader() {
       <div className="relative mx-auto flex h-16 max-w-6xl items-center gap-8 px-5 sm:px-8 lg:h-20">
         <Link href="/" className="shrink-0">
           <Wordmark size="sm" />
-          <span className="sr-only">Samjho home</span>
+          <span className="sr-only">Medhavi home</span>
         </Link>
 
         <nav aria-label="Site" className="hidden items-center gap-8 lg:flex">

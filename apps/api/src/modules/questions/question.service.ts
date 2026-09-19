@@ -3,7 +3,7 @@ import type {
   Paginated,
   StudentQuestion,
   StudentSubPart,
-} from "@samjho/contracts";
+} from "@medhavi/contracts";
 
 import { NotFoundError } from "../../lib/errors.js";
 import { questionRepository, type StudentQuestionRow } from "./question.repository.js";

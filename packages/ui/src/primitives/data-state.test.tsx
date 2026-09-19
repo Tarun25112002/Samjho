@@ -92,7 +92,7 @@ describe("DataState — loading", () => {
     expect(status).toHaveTextContent("Loading…");
 
     // The skeleton itself is decorative; the live region carries the meaning.
-    const skeleton = container.querySelector(".samjho-skeleton");
+    const skeleton = container.querySelector(".medhavi-skeleton");
     expect(skeleton).not.toBeNull();
     expect(skeleton).toHaveAttribute("aria-hidden", "true");
   });

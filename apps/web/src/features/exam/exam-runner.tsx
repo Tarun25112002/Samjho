@@ -6,8 +6,8 @@ import {
   type AnswerStatus,
   type ExamAttempt,
   type ExamItem,
-} from "@samjho/contracts";
-import { QuestionRenderer } from "@samjho/ui";
+} from "@medhavi/contracts";
+import { QuestionRenderer } from "@medhavi/ui";
 import { useState } from "react";
 
 import { Check, ChevronLeft, ChevronRight } from "@/components/icons";

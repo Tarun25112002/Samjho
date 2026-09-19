@@ -9,7 +9,7 @@ type ClerkLocalization = NonNullable<ComponentProps<typeof ClerkProvider>["local
  * Two reasons this file exists rather than the defaults being left alone.
  *
  * The first is literal: Clerk builds its titles from the application name in its
- * own dashboard, which is stored as `SAMJHO`. "Sign in to SAMJHO" shouts, and
+ * own dashboard, which is stored as `MEDHAVI`. "Sign in to MEDHAVI" shouts, and
  * nothing else in this product is set in capitals. Overriding the strings is the
  * only way to fix that from code.
  *

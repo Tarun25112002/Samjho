@@ -1,4 +1,4 @@
-import { subjectListResponseSchema, type SubjectSummary } from "@samjho/contracts";
+import { subjectListResponseSchema, type SubjectSummary } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 

@@ -1,4 +1,4 @@
-import { PRACTICE_MODE_LABELS, type PracticeTopicResult } from "@samjho/contracts";
+import { PRACTICE_MODE_LABELS, type PracticeTopicResult } from "@medhavi/contracts";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

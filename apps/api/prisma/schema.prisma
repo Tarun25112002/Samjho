@@ -1,4 +1,4 @@
-// Samjho database schema.
+// Medhavi database schema.
 //
 // Designed in docs/03-data-model.md — read that for the *why*. This file is the
 // mechanical expression of those decisions, and the comments here point back at
@@ -27,7 +27,7 @@ datasource db {
 // ═══════════════════════════════════════════════════════════════════════════
 //  Enums
 //
-//  QuestionType, Difficulty and BloomLevel are mirrored in @samjho/contracts
+//  QuestionType, Difficulty and BloomLevel are mirrored in @medhavi/contracts
 //  because they cross the network boundary. That duplication is asserted by a
 //  test rather than trusted — see src/modules/catalog/enum-parity.test.ts.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1204,7 +1204,7 @@ model QuestionRevision {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// The *rule*: how a paper for this subject is shaped. Validated by
-/// @samjho/exam-blueprints before it is ever written here.
+/// @medhavi/exam-blueprints before it is ever written here.
 model ExamBlueprint {
   id        String  @id @default(cuid())
   /// Stable identifier from the blueprint package, e.g. "cbse-10-science-2026".
@@ -1283,7 +1283,7 @@ model ExamSection {
   orderIndex       Int
   instructions     String?
   /// The section default. Null when the section mixes marks and every slot
-  /// carries its own — see the mixed-marks fixture in @samjho/exam-blueprints.
+  /// carries its own — see the mixed-marks fixture in @medhavi/exam-blueprints.
   marksPerQuestion Int?
 
   createdAt DateTime @default(now())
@@ -1865,7 +1865,7 @@ enum LearningEventType {
 /// a user by our own id — not a profile, and not something any third party ever
 /// receives.
 ///
-/// `propsJson` is small and bounded by the event schema in @samjho/contracts.
+/// `propsJson` is small and bounded by the event schema in @medhavi/contracts.
 /// It exists for the two or three numbers an event needs (which question index,
 /// how long the set was) and is validated rather than free-form: an untyped bag
 /// is how a table like this quietly becomes the profile it promised not to be.

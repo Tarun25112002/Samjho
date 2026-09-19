@@ -1,4 +1,4 @@
-import type { AnswerTranscription, TranscribeAnswerInput } from "@samjho/contracts";
+import type { AnswerTranscription, TranscribeAnswerInput } from "@medhavi/contracts";
 
 import { NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
