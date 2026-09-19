@@ -12,7 +12,13 @@ import {
   TargetIcon,
   UserIcon,
 } from "@/components/icons";
-import { ClassroomIcon, PaperIcon, StackIcon, TeachingIcon } from "@/components/icons";
+import {
+  BookmarkIcon,
+  ClassroomIcon,
+  PaperIcon,
+  StackIcon,
+  TeachingIcon,
+} from "@/components/icons";
 
 /**
  * The signed-in navigation, in its two forms.
@@ -62,6 +68,7 @@ const DESTINATIONS: Destination[] = [
   { href: "/exams", label: "Exams", icon: PaperIcon, railOnly: true },
   { href: "/progress", label: "Progress", icon: ProgressIcon },
   { href: "/ai-tutor", label: "AI tutor", icon: SparkIcon, railOnly: true },
+  { href: "/saved", label: "Saved", icon: BookmarkIcon, railOnly: true },
   { href: "/classroom", label: "Class", icon: ClassroomIcon },
   { href: "/profile", label: "You", icon: UserIcon },
 ];
