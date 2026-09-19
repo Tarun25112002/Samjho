@@ -40,6 +40,7 @@ import {
   type GradingRow,
   type SessionRow,
 } from "./practice.repository.js";
+import { analyticsService } from "../analytics/analytics.service.js";
 import { applyFinalisedAttempt, countCompletedSession, type Tx } from "./practice.rollups.js";
 import { practiceSelection } from "./practice.selection.js";
 import { correctLatestLapseSchedule } from "../revision/revision.scheduler.js";
@@ -334,7 +335,26 @@ export const practiceService = {
       await recomputeTotals(tx, session);
     });
 
-    return this.itemOutcome(userId, sessionId, input.questionId);
+    const outcome = await this.itemOutcome(userId, sessionId, input.questionId);
+
+    void analyticsService.record({
+      userId,
+      type: "ANSWER_SUBMITTED",
+      sessionId,
+      questionId: input.questionId,
+      props: {
+        index: session.questionIds.indexOf(input.questionId),
+        total: session.totalQuestions,
+        dwellMs: input.timeSpentMs,
+        // Every part right, which is the same rule the session totals use.
+        correct: outcome.item.attempts.every((attempt) => attempt.isCorrect === true),
+        ...(readSelections(session)[input.questionId]?.targetLevel === undefined
+          ? {}
+          : { targetLevel: readSelections(session)[input.questionId]?.targetLevel }),
+      },
+    });
+
+    return outcome;
   },
 
   /**
@@ -511,6 +531,16 @@ export const practiceService = {
     // IN_PROGRESS session is one the student is choosing to finish.
     if (session.status === "IN_PROGRESS") {
       await closeSession(sessionId, userId, new Date());
+
+      // Only on the transition. `complete` is idempotent by design — a
+      // double-tapped Finish returns the same result — and an event per tap
+      // would make "how many sets get finished" a count of taps.
+      void analyticsService.record({
+        userId,
+        type: "ASSESSMENT_COMPLETED",
+        sessionId,
+        props: { index: session.answered, total: session.totalQuestions },
+      });
     }
 
     return this.result(userId, sessionId);

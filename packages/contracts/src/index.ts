@@ -30,6 +30,7 @@ export * from "./practice/adaptive.schema.js";
 export * from "./practice/bookmark.schema.js";
 export * from "./progress/progress.schema.js";
 export * from "./analysis/analysis.schema.js";
+export * from "./analytics/event.schema.js";
 export * from "./revision/revision.schema.js";
 export * from "./study-plan/study-plan.schema.js";
 export * from "./catalog/subject.schema.js";

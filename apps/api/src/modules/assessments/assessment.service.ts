@@ -14,6 +14,7 @@ import {
 
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { analyticsService } from "../analytics/analytics.service.js";
 import { adaptiveSelection } from "../practice/practice.adaptive.selection.js";
 import {
   chooseTopic,
@@ -128,6 +129,14 @@ export const assessmentService = {
       ...timing,
     });
 
+    void analyticsService.record({
+      userId,
+      type: "ASSESSMENT_STARTED",
+      sessionId: session.id,
+      questionId,
+      props: { total: input.count, targetLevel: pick.targetLevel },
+    });
+
     return hydrateSession(session);
   },
 
@@ -204,6 +213,14 @@ export const assessmentService = {
     if (!row) throw new NotFoundError("Question");
 
     await practiceRepository.markHintUsed(sessionId, questionId);
+
+    void analyticsService.record({
+      userId,
+      type: "HINT_REQUESTED",
+      sessionId,
+      questionId,
+      props: { hintUsed: true },
+    });
 
     const authored = row.answer?.hint?.trim();
     if (authored) {

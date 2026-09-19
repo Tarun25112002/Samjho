@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { sendJson, type ApiFailure } from "@/lib/client-api";
+import { trackEvent } from "@/lib/events";
 
 /**
  * The practice runner's brain.
@@ -274,6 +275,25 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
   const goTo = useCallback(
     (nextIndex: number) => {
       const clamped = Math.min(Math.max(nextIndex, 0), Math.max(session.items.length - 1, 0));
+
+      // Emitted on the way *out* of a question rather than into one, so the
+      // dwell time is a measured span rather than a guess. The question being
+      // left is the one at the current index, which is why this reads `index`
+      // before `setIndex` replaces it.
+      const leaving = session.items[index];
+      if (leaving && clamped !== index) {
+        trackEvent({
+          type: "QUESTION_VIEWED",
+          sessionId: session.id,
+          questionId: leaving.question.id,
+          props: {
+            index,
+            total: Math.max(session.items.length, session.plannedQuestions),
+            dwellMs: Math.min(Date.now() - shownAt.current, 6 * 60 * 60 * 1000),
+          },
+        });
+      }
+
       setIndex(clamped);
       setFailure(null);
       shownAt.current = Date.now();
@@ -288,7 +308,7 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
         practiceSessionSchema,
       );
     },
-    [session.id, session.items.length],
+    [index, session.id, session.items, session.plannedQuestions],
   );
 
   /**

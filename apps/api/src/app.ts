@@ -13,6 +13,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
 import { buildAIRouter } from "./modules/ai/ai.routes.js";
 import { buildAnalysisRouter } from "./modules/analysis/analysis.routes.js";
+import { buildEventRouter } from "./modules/analytics/analytics.routes.js";
 import { buildAssessmentRouter } from "./modules/assessments/assessment.routes.js";
 import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
@@ -148,6 +149,7 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
   router.use("/progress", buildProgressRouter(verifyToken));
   router.use("/analysis", buildAnalysisRouter(verifyToken));
+  router.use("/events", buildEventRouter(verifyToken));
   router.use("/revision", buildRevisionRouter(verifyToken));
   router.use("/study-plan", buildStudyPlanRouter(verifyToken));
   router.use("/classrooms", buildClassroomRouter(verifyToken));

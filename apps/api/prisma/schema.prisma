@@ -334,6 +334,7 @@ model User {
   subjectProgress       SubjectProgress[]
   aiConversations       AIConversation[]
   aiUsage               AIUsageLedger[]
+  learningEvents        LearningEvent[]
   taughtClassrooms      Classroom[]            @relation("ClassroomTeacher")
   classMemberships      ClassroomMembership[]  @relation("ClassroomStudent")
   assignmentSubmissions AssignmentSubmission[] @relation("AssignmentStudent")
@@ -936,6 +937,7 @@ model Question {
   bookmarks       Bookmark[]
   mistakes        MistakeRecord[]
   aiConversations AIConversation[]
+  learningEvents  LearningEvent[]
 
   // The practice-selection hot path filters on several of these at once over
   // what will become by far the largest table. Composite indexes are ordered
@@ -1407,6 +1409,7 @@ model PracticeSession {
   updatedAt DateTime @updatedAt
 
   attempts             QuestionAttempt[]
+  learningEvents       LearningEvent[]
   assignmentSubmission AssignmentSubmission?
 
   @@index([userId, status])
@@ -1811,4 +1814,76 @@ model AIUsageLedger {
   @@unique([userId, date])
   @@index([date])
   @@map("ai_usage_ledger")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Learning analytics
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// The product events worth recording, and deliberately no others.
+///
+/// Every one of these is a thing a student did *inside a question set*, and
+/// each exists because a specific product question needs it: whether hints are
+/// a crutch or a ladder, whether students abandon sets at a particular length,
+/// whether the recommendations are ever taken. An event that cannot name the
+/// question it answers does not belong in this enum.
+enum LearningEventType {
+  ASSESSMENT_STARTED
+  QUESTION_VIEWED
+  ANSWER_SUBMITTED
+  HINT_REQUESTED
+  QUESTION_MARKED
+  ASSESSMENT_COMPLETED
+  RECOMMENDATION_CLICKED
+  SIMILAR_QUESTION_STARTED
+}
+
+/// First-party learning analytics, and nothing else.
+///
+/// ## What this table may not contain, as a rule rather than as a habit
+///
+/// No IP address, no user agent, no device or advertising identifier, no
+/// referrer, no cross-site anything. Every user of this platform is a 14-16
+/// year-old (docs/07 R6), the DPDP Act 2023 prohibits behavioural tracking
+/// directed at children, and docs/06 commits to zero third-party tracking SDKs
+/// permanently. So this is a record of what happened in the product, joined to
+/// a user by our own id — not a profile, and not something any third party ever
+/// receives.
+///
+/// `propsJson` is small and bounded by the event schema in @samjho/contracts.
+/// It exists for the two or three numbers an event needs (which question index,
+/// how long the set was) and is validated rather than free-form: an untyped bag
+/// is how a table like this quietly becomes the profile it promised not to be.
+///
+/// ## Why the writes are best-effort
+///
+/// Recording that a student viewed a question must never be the reason they
+/// could not answer it. Every call site swallows failures — see
+/// `analytics.service.ts` — which is the right trade for a table nothing in the
+/// product reads back at request time.
+model LearningEvent {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type LearningEventType
+
+  /// The practice session this happened in, where there was one.
+  sessionId  String?
+  session    PracticeSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  /// The question this happened to, where there was one. Kept on delete so a
+  /// withdrawn question does not erase the record that students struggled with
+  /// it — which is exactly the signal that got it withdrawn.
+  questionId String?
+  question   Question?        @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  propsJson Json?
+
+  occurredAt DateTime @default(now())
+
+  @@index([userId, occurredAt(sort: Desc)])
+  @@index([type, occurredAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("learning_events")
 }

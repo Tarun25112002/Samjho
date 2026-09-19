@@ -1,5 +1,6 @@
 import {
   aiActionSchema,
+  learningEventTypeSchema,
   assessmentObjectiveSchema,
   aiContextSchema,
   selectionReasonSchema,
@@ -40,6 +41,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   AIAction as PrismaAIAction,
+  LearningEventType as PrismaLearningEventType,
   AssessmentObjective as PrismaAssessmentObjective,
   AIContext as PrismaAIContext,
   SelectionReason as PrismaSelectionReason,
@@ -102,6 +104,7 @@ describe("Prisma ↔ contracts enum parity", () => {
     ["ConversationStatus", PrismaConversationStatus, conversationStatusSchema.options],
     ["AssessmentObjective", PrismaAssessmentObjective, assessmentObjectiveSchema.options],
     ["SelectionReason", PrismaSelectionReason, selectionReasonSchema.options],
+    ["LearningEventType", PrismaLearningEventType, learningEventTypeSchema.options],
   ])(
     "%s matches",
     (_name, prismaEnum: Record<string, string>, contractOptions: readonly string[]) => {
