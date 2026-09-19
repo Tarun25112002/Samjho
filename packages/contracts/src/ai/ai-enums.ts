@@ -19,6 +19,19 @@ import { z } from "zod";
 export const aiContextSchema = z.enum(["PRACTICE", "REVIEW", "CHAPTER"]);
 export type AIContext = z.infer<typeof aiContextSchema>;
 
+/**
+ * Said as the student would recognise it, not as the enum spells it.
+ *
+ * "REVIEW" is a state machine's word for it; "Reviewing a mistake" is what the
+ * student was actually doing when they asked, and it is what makes a list of
+ * past conversations scannable.
+ */
+export const AI_CONTEXT_LABELS = {
+  PRACTICE: "While practising",
+  REVIEW: "Reviewing a mistake",
+  CHAPTER: "About a chapter",
+} as const satisfies Record<AIContext, string>;
+
 export const aiRoleSchema = z.enum(["USER", "ASSISTANT", "SYSTEM"]);
 export type AIRole = z.infer<typeof aiRoleSchema>;
 
