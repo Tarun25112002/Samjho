@@ -151,6 +151,24 @@ enum PracticeMode {
   PREVIOUS_YEAR
   REVIEW_DUE
   ASSIGNED
+  DIAGNOSTIC
+  ADAPTIVE
+}
+
+enum AssessmentObjective {
+  DIAGNOSTIC_FUNDAMENTALS
+  DIAGNOSTIC_APPLICATION
+  DIAGNOSTIC_CHALLENGE
+  ADAPTIVE_PERSONALISED
+}
+
+enum SelectionReason {
+  DIAGNOSTIC_LADDER
+  WEAK_AREA
+  REINFORCEMENT
+  CURRENT_LEVEL
+  CHALLENGE
+  COVERAGE
 }
 
 enum SessionStatus {
@@ -533,7 +551,7 @@ model ClassroomAssignment {
   /// Frozen at creation rather than resolved per student for the same reason
   /// `PracticeSession.questionIds` is: withdrawing a question next week must not
   /// silently change what a test contained last week.
-  questionIds   String[]
+  questionIds String[]
 
   /// Minutes, or null for an untimed assignment. Copied onto each student's
   /// session at start, so a teacher shortening the limit tomorrow does not cut
@@ -959,6 +977,10 @@ model QuestionAnswer {
   markingScheme Json?
   /// Why the answer is what it is — the AI tutor's fallback when quota runs out.
   explanation   String?
+  /// A nudge towards the method, never towards the answer. Authored rather than
+  /// generated, so a hint costs no AI call, no latency and no quota, and so the
+  /// first hint a student sees is one an editor has read.
+  hint          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1333,8 +1355,25 @@ model PracticeSession {
   /// The question set is materialised at creation rather than re-queried. A
   /// student's session must not change shape because an admin published new
   /// content halfway through it.
+  ///
+  /// An adaptive set is the exception that proves the rule: it cannot know its
+  /// own contents in advance, because question *n+1* is chosen from the answer
+  /// to *n*. It therefore starts with one id and grows, and this array stays the
+  /// order of record throughout — a question already served never changes.
   questionIds  String[]
   currentIndex Int          @default(0)
+
+  /// What this sitting is trying to find out. Null for the ordinary practice
+  /// modes, which are shaped by a student's filters rather than by an intent.
+  objective        AssessmentObjective?
+  /// How many questions an adaptive sitting is meant to reach. `questionIds`
+  /// counts what has been served so far; this is where it is heading.
+  plannedQuestions Int                  @default(0)
+  /// Why the engine chose each served question, keyed by question id:
+  /// `{ reason, targetLevel, masteryAtPick }`. Recorded so "we picked this
+  /// because Probability is your weakest topic" is a stored fact rather than a
+  /// post-hoc guess, and so the claim that a set adapted is auditable.
+  selectionsJson   Json?
 
   status      SessionStatus @default(IN_PROGRESS)
   startedAt   DateTime      @default(now())
@@ -1484,6 +1523,12 @@ model QuestionAttempt {
   usedAiHelp  Boolean  @default(false)
   attemptedAt DateTime @default(now())
 
+  /// Whether the student opened the hint before answering. Evidence about
+  /// mastery rather than a neutral convenience: a topic that only clears with a
+  /// nudge is a topic the student has not got yet, and the adaptive engine reads
+  /// this before deciding the next question's difficulty.
+  hintUsed Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1559,16 +1604,16 @@ model MistakeRecord {
   /// that comes from the streak and the ease factor. See `nextInterval` for why
   /// multiplying this column turned out to be both unreachable and, on a
   /// backfilled zero, an infinite loop.
-  intervalDays   Int            @default(0)
+  intervalDays   Int       @default(0)
   /// SM-2's ease factor — how fast intervals grow for this student on *this*
   /// question. Falls on a lapse, rises slightly on a confident success, floored
   /// at 1.3. Below that floor a question they keep failing returns so often it
   /// crowds out everything else, which is how a review queue gets abandoned.
-  easeFactor     Float          @default(2.5)
+  easeFactor     Float     @default(2.5)
   /// Consecutive successful reviews, reset to zero by any lapse. What
   /// `REVIEW_GRADUATION_STREAK` is compared against.
-  reviewStreak   Int            @default(0)
-  reviewCount    Int            @default(0)
+  reviewStreak   Int       @default(0)
+  reviewCount    Int       @default(0)
   lastReviewedAt DateTime?
   /// Set when the streak reaches graduation. `nextReviewAt` goes null in the
   /// same write, so a graduated record cannot be picked by the due query even if

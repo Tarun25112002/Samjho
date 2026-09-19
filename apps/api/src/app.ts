@@ -12,6 +12,7 @@ import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
 import { buildAIRouter } from "./modules/ai/ai.routes.js";
+import { buildAssessmentRouter } from "./modules/assessments/assessment.routes.js";
 import { buildMeRouter } from "./modules/auth/auth.routes.js";
 import { buildCatalogAdminRouter } from "./modules/catalog/catalog.admin.routes.js";
 import { buildCatalogRouter } from "./modules/catalog/catalog.routes.js";
@@ -142,6 +143,7 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/catalog", buildCatalogRouter(verifyToken));
   router.use("/questions", buildQuestionRouter(verifyToken));
   router.use("/practice-sessions", buildPracticeRouter(verifyToken));
+  router.use("/assessments", buildAssessmentRouter(verifyToken));
   router.use("/bookmarks", buildBookmarkRouter(verifyToken));
   router.use("/progress", buildProgressRouter(verifyToken));
   router.use("/revision", buildRevisionRouter(verifyToken));

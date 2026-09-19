@@ -26,6 +26,7 @@ export * from "./exam/past-paper.schema.js";
 export * from "./practice/practice-enums.js";
 export * from "./practice/answer.schema.js";
 export * from "./practice/session.schema.js";
+export * from "./practice/adaptive.schema.js";
 export * from "./practice/bookmark.schema.js";
 export * from "./progress/progress.schema.js";
 export * from "./revision/revision.schema.js";

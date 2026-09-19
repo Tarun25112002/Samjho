@@ -68,6 +68,7 @@ export const class10MathsQuestions: SeedQuestion[] = [
         "The smallest prime number is $2$. The smallest odd composite number is $9$ (since $1$ is neither prime nor composite, and $3,5,7$ are prime). As $2$ and $9$ are co-prime, $\\text{LCM}(2,9) = 2 \\times 9 = 18$.",
       explanation:
         "The trap here is picking $4$ as the smallest composite number — it is, but the question asks for the smallest *odd* composite, which is $9$.",
+      hint: "List the first few primes and the first few composite numbers separately, then read the question again — one word in it is doing more work than it looks.",
     },
     source: ORIGINAL,
   },
@@ -92,6 +93,7 @@ export const class10MathsQuestions: SeedQuestion[] = [
       solution:
         "For $ax^2 + bx + c$, the sum of zeroes is $-\\dfrac{b}{a}$. Here $a = 1$, $b = -5$, so $\\alpha + \\beta = -\\dfrac{-5}{1} = 5$.",
       explanation: "The sign is the usual slip: the formula is $-b/a$, not $b/a$.",
+      hint: "You do not need to find the zeroes at all. There is a relation between a quadratic's coefficients and the sum of its zeroes — write that down first, then substitute.",
     },
     source: ORIGINAL,
   },
@@ -115,6 +117,7 @@ export const class10MathsQuestions: SeedQuestion[] = [
       correctValue: "B",
       solution:
         "Equal roots require the discriminant to vanish: $b^2 - 4ac = 0$. Here $(-4)^2 - 4(k)(1) = 0$, so $16 = 4k$ and $k = 4$.",
+      hint: '"Equal roots" is a statement about the discriminant. Decide what $b^2 - 4ac$ has to equal before you substitute anything.',
     },
     source: ADAPTED(2023, "7"),
   },

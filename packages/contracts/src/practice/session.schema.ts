@@ -10,6 +10,7 @@ import {
   yearsQuerySchema,
 } from "../question/question.schema.js";
 import { studentAnswerSchema } from "./answer.schema.js";
+import { assessmentObjectiveSchema, questionSelectionSchema } from "./adaptive.schema.js";
 import {
   evaluationModeSchema,
   mistakeReasonSchema,
@@ -340,6 +341,10 @@ export const practiceSessionSchema = z.object({
    */
   expired: z.boolean(),
 
+  objective: assessmentObjectiveSchema.nullable(),
+  plannedQuestions: z.int().nonnegative(),
+  selections: z.record(z.string(), questionSelectionSchema),
+
   totals: practiceTotalsSchema,
   items: z.array(practiceItemSchema),
 });
@@ -352,6 +357,7 @@ export const practiceSessionSummarySchema = practiceSessionSchema.omit({
   filters: true,
   currentIndex: true,
   serverNow: true,
+  selections: true,
 });
 
 export type PracticeSessionSummary = z.infer<typeof practiceSessionSummarySchema>;

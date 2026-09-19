@@ -1,5 +1,6 @@
 import {
   markingStepSchema,
+  questionSelectionSchema,
   practiceFiltersSchema,
   WEAK_TOPIC_MARK_RATIO,
   WEAK_TOPIC_MIN_ATTEMPTS,
@@ -16,12 +17,14 @@ import {
   type PracticeSessionSummary,
   type PracticeTopicResult,
   type QuestionAnswer,
+  type QuestionSelection,
   type SelfEvaluateInput,
   type SetMistakeReasonInput,
   type StudentAnswer,
   type StudentQuestion,
   type SubmitAttemptInput,
 } from "@samjho/contracts";
+import { z } from "zod";
 
 import type { Prisma } from "../../generated/prisma/client.js";
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors.js";
@@ -102,6 +105,18 @@ export const practiceService = {
         {
           path: "body.mode",
           message: "this session type can only be started from its revision queue or assignment",
+        },
+      ]);
+    }
+
+    // An adaptive or diagnostic sitting has an objective and a ladder, and both
+    // arrive through `/assessments`. Building one here would produce a filtered
+    // random set wearing the label of a measurement.
+    if (input.mode === "DIAGNOSTIC" || input.mode === "ADAPTIVE") {
+      throw new ValidationError("Request validation failed", [
+        {
+          path: "body.mode",
+          message: "this session type is started from /assessments",
         },
       ]);
     }
@@ -562,7 +577,7 @@ export const practiceService = {
  * deadline directly, so an answer sent thirty seconds late is rejected whether
  * or not anything has swept.
  */
-async function loadSession(userId: string, sessionId: string): Promise<SessionRow> {
+export async function loadSession(userId: string, sessionId: string): Promise<SessionRow> {
   const session = await practiceRepository.findById(sessionId, userId);
   if (!session) throw new NotFoundError("Practice session");
 
@@ -632,7 +647,7 @@ async function closeSession(sessionId: string, userId: string, at: Date): Promis
  * row. The set gets shorter and the totals still add up, which is a better
  * outcome than showing a student a question an editor has flagged as wrong.
  */
-async function hydrateSession(session: SessionRow): Promise<PracticeSession> {
+export async function hydrateSession(session: SessionRow): Promise<PracticeSession> {
   const [questions, attempts] = [
     await practiceRepository.findSessionQuestions(session.questionIds),
     await practiceRepository.findAttempts(session.id),
@@ -703,6 +718,9 @@ function toSession(
       session.deadlineAt !== null &&
       session.completedAt !== null &&
       session.completedAt.getTime() >= session.deadlineAt.getTime(),
+    objective: session.objective,
+    plannedQuestions: session.plannedQuestions,
+    selections: readSelections(session),
     totals: {
       totalQuestions: session.totalQuestions,
       answered: session.answered,
@@ -776,6 +794,13 @@ function readAnswer(value: Prisma.JsonValue | null): StudentAnswer {
 function readFilters(session: Pick<SessionRow, "filtersJson">): PracticeFilters {
   const parsed = practiceFiltersSchema.safeParse(session.filtersJson);
   return parsed.success ? parsed.data : { unseenOnly: false };
+}
+
+export function readSelections(
+  session: Pick<SessionRow, "selectionsJson">,
+): Record<string, QuestionSelection> {
+  const parsed = z.record(z.string(), questionSelectionSchema).safeParse(session.selectionsJson);
+  return parsed.success ? parsed.data : {};
 }
 
 // ── Grading inputs ───────────────────────────────────────────────────────────
@@ -951,7 +976,7 @@ async function countPendingBySession(sessionIds: string[]): Promise<Map<string, 
 }
 
 /** Marks the set is worth, summed over graded units rather than over items. */
-async function sumGradableMarks(questionIds: string[]): Promise<number> {
+export async function sumGradableMarks(questionIds: string[]): Promise<number> {
   const rows = await prisma.question.findMany({
     where: { id: { in: questionIds } },
     select: { marks: true, isContainer: true, subParts: { select: { marks: true } } },

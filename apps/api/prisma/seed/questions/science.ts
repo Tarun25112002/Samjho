@@ -230,6 +230,7 @@ export const class10ScienceQuestions: SeedQuestion[] = [
       correctValue: "C",
       solution:
         "The ciliary muscles change the curvature, and hence the focal length, of the eye lens. This ability is called accommodation. The iris controls the pupil's size and thus the amount of light, not the focus.",
+      hint: "Separate the two jobs the eye does: letting in the right amount of light, and focusing it. Which part changes the lens itself?",
     },
     source: ORIGINAL,
   },
@@ -255,6 +256,7 @@ export const class10ScienceQuestions: SeedQuestion[] = [
         "$\\dfrac{1}{R} = \\dfrac{1}{6} + \\dfrac{1}{3} = \\dfrac{1}{6} + \\dfrac{2}{6} = \\dfrac{3}{6} = \\dfrac{1}{2}$, so $R = 2\\ \\Omega$.",
       explanation:
         "A useful check: the equivalent resistance of a parallel combination is always *smaller* than the smallest individual resistor. Any answer above $3\\ \\Omega$ is wrong before you calculate anything.",
+      hint: "In parallel it is the reciprocals that add, not the resistances. Before computing, ask yourself whether the answer should be bigger or smaller than $3\\ \\Omega$.",
     },
     source: ORIGINAL,
   },

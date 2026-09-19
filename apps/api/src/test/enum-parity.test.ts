@@ -1,6 +1,8 @@
 import {
   aiActionSchema,
+  assessmentObjectiveSchema,
   aiContextSchema,
+  selectionReasonSchema,
   aiRoleSchema,
   bloomLevelSchema,
   boardSchema,
@@ -16,7 +18,9 @@ import {
   sessionStatusSchema,
   userStatusSchema,
   type AIAction,
+  type AssessmentObjective,
   type AIContext,
+  type SelectionReason,
   type AIRole,
   type BloomLevel,
   type Board,
@@ -36,7 +40,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   AIAction as PrismaAIAction,
+  AssessmentObjective as PrismaAssessmentObjective,
   AIContext as PrismaAIContext,
+  SelectionReason as PrismaSelectionReason,
   AIRole as PrismaAIRole,
   BloomLevel as PrismaBloomLevel,
   Board as PrismaBoard,
@@ -94,6 +100,8 @@ describe("Prisma ↔ contracts enum parity", () => {
     ["AIRole", PrismaAIRole, aiRoleSchema.options],
     ["AIAction", PrismaAIAction, aiActionSchema.options],
     ["ConversationStatus", PrismaConversationStatus, conversationStatusSchema.options],
+    ["AssessmentObjective", PrismaAssessmentObjective, assessmentObjectiveSchema.options],
+    ["SelectionReason", PrismaSelectionReason, selectionReasonSchema.options],
   ])(
     "%s matches",
     (_name, prismaEnum: Record<string, string>, contractOptions: readonly string[]) => {
@@ -122,6 +130,8 @@ describe("Prisma ↔ contracts enum parity", () => {
     const aiRole: AIRole = PrismaAIRole.ASSISTANT;
     const aiAction: AIAction = PrismaAIAction.STEP_BY_STEP;
     const conversation: ConversationStatus = PrismaConversationStatus.ARCHIVED;
+    const objective: AssessmentObjective = PrismaAssessmentObjective.ADAPTIVE_PERSONALISED;
+    const selection: SelectionReason = PrismaSelectionReason.WEAK_AREA;
 
     expect([
       type,
@@ -140,6 +150,8 @@ describe("Prisma ↔ contracts enum parity", () => {
       aiRole,
       aiAction,
       conversation,
+      objective,
+      selection,
     ]).toEqual([
       "CASE_BASED",
       "HARD",
@@ -157,6 +169,8 @@ describe("Prisma ↔ contracts enum parity", () => {
       "ASSISTANT",
       "STEP_BY_STEP",
       "ARCHIVED",
+      "ADAPTIVE_PERSONALISED",
+      "WEAK_AREA",
     ]);
   });
 });

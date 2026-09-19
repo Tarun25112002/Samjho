@@ -35,6 +35,7 @@ export interface SeedAnswer {
   /** Step-by-step marks allocation, mirroring CBSE's own marking schemes. */
   markingScheme?: { step: string; marks: number }[];
   explanation?: string;
+  hint?: string;
 }
 
 export interface SeedSource {

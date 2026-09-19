@@ -51,6 +51,8 @@ export const practiceModeSchema = z.enum([
   "PREVIOUS_YEAR",
   "REVIEW_DUE",
   "ASSIGNED",
+  "DIAGNOSTIC",
+  "ADAPTIVE",
 ]);
 export type PracticeMode = z.infer<typeof practiceModeSchema>;
 
@@ -63,6 +65,8 @@ export const PRACTICE_MODE_LABELS = {
   PREVIOUS_YEAR: "Previous-year questions",
   REVIEW_DUE: "Today's revision",
   ASSIGNED: "Set by your teacher",
+  DIAGNOSTIC: "Diagnostic",
+  ADAPTIVE: "Made for you",
 } as const satisfies Record<PracticeMode, string>;
 
 /**
