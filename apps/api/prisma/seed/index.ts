@@ -8,7 +8,9 @@ import { class10ScienceChapters } from "./curriculum/science.js";
 import { seedId, upsertQuestion, type CurriculumIndex } from "./helpers.js";
 import { seedPastPapers } from "./past-papers.js";
 import { class10MathsQuestions } from "./questions/maths.js";
+import { class10MathsPastPaperQuestions } from "./questions/maths-pyq.js";
 import { class10ScienceQuestions } from "./questions/science.js";
+import { class10SciencePastPaperQuestions } from "./questions/science-pyq.js";
 import type { SeedChapter, SeedQuestion } from "./types.js";
 import { enrolStudents, seedClassroom, seedPracticeHistory, seedUsers } from "./users.js";
 
@@ -59,7 +61,7 @@ const CLASS_10_SUBJECTS: SubjectSpec[] = [
     hasPractical: false,
     orderIndex: 0,
     chapters: class10MathsChapters,
-    questions: class10MathsQuestions,
+    questions: [...class10MathsQuestions, ...class10MathsPastPaperQuestions],
   },
   {
     code: "SCI",
@@ -72,7 +74,7 @@ const CLASS_10_SUBJECTS: SubjectSpec[] = [
     hasPractical: true,
     orderIndex: 1,
     chapters: class10ScienceChapters,
-    questions: class10ScienceQuestions,
+    questions: [...class10ScienceQuestions, ...class10SciencePastPaperQuestions],
   },
 ];
 
