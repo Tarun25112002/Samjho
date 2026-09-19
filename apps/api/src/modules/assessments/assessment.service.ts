@@ -144,7 +144,7 @@ export const assessmentService = {
 
     const served = session.questionIds.length;
     if (served >= session.plannedQuestions) {
-      return { index: null, selection: null, exhausted: false };
+      return { index: null, selection: null, exhausted: false, item: null, totals: null };
     }
 
     const subjectIds = await resolveSubjectIds(userId, readSubjectId(session));
@@ -169,22 +169,27 @@ export const assessmentService = {
     });
 
     if (questionId === null) {
-      return { index: null, selection: null, exhausted: true };
+      return { index: null, selection: null, exhausted: true, item: null, totals: null };
     }
 
     const questionIds = [...session.questionIds, questionId];
 
-    await practiceRepository.appendQuestion({
+    const updated = await practiceRepository.appendQuestion({
       sessionId: session.id,
       questionIds,
       marksPossible: await sumGradableMarks(questionIds),
       selections: { ...readSelections(session), [questionId]: toSelection(pick) },
     });
 
+    const hydrated = await hydrateSession(updated);
+    const index = questionIds.length - 1;
+
     return {
-      index: questionIds.length - 1,
+      index,
       selection: toSelection(pick),
       exhausted: false,
+      item: hydrated.items.at(-1) ?? null,
+      totals: hydrated.totals,
     };
   },
 

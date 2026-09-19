@@ -125,14 +125,6 @@ export const diagnosticProgressSchema = z.object({
 
 export type DiagnosticProgress = z.infer<typeof diagnosticProgressSchema>;
 
-export const nextQuestionSchema = z.object({
-  index: z.int().nonnegative().nullable(),
-  selection: questionSelectionSchema.nullable(),
-  exhausted: z.boolean(),
-});
-
-export type NextQuestionResult = z.infer<typeof nextQuestionSchema>;
-
 export const hintResponseSchema = z.object({
   questionId: z.string().min(1),
   hint: z.string().min(1),

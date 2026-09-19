@@ -4,6 +4,8 @@ import {
   attemptOutcomeSchema,
   bookmarkStateSchema,
   EMPTY_ANSWER,
+  hintResponseSchema,
+  nextQuestionSchema,
   practiceAttemptSchema,
   practiceResultSchema,
   practiceSessionSchema,
@@ -55,7 +57,17 @@ export interface PracticeRunner {
   busy: boolean;
   failure: ApiFailure | null;
 
+  /** True while the engine is choosing the next question of an adaptive sitting. */
+  extending: boolean;
+  /** Set when the bank ran out before the sitting reached its planned length. */
+  exhausted: boolean;
+  /** The hint for the current question, once the student has asked for one. */
+  hint: string | null;
+  hintPending: boolean;
+
   setAnswer: (targetId: string, answer: StudentAnswer) => void;
+  requestHint: () => Promise<void>;
+  advance: () => Promise<void>;
   submit: () => Promise<void>;
   selfEvaluate: (attemptId: string, marksAwarded: number) => Promise<void>;
   setMistakeReason: (attemptId: string, reason: MistakeReason | null) => Promise<void>;
@@ -74,6 +86,10 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
   const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ApiFailure | null>(null);
+  const [extending, setExtending] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+  const [hints, setHints] = useState<Record<string, string>>({});
+  const [hintPending, setHintPending] = useState(false);
 
   /**
    * When the student arrived at the question they are looking at.
@@ -111,6 +127,29 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
   const setAnswer = useCallback((targetId: string, answer: StudentAnswer) => {
     setAnswers((current) => ({ ...current, [targetId]: answer }));
   }, []);
+
+  const requestHint = useCallback(async () => {
+    if (!item || hints[item.question.id] !== undefined || hintPending) return;
+
+    setHintPending(true);
+    setFailure(null);
+
+    const result = await sendJson(
+      "POST",
+      `/api/v1/assessments/${session.id}/hint`,
+      { questionId: item.question.id },
+      hintResponseSchema,
+    );
+
+    setHintPending(false);
+
+    if (!result.ok) {
+      setFailure(result.failure);
+      return;
+    }
+
+    setHints((current) => ({ ...current, [result.data.questionId]: result.data.hint }));
+  }, [hintPending, hints, item, session.id]);
 
   const submit = useCallback(async () => {
     if (!item || answered || busy) return;
@@ -252,6 +291,61 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
     [session.id, session.items.length],
   );
 
+  /**
+   * Move to the next question, asking the engine for one first where there is
+   * one to ask for.
+   *
+   * An adaptive sitting has no question n+1 until this call returns: the engine
+   * decides it from the answer to n. A fixed set already holds every question,
+   * so for those this is a navigation and nothing more — which is why both live
+   * behind one function rather than the runner branching on the session's mode
+   * inside its JSX.
+   */
+  const advance = useCallback(async () => {
+    const isAdaptive = session.objective !== null;
+    const atEndOfServed = index >= session.items.length - 1;
+    const roomToGrow = session.items.length < session.plannedQuestions;
+
+    if (!isAdaptive || !atEndOfServed || !roomToGrow) {
+      goTo(index + 1);
+      return;
+    }
+
+    setExtending(true);
+    setFailure(null);
+
+    const result = await sendJson(
+      "POST",
+      `/api/v1/assessments/${session.id}/next-question`,
+      {},
+      nextQuestionSchema,
+    );
+
+    setExtending(false);
+
+    if (!result.ok) {
+      setFailure(result.failure);
+      return;
+    }
+
+    if (result.data.exhausted) {
+      setExhausted(true);
+      return;
+    }
+
+    const { item: next, totals, index: nextIndex } = result.data;
+    if (!next || nextIndex === null) return;
+
+    setSession((current) => ({
+      ...current,
+      ...(totals ? { totals } : {}),
+      items: [...current.items, next],
+    }));
+
+    setIndex(nextIndex);
+    shownAt.current = Date.now();
+  }, [goTo, index, session.id, session.items.length, session.objective, session.plannedQuestions]);
+
   const finish = useCallback(async () => {
     setBusy(true);
     setFailure(null);
@@ -284,7 +378,13 @@ export function usePracticeRunner(initial: PracticeSession): PracticeRunner {
     answered,
     busy,
     failure,
+    extending,
+    exhausted,
+    hint: item ? (hints[item.question.id] ?? null) : null,
+    hintPending,
     setAnswer,
+    requestHint,
+    advance,
     submit,
     selfEvaluate,
     setMistakeReason,

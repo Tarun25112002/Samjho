@@ -1,6 +1,7 @@
 import {
   PRACTICE_MODE_LABELS,
   type DailyStudyPlan,
+  type DiagnosticProgress,
   type DailyStudyPlanItem,
   type PracticeSessionSummary,
   type ProgressOverview,
@@ -14,7 +15,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { ChevronRight, FlameIcon, PaperIcon, RedoIcon } from "@/components/icons";
+import {
+  ChevronRight,
+  FlameIcon,
+  GaugeIcon,
+  PaperIcon,
+  RedoIcon,
+  TargetIcon,
+} from "@/components/icons";
 import { StartPractice } from "@/features/practice/start-practice";
 import { StudyPlanAction } from "@/features/study-plan/study-plan-action";
 import { WeeklyTrend } from "@/features/dashboard/weekly-trend";
@@ -38,6 +46,7 @@ import {
   formatMarksValue,
   practiceHref,
 } from "@/lib/practice-format";
+import { loadDiagnostics } from "@/lib/assessment";
 import { loadProgressOverview } from "@/lib/progress";
 import { loadRevisionQueue } from "@/lib/revision";
 import { loadDailyStudyPlan } from "@/lib/study-plan";
@@ -79,28 +88,33 @@ export default async function HomePage() {
   // days when a request happens to straddle the boundary.
   const now = new Date();
 
-  const [inProgress, history, classrooms, overview, revision, studyPlan] = await Promise.all([
-    loadSessions({ status: "IN_PROGRESS", limit: 1 }),
-    loadSessions({ limit: 50 }),
-    // The same rule the subject cards below follow, for the same reason. The
-    // teacher strip is one optional band on this page; practice history is the
-    // page. A classroom endpoint that is failing — an unapplied migration is the
-    // way this actually happens — should cost a student that band, not their
-    // whole dashboard. `/classroom` is where a real failure gets reported,
-    // because there it is the subject of the page rather than a garnish.
-    loadStudentClassrooms().catch(() => []),
-    // Progress is a helpful recommendation signal here, never a reason the
-    // student's central workspace should fail to render.
-    loadProgressOverview().catch(() => null),
-    // Same rule again. The revision count is the most actionable thing on this
-    // page when it is there, and it is a band — a student whose queue endpoint
-    // is down should still get their dashboard.
-    loadRevisionQueue().catch(() => null),
-    // The plan is a recommendation layer. If it is temporarily unavailable,
-    // the established quick-practice hero remains useful instead of turning a
-    // dashboard load into a failure.
-    loadDailyStudyPlan().catch(() => null),
-  ]);
+  const [inProgress, history, classrooms, overview, revision, studyPlan, diagnostics] =
+    await Promise.all([
+      loadSessions({ status: "IN_PROGRESS", limit: 1 }),
+      loadSessions({ limit: 50 }),
+      // The same rule the subject cards below follow, for the same reason. The
+      // teacher strip is one optional band on this page; practice history is the
+      // page. A classroom endpoint that is failing — an unapplied migration is the
+      // way this actually happens — should cost a student that band, not their
+      // whole dashboard. `/classroom` is where a real failure gets reported,
+      // because there it is the subject of the page rather than a garnish.
+      loadStudentClassrooms().catch(() => []),
+      // Progress is a helpful recommendation signal here, never a reason the
+      // student's central workspace should fail to render.
+      loadProgressOverview().catch(() => null),
+      // Same rule again. The revision count is the most actionable thing on this
+      // page when it is there, and it is a band — a student whose queue endpoint
+      // is down should still get their dashboard.
+      loadRevisionQueue().catch(() => null),
+      // The plan is a recommendation layer. If it is temporarily unavailable,
+      // the established quick-practice hero remains useful instead of turning a
+      // dashboard load into a failure.
+      loadDailyStudyPlan().catch(() => null),
+      // Same rule once more. The assessment band is the most valuable thing on
+      // this page for a new student and one band among several for everyone else;
+      // neither case is worth failing the dashboard over.
+      loadDiagnostics().catch(() => null),
+    ]);
 
   const resume = inProgress.items[0];
   const week = weekTotals(history.items, now);
@@ -200,6 +214,8 @@ export default async function HomePage() {
           <TodayCard today={today} week={week} />
         </aside>
       </section>
+
+      {diagnostics ? <AssessmentBand diagnostics={diagnostics} /> : null}
 
       {assignedNext ? (
         <TeacherBrief
@@ -1264,5 +1280,63 @@ async function loadEnrolledSubjects(summaries: SubjectSummary[]): Promise<Enroll
         return { summary, detail: null };
       }
     }),
+  );
+}
+
+/**
+ * Where the student is in the assessment sequence.
+ *
+ * ## Why this is a band and not a card in the aside
+ *
+ * For a student who has not sat the diagnostics, this is the most valuable
+ * thing on the dashboard — it is the only path to a product that knows anything
+ * about them. For a student who has, it is a standing offer of a sitting built
+ * from their weak areas, which is still the best-targeted practice available.
+ * Neither version belongs in a 200px column beside the countdown.
+ *
+ * It never reports "3 of 3 done", because a band that only congratulates is a
+ * band a student stops reading. Once the diagnostics are finished it stops
+ * talking about them and becomes the offer instead.
+ */
+function AssessmentBand({ diagnostics }: { diagnostics: DiagnosticProgress }) {
+  const ready = diagnostics.analysisReady;
+  const remaining = diagnostics.stages.length - diagnostics.completedCount;
+
+  return (
+    <Card
+      tone="brand"
+      aria-labelledby="assessment-band-heading"
+      className="relative grid gap-5 overflow-hidden lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+    >
+      <PanelOrbit />
+
+      <div className="relative flex min-w-0 items-start gap-4">
+        <IconTile tone="brand" size="large">
+          {ready ? <TargetIcon className="size-5" /> : <GaugeIcon className="size-5" />}
+        </IconTile>
+
+        <div className="min-w-0">
+          <Eyebrow>{ready ? "Made for you" : "Find your level"}</Eyebrow>
+          <h2 id="assessment-band-heading" className="text-text text-heading mt-2">
+            {ready
+              ? "Your personalised assessment is ready."
+              : diagnostics.completedCount === 0
+                ? "Start with a short diagnostic."
+                : `${String(remaining)} ${remaining === 1 ? "diagnostic" : "diagnostics"} to go.`}
+          </h2>
+          <p className="text-text-soft mt-2 max-w-xl text-sm leading-relaxed">
+            {ready
+              ? "Ten questions chosen from what you have already answered — four on your weakest topics, three to reinforce, two at your level and one stretch."
+              : "Three short sittings tell Samjho what is solid, what is shaky and what has not been learned yet. Everything else is built from them."}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative shrink-0">
+        <ButtonLink href="/assessment" size="lg">
+          {ready ? "Start assessment" : "Go to assessments"}
+        </ButtonLink>
+      </div>
+    </Card>
   );
 }

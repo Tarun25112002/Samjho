@@ -35,7 +35,17 @@ export default async function ProgressPage() {
         eyebrow="Learning evidence"
         title="Your progress"
         lede="See the work you have done, spot what needs another look, and turn it into a focused set."
-        action={<ButtonLink href="/practice/new">Build a focused set</ButtonLink>}
+        action={
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/analysis"
+              className="text-brand-700 inline-flex min-h-11 items-center gap-1 text-sm font-semibold hover:underline"
+            >
+              Your report <ChevronRight className="size-4" />
+            </Link>
+            <ButtonLink href="/practice/new">Build a focused set</ButtonLink>
+          </div>
+        }
       />
 
       <section aria-label="Progress summary" className="grid gap-4 sm:grid-cols-3">

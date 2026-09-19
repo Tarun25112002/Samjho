@@ -375,6 +375,28 @@ export const attemptOutcomeSchema = z.object({
 
 export type AttemptOutcome = z.infer<typeof attemptOutcomeSchema>;
 
+/**
+ * What extending an adaptive sitting returns.
+ *
+ * The item rides along rather than being fetched afterwards, so the runner can
+ * show question n+1 without a second round trip — the engine has just decided
+ * what it is, and a student waiting between questions is a student who notices.
+ *
+ * All four fields are null when there is nothing more to serve. `exhausted`
+ * tells the two reasons apart: the sitting reached its planned length, or the
+ * bank ran out of anything suitable. The first is success and the second is a
+ * content problem, and the runner says different things about them.
+ */
+export const nextQuestionSchema = z.object({
+  index: z.int().nonnegative().nullable(),
+  selection: questionSelectionSchema.nullable(),
+  exhausted: z.boolean(),
+  item: practiceItemSchema.nullable(),
+  totals: practiceTotalsSchema.nullable(),
+});
+
+export type NextQuestionResult = z.infer<typeof nextQuestionSchema>;
+
 // ── The result page ──────────────────────────────────────────────────────────
 
 export const practiceTopicResultSchema = z.object({
