@@ -30,6 +30,8 @@ const TOPIC = `${PREFIX}-topic`;
 const OWNED_QUESTION = `${PREFIX}-q-owned`;
 const SHARED_QUESTION = `${PREFIX}-q-shared`;
 const OTHER_TEACHER_QUESTION = `${PREFIX}-q-other`;
+const PYQ_QUESTION = `${PREFIX}-q-pyq-2024`;
+const YEAR_TAGGED_ORIGINAL = `${PREFIX}-q-original-2024`;
 
 let teacherAuth: string;
 let otherTeacherAuth: string;
@@ -122,6 +124,39 @@ beforeAll(async () => {
       },
     });
   }
+
+  // Same year, same visibility, deliberately different provenance. The teacher
+  // picker must be able to ask for “CBSE 2024” without admitting an original
+  // question whose author also happened to record 2024 in its source note.
+  for (const [id, sourceType] of [
+    [PYQ_QUESTION, "CBSE_BOARD_PAPER"],
+    [YEAR_TAGGED_ORIGINAL, "ORIGINAL"],
+  ] as const) {
+    await prisma.question.create({
+      data: {
+        id,
+        subjectId: SUBJECT,
+        chapterId: CHAPTER,
+        type: "SHORT_ANSWER",
+        body: `Question ${id}`,
+        marks: 2,
+        difficulty: "MEDIUM",
+        expectedTimeSeconds: 120,
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        answer: { create: { solution: "A solution." } },
+        topics: { create: { topicId: TOPIC, isPrimary: true } },
+        source: {
+          create: {
+            sourceType,
+            year: 2024,
+            licenceStatus: "CLEARED",
+            attributionText: sourceType === "CBSE_BOARD_PAPER" ? "CBSE 2024, Q12" : null,
+          },
+        },
+      },
+    });
+  }
 });
 
 afterAll(async () => {
@@ -182,6 +217,18 @@ describe("the question bank is scoped to its owner", () => {
     expect(data.facets.byChapter).toEqual([
       { chapterId: CHAPTER, chapterName: "Electricity", count: 1 },
     ]);
+  });
+
+  it("lets a teacher narrow the reviewed bank to a CBSE PYQ year", async () => {
+    const response = await request(app)
+      .get(
+        `/api/v1/teacher/questions?scope=SHARED&subjectId=${SUBJECT}&previousYearOnly=true&years=2024`,
+      )
+      .set("authorization", teacherAuth)
+      .expect(200);
+
+    const data = teacherBankResponseSchema.parse(response.body.data);
+    expect(data.items.map((item) => item.id)).toEqual([PYQ_QUESTION]);
   });
 
   it("refuses to change the status of a question owned by someone else", async () => {

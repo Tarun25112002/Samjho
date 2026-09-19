@@ -149,6 +149,8 @@ enum PracticeMode {
   MISTAKE_REVIEW
   BOOKMARKS
   PREVIOUS_YEAR
+  REVIEW_DUE
+  ASSIGNED
 }
 
 enum SessionStatus {
@@ -277,6 +279,7 @@ enum ExtractedQuestionStatus {
 enum AssignmentSourcePool {
   SHARED
   TEACHER_BANK
+  CURATED
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -308,6 +311,7 @@ model User {
   questionAttempts      QuestionAttempt[]
   bookmarks             Bookmark[]
   mistakeRecords        MistakeRecord[]
+  studyDays             StudyDay[]
   topicMastery          TopicMastery[]
   subjectProgress       SubjectProgress[]
   aiConversations       AIConversation[]
@@ -517,9 +521,28 @@ model ClassroomAssignment {
   /// assignment rather than resolved at start time, so re-reading an old
   /// assignment says what it actually drew from.
   sourcePool    AssignmentSourcePool @default(SHARED)
-  dueAt         DateTime?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+
+  /// The exact questions, in the exact order, for a `CURATED` assignment.
+  ///
+  /// Empty for every other pool, where the selector draws a fresh set per
+  /// student. This is the difference between "ten questions from Electricity"
+  /// and "this paper I built" — and a teacher building a class test means the
+  /// second one: every student sits the same questions, or the marks are not
+  /// comparable and the item analysis is meaningless.
+  ///
+  /// Frozen at creation rather than resolved per student for the same reason
+  /// `PracticeSession.questionIds` is: withdrawing a question next week must not
+  /// silently change what a test contained last week.
+  questionIds   String[]
+
+  /// Minutes, or null for an untimed assignment. Copied onto each student's
+  /// session at start, so a teacher shortening the limit tomorrow does not cut
+  /// short a student who is sitting it right now.
+  timeLimitMinutes Int?
+
+  dueAt     DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   submissions AssignmentSubmission[]
 
@@ -1317,6 +1340,23 @@ model PracticeSession {
   startedAt   DateTime      @default(now())
   completedAt DateTime?
 
+  /// A timed set, when the student or their teacher asked for one.
+  ///
+  /// Both columns or neither. `timeLimitSeconds` is what was asked for and is
+  /// what the results page reports; `deadlineAt` is computed once at creation
+  /// and is the only thing that decides whether the set is still live. That
+  /// split is the same one the exam engine makes for the same reason (docs/04
+  /// §3): a client that recomputes "started plus thirty minutes" is a client
+  /// whose clock decides when time is up, and a phone's clock is not a fact.
+  ///
+  /// Null on both is an untimed practice set, which stays the default. Practice
+  /// is not an exam, and putting a countdown on every set would make revision
+  /// feel like assessment — the timer is here because sitting a *paper* to time
+  /// is a distinct thing a student and a teacher both want, not because more
+  /// pressure is better.
+  timeLimitSeconds Int?
+  deadlineAt       DateTime?
+
   totalQuestions Int   @default(0)
   answered       Int   @default(0)
   correct        Int   @default(0)
@@ -1332,6 +1372,9 @@ model PracticeSession {
 
   @@index([userId, status])
   @@index([userId, startedAt(sort: Desc)])
+  /// The expiry sweep, mirroring `exam_attempts`:
+  /// WHERE status = 'IN_PROGRESS' AND deadlineAt < now()
+  @@index([status, deadlineAt])
   @@map("practice_sessions")
 }
 
@@ -1471,8 +1514,22 @@ model Bookmark {
 }
 
 /// Derivable from attempts, materialised anyway: it makes "what have I got
-/// wrong and not yet fixed" a fast indexed lookup, and gives spaced repetition
-/// somewhere to live later.
+/// wrong and not yet fixed" a fast indexed lookup, and it is where the spaced
+/// repetition schedule lives.
+///
+/// ## Repaired and graduated are different things, and the difference is the feature
+///
+/// `repairedAt` answers "has this student got it right since?" — one correct
+/// answer sets it, and the dashboard's unrepaired-mistake count reads it. That
+/// was enough while nothing scheduled, and it is the wrong signal to retire a
+/// question on: getting something right ninety seconds after reading the
+/// solution is recognition rather than recall, and the forgetting curve is
+/// unmoved by it.
+///
+/// `graduatedAt` answers "has this student got it right repeatedly, over
+/// widening gaps?" — which is the question that justifies never showing the
+/// question again. A record leaves the review queue when it graduates, not when
+/// it is first repaired, so the two stay separate fields rather than one.
 model MistakeRecord {
   id         String   @id @default(cuid())
   userId     String
@@ -1485,16 +1542,85 @@ model MistakeRecord {
   /// Null means unrepaired. Indexed on that basis.
   repairedAt     DateTime?
   repairAttempts Int            @default(0)
-  nextReviewAt   DateTime?
   lastReason     MistakeReason?
+
+  /// When this question is next worth seeing. Null means unscheduled: either it
+  /// graduated, or it predates the scheduler. The queue reads this column and
+  /// nothing else, which keeps "what is due today" one indexed range scan rather
+  /// than an interval recomputed per row on every page load.
+  nextReviewAt   DateTime?
+  /// The gap that produced `nextReviewAt`, in days — what was actually asked of
+  /// the student, which is not the same as how long they took. Stored rather
+  /// than derived from the timestamps, because a review taken three days late
+  /// would otherwise read as a three-day interval and the schedule would shrink
+  /// every time somebody took a weekend off.
+  ///
+  /// Read for display ("next in 7 days"), not fed back into the next interval:
+  /// that comes from the streak and the ease factor. See `nextInterval` for why
+  /// multiplying this column turned out to be both unreachable and, on a
+  /// backfilled zero, an infinite loop.
+  intervalDays   Int            @default(0)
+  /// SM-2's ease factor — how fast intervals grow for this student on *this*
+  /// question. Falls on a lapse, rises slightly on a confident success, floored
+  /// at 1.3. Below that floor a question they keep failing returns so often it
+  /// crowds out everything else, which is how a review queue gets abandoned.
+  easeFactor     Float          @default(2.5)
+  /// Consecutive successful reviews, reset to zero by any lapse. What
+  /// `REVIEW_GRADUATION_STREAK` is compared against.
+  reviewStreak   Int            @default(0)
+  reviewCount    Int            @default(0)
+  lastReviewedAt DateTime?
+  /// Set when the streak reaches graduation. `nextReviewAt` goes null in the
+  /// same write, so a graduated record cannot be picked by the due query even if
+  /// something later read this field wrong.
+  graduatedAt    DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, questionId])
   @@index([userId, repairedAt])
+  /// The revision queue's only query: WHERE userId = ? AND nextReviewAt <= now().
   @@index([userId, nextReviewAt])
   @@map("mistake_records")
+}
+
+/// One row per student per day they did any graded work.
+///
+/// A streak counter on the profile would have been two columns rather than a
+/// table, and it drifts the first time anything writes an attempt outside the
+/// path that maintains it — a backfill, an import, a second service. The honest
+/// alternative is date-truncating a year of `QuestionAttempt` rows on every
+/// dashboard load, which is the query nobody wants there. So it is materialised:
+/// the streak becomes a scan of at most a year of narrow rows, and it cannot
+/// disagree with itself.
+///
+/// `day` is a date rather than a timestamp, because a streak is about calendar
+/// days and the calendar in question is the student's. Bucketed in IST — every
+/// user of this product sits one board exam in one country, and someone
+/// practising at 11pm should not lose their streak to a UTC midnight that fell
+/// at half past five in the afternoon.
+model StudyDay {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Midnight IST for the day being counted.
+  day           DateTime @db.Date
+  attempts      Int      @default(0)
+  correct       Int      @default(0)
+  marksEarned   Float    @default(0)
+  marksPossible Float    @default(0)
+  /// Attempts that came from a review session, so the queue can say whether the
+  /// student is clearing it rather than only practising new things.
+  reviews       Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day])
+  @@index([userId, day(sort: Desc)])
+  @@map("study_days")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

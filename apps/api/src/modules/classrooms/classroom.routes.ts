@@ -10,6 +10,7 @@ import type { TokenVerifier } from "../../lib/token-verifier.js";
 import { authenticated, getAuthUser } from "../../middleware/auth.js";
 import { parseBody, validate } from "../../middleware/validate.js";
 import { assertStudent, assertTeacher, classroomService } from "./classroom.service.js";
+import { diagnosticsService } from "./diagnostics.service.js";
 
 /** `/api/v1/classrooms` — membership and assignment orchestration only. */
 export function buildClassroomRouter(verifyToken: TokenVerifier): Router {
@@ -64,6 +65,28 @@ export function buildClassroomRouter(verifyToken: TokenVerifier): Router {
     assertTeacher(user.role);
     const { id } = idParams.parse(req.params);
     res.json({ data: await classroomService.report(user.id, id) });
+  });
+
+  /**
+   * Class diagnostics, and per-item analysis of one assignment.
+   *
+   * Both are teacher-only and both scope on `teacherId` inside the service
+   * rather than here, so the ownership check is in the `where` of the query that
+   * reads the data rather than in a guard that a later route could forget to
+   * copy. `assertTeacher` above is the role check; it is not the ownership one.
+   */
+  router.get("/:id/diagnostics", validate({ params: idParams }), async (req, res) => {
+    const user = getAuthUser(req);
+    assertTeacher(user.role);
+    const { id } = idParams.parse(req.params);
+    res.json({ data: await diagnosticsService.forClassroom(user.id, id) });
+  });
+
+  router.get("/assignments/:id/item-analysis", validate({ params: idParams }), async (req, res) => {
+    const user = getAuthUser(req);
+    assertTeacher(user.role);
+    const { id } = idParams.parse(req.params);
+    res.json({ data: await diagnosticsService.forAssignment(user.id, id) });
   });
 
   return router;

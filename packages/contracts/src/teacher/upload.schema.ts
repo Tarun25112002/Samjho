@@ -7,7 +7,12 @@ import {
   questionStatusSchema,
   questionTypeSchema,
 } from "../question/question-enums.js";
-import { markingStepSchema, multiValue } from "../question/question.schema.js";
+import {
+  booleanFlag,
+  markingStepSchema,
+  multiValue,
+  yearsQuerySchema,
+} from "../question/question.schema.js";
 
 /**
  * Uploading a question paper, and reviewing what the model made of it.
@@ -438,7 +443,34 @@ export const createUploadResponseSchema = z.object({ uploadId: z.string().min(1)
  * from Electricity worth three marks" — which is the actual question someone
  * building a worksheet asks.
  */
+/**
+ * Which bank a teacher is looking at.
+ *
+ * `MINE` is the questions they imported from their own papers — the original
+ * behaviour, and still the default so no existing call changes meaning.
+ * `SHARED` is Samjho's own reviewed bank: the chapter-wise previous-year
+ * collection, browsable by the same filters.
+ *
+ * ## Why teachers can now read the shared bank at all
+ *
+ * They could not, and that was a real hole rather than a policy. A teacher
+ * building Friday's test on Circles had exactly one source — papers they had
+ * personally scanned and imported — while a bank of reviewed, chapter-tagged,
+ * previous-year questions sat in the same database being served to students. The
+ * teacher was the only person in the product who could not see it.
+ *
+ * Read access is safe in a way write access would not be: `SHARED` resolves to
+ * the identical predicate a student's practice uses, so a teacher sees neither
+ * more nor less than what is already published to every student in the country.
+ * What it emphatically does not include is the answer key — `TeacherBankQuestion`
+ * carries `hasAnswer`, a boolean, and there is no shape here that could carry a
+ * solution even if something tried to put one in.
+ */
+export const bankScopeSchema = z.enum(["MINE", "SHARED"]);
+export type BankScope = z.infer<typeof bankScopeSchema>;
+
 export const teacherBankQuerySchema = z.object({
+  scope: bankScopeSchema.default("MINE"),
   subjectId: z.string().min(1).optional(),
   chapterId: z.string().min(1).optional(),
   topicId: z.string().min(1).optional(),
@@ -448,6 +480,16 @@ export const teacherBankQuerySchema = z.object({
   marks: z.coerce.number().int().positive().optional(),
   uploadId: z.string().min(1).optional(),
   search: z.string().trim().min(2).max(120).optional(),
+  /**
+   * Restrict to questions carrying board or sample-paper provenance.
+   *
+   * The teacher-facing name for "previous year". It is a provenance filter
+   * rather than a separate collection, exactly as it is for students — one bank,
+   * queried differently, so a question does not have to exist twice to be both
+   * a Circles question and a 2019 question.
+   */
+  previousYearOnly: booleanFlag().optional(),
+  years: yearsQuerySchema.optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(25),
 });

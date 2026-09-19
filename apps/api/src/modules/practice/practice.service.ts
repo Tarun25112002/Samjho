@@ -38,6 +38,7 @@ import {
 } from "./practice.repository.js";
 import { applyFinalisedAttempt, countCompletedSession, type Tx } from "./practice.rollups.js";
 import { practiceSelection } from "./practice.selection.js";
+import { correctLatestLapseSchedule } from "../revision/revision.scheduler.js";
 
 /**
  * Practice sessions: creating them, answering them, scoring them.
@@ -64,24 +65,68 @@ import { practiceSelection } from "./practice.selection.js";
 
 export const practiceService = {
   /**
-   * `options.ownerTeacherId` draws from one teacher's own bank instead of the
-   * shared one. It is not reachable from any student route — the practice
-   * router does not parse it, and the only caller that supplies it is
-   * `classroomService.startAssignment`, which reads it from the classroom the
-   * assignment belongs to rather than from the request.
+   * Build a set and start a session.
+   *
+   * Both options exist for callers a student cannot reach, and neither is parsed
+   * by the practice router:
+   *
+   *  - `ownerTeacherId` draws from one teacher's own bank instead of the shared
+   *    one. Supplied only by `classroomService.startAssignment`, which reads it
+   *    from the classroom the assignment belongs to rather than from the request.
+   *  - `questionIds` skips selection entirely and uses exactly these questions,
+   *    in this order. Supplied by the revision queue, which has already ordered
+   *    them by how overdue they are, and by a curated assignment, where the
+   *    teacher's chosen order *is* the paper. A student cannot name a question
+   *    id here for the same reason they cannot name a teacher: the route does
+   *    not read one.
+   *
+   * The two are exclusive in practice and not enforced to be, because the one
+   * caller that could set both — a curated assignment from a teacher's own bank
+   * — genuinely means both, and the ids are the narrower constraint.
    */
   async create(
     userId: string,
     input: CreatePracticeSessionInput,
-    options: { ownerTeacherId?: string } = {},
+    options: { ownerTeacherId?: string; questionIds?: string[] } = {},
   ): Promise<PracticeSession> {
-    const questionIds = await practiceSelection.pick({
-      userId,
-      mode: input.mode,
-      filters: input.filters,
-      count: input.count,
-      ...(options.ownerTeacherId === undefined ? {} : { ownerTeacherId: options.ownerTeacherId }),
-    });
+    // These modes describe sets whose membership is decided by another service,
+    // not by a student's filters. Keeping them in the shared enum lets a stored
+    // session say what it is, but accepting them through the ordinary creator
+    // would let a caller manufacture a random set labelled "Today's revision"
+    // (and inflate the review-day counter) or "Set by your teacher".
+    if (
+      (input.mode === "REVIEW_DUE" || input.mode === "ASSIGNED") &&
+      options.questionIds === undefined
+    ) {
+      throw new ValidationError("Request validation failed", [
+        {
+          path: "body.mode",
+          message: "this session type can only be started from its revision queue or assignment",
+        },
+      ]);
+    }
+
+    if (
+      options.questionIds !== undefined &&
+      new Set(options.questionIds).size !== options.questionIds.length
+    ) {
+      // The two trusted callers both create top-level ids and must preserve one
+      // id per item. A duplicate here would produce two visual slots backed by
+      // one attempt row, making the later slot impossible to answer.
+      throw new ValidationError("Request validation failed", [
+        { path: "questionIds", message: "a practice set cannot contain the same question twice" },
+      ]);
+    }
+
+    const questionIds =
+      options.questionIds ??
+      (await practiceSelection.pick({
+        userId,
+        mode: input.mode,
+        filters: input.filters,
+        count: input.count,
+        ...(options.ownerTeacherId === undefined ? {} : { ownerTeacherId: options.ownerTeacherId }),
+      }));
 
     if (questionIds.length === 0) {
       // A 404 would be wrong — the filters are fine, the bank is empty. The web
@@ -94,7 +139,33 @@ export const practiceService = {
       );
     }
 
+    if (options.questionIds !== undefined) {
+      // Curated assignments and revision sessions supply frozen ids rather than
+      // going through the selector. Check their present visibility before
+      // creating the session: without this a question withdrawn between a
+      // teacher creating an assignment and a student starting it would be
+      // silently dropped by hydration, leaving totals for an item the runner
+      // cannot display or answer.
+      const available = await practiceRepository.findSessionQuestions(questionIds);
+      if (available.length !== questionIds.length) {
+        throw new NotFoundError("A question in this set");
+      }
+    }
+
     const marksPossible = await sumGradableMarks(questionIds);
+
+    // Computed once, here, from the server's clock. Everything downstream — the
+    // countdown the student sees, the refusal of a late answer, the expiry sweep
+    // — reads this instant rather than re-deriving it, so there is exactly one
+    // answer to "when does this end" and no device is consulted for it.
+    const startedAt = new Date();
+    const timing =
+      input.timeLimitMinutes === undefined
+        ? {}
+        : {
+            timeLimitSeconds: input.timeLimitMinutes * 60,
+            deadlineAt: new Date(startedAt.getTime() + input.timeLimitMinutes * 60_000),
+          };
 
     const session = await practiceRepository.create({
       userId,
@@ -102,6 +173,7 @@ export const practiceService = {
       filters: input.filters,
       questionIds,
       marksPossible,
+      ...timing,
     });
 
     return hydrateSession(session);
@@ -125,6 +197,7 @@ export const practiceService = {
         items: _items,
         filters: _filters,
         currentIndex: _index,
+        serverNow: _serverNow,
         ...summary
       } = toSession(row, [], focusFor(readFilters(row)), pendingBySession.get(row.id) ?? 0);
       return summary;
@@ -152,7 +225,15 @@ export const practiceService = {
     const session = await loadSession(userId, sessionId);
 
     if (session.status !== "IN_PROGRESS") {
-      throw new ConflictError("This practice session has already been finished.");
+      // `loadSession` has already closed the session if its deadline passed, so
+      // a timed-out set arrives here as COMPLETED. Saying so specifically is
+      // worth the extra branch: "you have already finished this" is confusing
+      // advice for a student who was mid-question when the clock stopped.
+      throw new ConflictError(
+        session.deadlineAt !== null && session.deadlineAt.getTime() <= Date.now()
+          ? "Time is up on this set. Your answers so far have been saved and scored."
+          : "This practice session has already been finished.",
+      );
     }
 
     if (!session.questionIds.includes(input.questionId)) {
@@ -228,6 +309,8 @@ export const practiceService = {
             marksPossible: unit.marks,
             mistakeReason: null,
             at,
+            fromReview: session.mode === "REVIEW_DUE",
+            ...(session.mode === "REVIEW_DUE" ? { reviewSessionStartedAt: session.startedAt } : {}),
           });
         }
       }
@@ -286,6 +369,8 @@ export const practiceService = {
           marksPossible: attempt.marksPossible,
           mistakeReason: attempt.mistakeReason,
           at,
+          fromReview: session.mode === "REVIEW_DUE",
+          ...(session.mode === "REVIEW_DUE" ? { reviewSessionStartedAt: session.startedAt } : {}),
         });
       }
 
@@ -315,16 +400,59 @@ export const practiceService = {
     const attempt = await practiceRepository.findAttemptForUpdate(attemptId, sessionId, userId);
     if (!attempt) throw new NotFoundError("Attempt");
 
+    if (attempt.isCorrect !== false) {
+      // A reason describes a wrong, scored answer. Accepting one for a correct
+      // or pending answer lets an optional annotation overwrite the reason on
+      // an unrelated open mistake record for the same question.
+      throw new ConflictError("A mistake reason can only be recorded for an incorrect answer.");
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.questionAttempt.update({
         where: { id: attempt.id },
         data: { mistakeReason: input.reason },
       });
 
-      if (input.reason !== null) {
-        await tx.mistakeRecord.updateMany({
-          where: { userId, questionId: attempt.questionId, repairedAt: null },
-          data: { lastReason: input.reason },
+      const record = await tx.mistakeRecord.findUnique({
+        where: { userId_questionId: { userId, questionId: attempt.questionId } },
+        select: {
+          id: true,
+          easeFactor: true,
+          reviewCount: true,
+          lastMissedAt: true,
+          lastReviewedAt: true,
+        },
+      });
+
+      // A late edit to an old attempt is still useful on that attempt, but it
+      // must not rewrite the schedule created by a newer answer. The timestamp
+      // check gives the current lapse one small, safe window to replace its
+      // neutral schedule with the student's stated reason.
+      if (
+        record &&
+        (record.lastReviewedAt?.getTime() === attempt.attemptedAt.getTime() ||
+          record.lastMissedAt.getTime() === attempt.attemptedAt.getTime())
+      ) {
+        // The first miss starts a one-day schedule independent of a reason. A
+        // later lapse has already received the neutral default schedule, so it
+        // is the only case whose interval and ease need correcting here.
+        const corrected =
+          record.reviewCount > 0 && record.lastReviewedAt !== null
+            ? correctLatestLapseSchedule(record.easeFactor, input.reason, attempt.attemptedAt)
+            : null;
+
+        await tx.mistakeRecord.update({
+          where: { id: record.id },
+          data: {
+            lastReason: input.reason,
+            ...(corrected === null
+              ? {}
+              : {
+                  intervalDays: corrected.intervalDays,
+                  easeFactor: corrected.easeFactor,
+                  nextReviewAt: corrected.nextReviewAt,
+                }),
+          },
         });
       }
     });
@@ -363,18 +491,10 @@ export const practiceService = {
   async complete(userId: string, sessionId: string): Promise<PracticeResult> {
     const session = await loadSession(userId, sessionId);
 
+    // `loadSession` has already closed it if the clock ran out, so by here an
+    // IN_PROGRESS session is one the student is choosing to finish.
     if (session.status === "IN_PROGRESS") {
-      const subjectIds = await practiceRepository.findSessionSubjectIds(sessionId);
-      const at = new Date();
-
-      await prisma.$transaction(async (tx) => {
-        await tx.practiceSession.update({
-          where: { id: sessionId },
-          data: { status: "COMPLETED", completedAt: at },
-        });
-
-        await countCompletedSession(tx, userId, subjectIds);
-      });
+      await closeSession(sessionId, userId, new Date());
     }
 
     return this.result(userId, sessionId);
@@ -421,10 +541,82 @@ export const practiceService = {
 
 // ── Loading and shaping ──────────────────────────────────────────────────────
 
+/**
+ * The session, for its owner, with the clock already applied.
+ *
+ * ## Expiry is settled on read, not by a background job
+ *
+ * Every path into a session goes through here, so this is the one place that has
+ * to notice the deadline has passed — and noticing it lazily, on the next touch,
+ * is enough for practice in a way it would not be for an exam.
+ *
+ * The exam engine needs a sweeper (docs/04 §5) because an abandoned exam attempt
+ * that is never touched again still has to be graded and reported, and a paper
+ * left open at midnight must not be sittable at breakfast. A timed practice set
+ * has neither obligation: nobody is waiting on its result, and the only way to
+ * do anything with it is to come back to it, at which point this runs. Adding a
+ * second sweeper for a set with no external observer would be a process to
+ * maintain for no behaviour anyone could see.
+ *
+ * What is not lazy is the *refusal*. `submit` compares against the stored
+ * deadline directly, so an answer sent thirty seconds late is rejected whether
+ * or not anything has swept.
+ */
 async function loadSession(userId: string, sessionId: string): Promise<SessionRow> {
   const session = await practiceRepository.findById(sessionId, userId);
   if (!session) throw new NotFoundError("Practice session");
-  return session;
+
+  if (session.status !== "IN_PROGRESS") return session;
+  if (session.deadlineAt === null || session.deadlineAt.getTime() > Date.now()) return session;
+
+  // Closing recomputes nothing — the totals were already recomputed on every
+  // answer — so a set that timed out with four of ten answered scores four of
+  // ten rather than being abandoned unscored. The student earned those marks.
+  await closeSession(session.id, session.userId, session.deadlineAt);
+
+  // Re-read rather than patching the row in memory: the close is the
+  // authoritative write and this is what it produced, whether this request made
+  // it or a concurrent one did.
+  const closed = await practiceRepository.findById(sessionId, userId);
+  if (!closed) throw new NotFoundError("Practice session");
+  return closed;
+}
+
+/**
+ * Close a session, doing everything closing it means.
+ *
+ * Shared by the student pressing Finish and by the clock running out, and it is
+ * shared rather than duplicated because the first version was not: the expiry
+ * path wrote the status and stopped, so a set the student completed counted
+ * towards `SubjectProgress.practiceSessions` and an identical set the clock
+ * closed did not. A student who times out on three sets in a row would have
+ * watched their session count sit still while their attempts went up.
+ *
+ * `at` is the deadline on the expiry path and now on the Finish path, which is
+ * the one thing the two callers genuinely differ on — and the reason it is a
+ * parameter rather than a `new Date()` in here.
+ *
+ * The `status` guard inside the transaction is what makes this safe to call from
+ * a read path: two tabs loading an expired session at once produce one close and
+ * one no-op, rather than two writes racing and the subject rollup counting the
+ * session twice.
+ */
+async function closeSession(sessionId: string, userId: string, at: Date): Promise<void> {
+  const subjectIds = await practiceRepository.findSessionSubjectIds(sessionId);
+
+  await prisma.$transaction(async (tx) => {
+    const closed = await tx.practiceSession.updateMany({
+      where: { id: sessionId, status: "IN_PROGRESS" },
+      data: { status: "COMPLETED", completedAt: at },
+    });
+
+    // Zero means another request got there first. Its transaction already did
+    // this, and doing it again would double-count the session in the subject
+    // rollup — a number nothing would ever correct.
+    if (closed.count === 0) return;
+
+    await countCompletedSession(tx, userId, subjectIds);
+  });
 }
 
 /**
@@ -500,6 +692,17 @@ function toSession(
     currentIndex: session.currentIndex,
     startedAt: session.startedAt.toISOString(),
     completedAt: session.completedAt?.toISOString() ?? null,
+    serverNow: new Date().toISOString(),
+    timeLimitSeconds: session.timeLimitSeconds,
+    deadlineAt: session.deadlineAt?.toISOString() ?? null,
+    // Derived rather than stored. A stored flag would be a third fact about the
+    // same event — alongside the deadline and the completion time — and the one
+    // most likely to be forgotten by a path that completes a session some other
+    // way. Two timestamps and a comparison cannot drift.
+    expired:
+      session.deadlineAt !== null &&
+      session.completedAt !== null &&
+      session.completedAt.getTime() >= session.deadlineAt.getTime(),
     totals: {
       totalQuestions: session.totalQuestions,
       answered: session.answered,

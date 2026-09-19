@@ -5,6 +5,9 @@ import {
   createClassroomAssignmentSchema,
   createClassroomResponseSchema,
   createClassroomSchema,
+  type AssignmentSourcePool,
+  type PastPaperYearOption,
+  type TeacherBankQuestion,
   type TeacherClassroom,
 } from "@samjho/contracts";
 import Link from "next/link";
@@ -15,14 +18,32 @@ import { Button } from "@/components/ui/button";
 import { inputClass, selectClass, textareaClass } from "@/components/ui/form";
 import { Eyebrow } from "@/components/ui/page";
 import { Card, flushBandClass } from "@/components/ui/surface";
+import { QuestionPicker } from "@/features/teacher/question-picker";
 import { sendJson } from "@/lib/client-api";
+import { INDIA_TIME_ZONE, indiaDateTimeLocalToIso } from "@/lib/india-time";
+
+/**
+ * Narrow a `<select>` value back to the union.
+ *
+ * A cast would compile and would be a lie the moment the enum grows a value the
+ * form does not offer. This falls back to the default instead, which is the
+ * behaviour anyone would want from a dropdown that somehow produced a value it
+ * does not contain.
+ */
+function toSourcePool(value: string): AssignmentSourcePool {
+  return value === "TEACHER_BANK" || value === "CURATED" ? value : "SHARED";
+}
 
 export function TeacherWorkspace({
   classrooms,
   subjects,
+  pastPaperYearsBySubject,
+  assignmentPrefill,
 }: {
   classrooms: TeacherClassroom[];
   subjects: { id: string; name: string; code: string }[];
+  pastPaperYearsBySubject: Record<string, PastPaperYearOption[]>;
+  assignmentPrefill?: { classroomId: string; chapterId: string; source: "diagnostics" };
 }) {
   const [showCreate, setShowCreate] = useState(classrooms.length === 0);
 
@@ -55,7 +76,12 @@ export function TeacherWorkspace({
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
         {classrooms.map((classroom) => (
-          <TeacherClassroomCard key={classroom.id} classroom={classroom} />
+          <TeacherClassroomCard
+            key={classroom.id}
+            classroom={classroom}
+            pastPaperYears={pastPaperYearsBySubject[classroom.subject.id] ?? []}
+            {...(assignmentPrefill?.classroomId === classroom.id ? { assignmentPrefill } : {})}
+          />
         ))}
       </div>
     </div>
@@ -170,8 +196,19 @@ function TeacherEmpty({ onCreate }: { onCreate: () => void }) {
   );
 }
 
-function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
-  const [assigning, setAssigning] = useState(false);
+function TeacherClassroomCard({
+  classroom,
+  pastPaperYears,
+  assignmentPrefill,
+}: {
+  classroom: TeacherClassroom;
+  pastPaperYears: PastPaperYearOption[];
+  assignmentPrefill?: { chapterId: string; source: "diagnostics" };
+}) {
+  const recommendedChapter = classroom.subject.chapters.find(
+    (chapter) => chapter.id === assignmentPrefill?.chapterId,
+  );
+  const [assigning, setAssigning] = useState(recommendedChapter !== undefined);
 
   return (
     <Card
@@ -202,17 +239,36 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
                 : `${String(classroom.assignments.length)} ${classroom.assignments.length === 1 ? "set" : "sets"}`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setAssigning((open) => !open)}
-            className="text-brand-700 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold hover:underline"
-          >
-            {assigning ? "Close" : "Set practice"}
-          </button>
+          <div className="flex shrink-0 items-center gap-4">
+            {/*
+              Beside "Set practice" rather than buried in an assignment, because
+              the question it answers — what does this class need next — is the
+              one a teacher has *before* they decide what to set.
+            */}
+            <Link
+              href={`/teacher/classrooms/${encodeURIComponent(classroom.id)}/diagnostics`}
+              className="text-brand-700 inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
+            >
+              What they got wrong
+            </Link>
+            <button
+              type="button"
+              onClick={() => setAssigning((open) => !open)}
+              className="text-brand-700 inline-flex min-h-11 items-center text-sm font-semibold hover:underline"
+            >
+              {assigning ? "Close" : "Set practice"}
+            </button>
+          </div>
         </div>
 
         {assigning ? (
-          <AssignmentForm classroom={classroom} onCreated={() => setAssigning(false)} />
+          <AssignmentForm
+            classroom={classroom}
+            pastPaperYears={pastPaperYears}
+            onCreated={() => setAssigning(false)}
+            diagnosticPrefill={recommendedChapter !== undefined}
+            {...(recommendedChapter ? { initialChapterId: recommendedChapter.id } : {})}
+          />
         ) : null}
 
         {classroom.assignments.length === 0 ? (
@@ -231,6 +287,10 @@ function TeacherClassroomCard({ classroom }: { classroom: TeacherClassroom }) {
                       {assignment.chapterName ?? "Whole subject"} · {assignment.questionCount}{" "}
                       questions
                       {assignment.sourcePool === "TEACHER_BANK" ? " · from your bank" : ""}
+                      {assignment.sourcePool === "CURATED" ? " · you picked these" : ""}
+                      {assignment.timeLimitMinutes === null
+                        ? ""
+                        : ` · ${String(assignment.timeLimitMinutes)} min`}
                       {assignment.dueAt ? ` · due ${dueLabel(assignment.dueAt)}` : ""}
                     </p>
                     <p className="text-text-soft mt-2 text-sm">
@@ -282,29 +342,55 @@ function ClassCode({ code }: { code: string }) {
 
 function AssignmentForm({
   classroom,
+  pastPaperYears,
   onCreated,
+  initialChapterId,
+  diagnosticPrefill = false,
 }: {
   classroom: TeacherClassroom;
+  pastPaperYears: PastPaperYearOption[];
   onCreated: () => void;
+  initialChapterId?: string;
+  diagnosticPrefill?: boolean;
 }) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [chapterId, setChapterId] = useState("");
+  const initialChapter = classroom.subject.chapters.find(
+    (chapter) => chapter.id === initialChapterId,
+  );
+  const [title, setTitle] = useState(
+    initialChapter ? `${initialChapter.name} follow-up practice` : "",
+  );
+  const [chapterId, setChapterId] = useState(initialChapter?.id ?? "");
   const [questionCount, setQuestionCount] = useState("10");
-  const [sourcePool, setSourcePool] = useState<"SHARED" | "TEACHER_BANK">("SHARED");
+  const [sourcePool, setSourcePool] = useState<AssignmentSourcePool>("SHARED");
+  const [picked, setPicked] = useState<TeacherBankQuestion[]>([]);
+  const [timeLimit, setTimeLimit] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [instructions, setInstructions] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const curated = sourcePool === "CURATED";
+  // `datetime-local` deliberately has no zone. Classroom deadlines do: CBSE
+  // work is scheduled in India, so the stored instant must not vary with the
+  // teacher's laptop zone.
+  const normalizedDueAt = dueAt ? indiaDateTimeLocalToIso(dueAt) : null;
 
   async function create(): Promise<void> {
     const parsed = createClassroomAssignmentSchema.safeParse({
       title,
       instructions: instructions || undefined,
       chapterId: chapterId || null,
+      // Ignored by the server for a curated test, which counts the list instead.
+      // Sent anyway so the schema's shape is the same either way rather than
+      // conditionally absent.
       questionCount: Number(questionCount),
       sourcePool,
-      dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+      questionIds: curated ? picked.map((question) => question.id) : [],
+      timeLimitMinutes: timeLimit ? Number(timeLimit) : null,
+      // Preserve an invalid raw value for the shared schema to reject rather
+      // than silently turning a malformed deadline into no deadline.
+      dueAt: dueAt ? (normalizedDueAt ?? dueAt) : null,
     });
     if (!parsed.success) {
       setMessage(parsed.error.issues[0]?.message ?? "Check the assignment details.");
@@ -327,6 +413,11 @@ function AssignmentForm({
     }
 
     onCreated();
+    // A diagnostic prefill lives in the URL so the teacher can land here from a
+    // shareable teaching signal. Once it has been acted on, remove it; a later
+    // refresh should show the newly created assignment, not reopen the composer
+    // with a stale recommendation.
+    router.replace("/teacher/classrooms");
     router.refresh();
   }
 
@@ -338,6 +429,13 @@ function AssignmentForm({
         void create();
       }}
     >
+      {diagnosticPrefill && initialChapter ? (
+        <p className="border-brand-200 bg-card text-text-soft rounded-control -mb-1 border px-3 py-2.5 text-sm leading-relaxed">
+          <strong className="text-text font-semibold">Diagnostic follow-up:</strong> this starts
+          with <span className="font-medium">{initialChapter.name}</span>, the chapter containing
+          the class&apos;s weakest topic. Review the set, then choose when to send it.
+        </p>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Assignment title" htmlFor={`${classroom.id}-title`}>
           <input
@@ -364,22 +462,46 @@ function AssignmentForm({
           </select>
         </Field>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Questions" htmlFor={`${classroom.id}-count`}>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {/*
+          Hidden for a curated test, where the count is however many questions
+          were picked. Showing a "10 questions" dropdown beside a list of seven
+          chosen ones invites a teacher to change a number that does nothing.
+        */}
+        {curated ? null : (
+          <Field label="Questions" htmlFor={`${classroom.id}-count`}>
+            <select
+              id={`${classroom.id}-count`}
+              value={questionCount}
+              onChange={(event) => setQuestionCount(event.target.value)}
+              className={selectClass}
+            >
+              {[5, 8, 10, 15, 20, 25, 30].map((count) => (
+                <option key={count} value={count}>
+                  {count} questions
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
+        <Field label="Time limit (optional)" htmlFor={`${classroom.id}-limit`}>
           <select
-            id={`${classroom.id}-count`}
-            value={questionCount}
-            onChange={(event) => setQuestionCount(event.target.value)}
+            id={`${classroom.id}-limit`}
+            value={timeLimit}
+            onChange={(event) => setTimeLimit(event.target.value)}
             className={selectClass}
           >
-            {[5, 8, 10, 15, 20, 25, 30].map((count) => (
-              <option key={count} value={count}>
-                {count} questions
+            <option value="">No time limit</option>
+            {[15, 20, 30, 45, 60, 90, 120, 180].map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes} minutes
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Due time (optional)" htmlFor={`${classroom.id}-due`}>
+
+        <Field label="Due time in IST (optional)" htmlFor={`${classroom.id}-due`}>
           <input
             id={`${classroom.id}-due`}
             type="datetime-local"
@@ -389,24 +511,61 @@ function AssignmentForm({
           />
         </Field>
       </div>
-      <Field label="Draw questions from" htmlFor={`${classroom.id}-pool`}>
+
+      {timeLimit ? (
+        <p className="text-text-faint -mt-1 text-xs leading-relaxed">
+          {/*
+            Two different things a teacher might mean by "time", stated so they
+            do not have to find out which one they set. The due date is a
+            deadline for starting; the limit is a clock once they have.
+          */}
+          The clock starts when each student opens the set, not at the due time. Whatever they have
+          answered when it runs out is what gets marked.
+        </p>
+      ) : null}
+      <Field label="Questions come from" htmlFor={`${classroom.id}-pool`}>
         <select
           id={`${classroom.id}-pool`}
           value={sourcePool}
-          onChange={(event) =>
-            setSourcePool(event.target.value === "TEACHER_BANK" ? "TEACHER_BANK" : "SHARED")
-          }
+          onChange={(event) => {
+            setSourcePool(toSourcePool(event.target.value));
+          }}
           className={selectClass}
         >
-          <option value="SHARED">Samjho&rsquo;s question bank</option>
-          <option value="TEACHER_BANK">My own questions</option>
+          <option value="SHARED">Samjho&rsquo;s bank, drawn at random</option>
+          <option value="TEACHER_BANK">My own questions, drawn at random</option>
+          <option value="CURATED">Questions I pick myself, including CBSE PYQs</option>
         </select>
       </Field>
+
       {sourcePool === "TEACHER_BANK" ? (
         <p className="text-text-faint -mt-1 text-xs leading-relaxed">
           Only questions you have imported from your own papers and set for students. Nobody outside
           this class ever sees them.
         </p>
+      ) : null}
+
+      {curated ? (
+        <div>
+          <p className="text-text-faint text-xs leading-relaxed">
+            {/*
+              The reason to pick rather than draw, in one sentence. It is not
+              obvious, and a teacher who does not know it will keep choosing the
+              default and then wonder why the item analysis says nothing.
+            */}
+            Every student sits the same questions in the same order, so their marks compare and the
+            report afterwards can tell you which question the class got wrong. Turn on CBSE PYQs
+            below to choose by paper year.
+          </p>
+
+          <QuestionPicker
+            subjectId={classroom.subject.id}
+            chapters={classroom.subject.chapters}
+            pastPaperYears={pastPaperYears}
+            selected={picked}
+            onChange={setPicked}
+          />
+        </div>
       ) : null}
 
       <Field label="A note for students (optional)" htmlFor={`${classroom.id}-instructions`}>
@@ -421,10 +580,12 @@ function AssignmentForm({
       </Field>
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <Button type="submit" size="sm" disabled={busy}>
-          {busy ? "Sending…" : "Send practice"}
+          {busy ? "Sending…" : curated ? "Set this test" : "Send practice"}
         </Button>
         <p className="text-text-faint text-xs">
-          Students receive their own question set when they start.
+          {curated
+            ? `${String(picked.length)} question${picked.length === 1 ? "" : "s"}, the same for everyone.`
+            : "Students receive their own question set when they start."}
         </p>
       </div>
       {message ? (
@@ -457,6 +618,7 @@ function Field({
 
 function dueLabel(value: string): string {
   return new Intl.DateTimeFormat("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     hour: "numeric",

@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { Check, SparkIcon } from "@/components/icons";
 import { Eyebrow, PageShell, PageHeader, SectionHeading } from "@/components/ui/page";
 import { Card, Meter } from "@/components/ui/surface";
+import { suggestBoardSessions } from "@/features/onboarding/board-sessions";
 import { ProfileForm } from "@/features/profile/profile-form";
 import { loadTutorStatus } from "@/lib/ai";
 import { apiFetchAuthed } from "@/lib/api-client";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 import { requireOnboarded } from "@/lib/me";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -48,6 +50,10 @@ export default async function ProfilePage() {
     ),
     loadTutorStatus(),
   ]);
+  // The profile form is interactive and therefore pre-rendered on both sides.
+  // Send its date-derived options as data rather than asking the server and
+  // browser to independently decide which board session is current.
+  const boardSessionOptions = suggestBoardSessions(new Date());
 
   return (
     <PageShell>
@@ -65,7 +71,11 @@ export default async function ProfilePage() {
             title="What you are preparing for"
             lede="Keep your subjects, language, and exam target accurate so your practice stays relevant."
           />
-          <ProfileForm profile={profile} subjectOptions={subjects} />
+          <ProfileForm
+            profile={profile}
+            subjectOptions={subjects}
+            boardSessionOptions={boardSessionOptions}
+          />
         </section>
 
         <div className="flex flex-col gap-5 xl:sticky xl:top-6">
@@ -171,6 +181,7 @@ function formatDate(iso: string | null): string | null {
   // en-IN, because the audience is in India and 08/09 means different things in
   // different places.
   return new Date(iso).toLocaleDateString("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -237,6 +248,7 @@ function TutorAllowance({ status }: { status: AIStatus }) {
 /** The reset lands at UTC midnight; a student thinks in IST. */
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString("en-IN", {
+    timeZone: INDIA_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",
     day: "numeric",

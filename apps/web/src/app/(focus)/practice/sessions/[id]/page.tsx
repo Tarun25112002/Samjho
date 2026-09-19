@@ -40,5 +40,8 @@ export default async function PracticeSessionPage({ params }: PageProps) {
 
   if (session.status !== "IN_PROGRESS") redirect(`/practice/sessions/${id}/result`);
 
-  return <PracticeRunner initial={session} />;
+  // The API owns both the deadline and this matching clock anchor. The timer
+  // measures browser-monotonic elapsed time from it, never a student's editable
+  // wall clock.
+  return <PracticeRunner initial={session} clockAnchor={session.serverNow} />;
 }

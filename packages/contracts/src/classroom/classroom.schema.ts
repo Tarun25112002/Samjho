@@ -48,19 +48,83 @@ export type JoinClassroomInput = z.infer<typeof joinClassroomSchema>;
  * every assignment written before teacher uploads existed used. `TEACHER_BANK`
  * is the questions this teacher imported from their own papers: theirs to set
  * for their own class, and invisible to open practice and to every other
- * classroom.
+ * classroom. `CURATED` is neither bank but a specific list of questions the
+ * teacher picked by hand.
+ *
+ * ## Why `CURATED` is a pool value and not a flag
+ *
+ * The first three values answer "where do the questions come from?" and the
+ * answer for a hand-built test is "from this list, and nowhere else". Modelling
+ * it as `SHARED` plus an optional override would leave `questionCount` and
+ * `questionIds` both meaningful and free to contradict each other; as a pool
+ * value, exactly one of the two is authoritative and the service can say which.
+ *
+ * The behavioural difference matters more than the modelling one. Under the
+ * drawing pools each student gets a *different* random set, which is right for
+ * homework and wrong for a test: two students' marks are only comparable if they
+ * sat the same questions, and item analysis over a class that all saw different
+ * questions is arithmetic performed on nothing.
  */
-export const assignmentSourcePoolSchema = z.enum(["SHARED", "TEACHER_BANK"]);
+export const assignmentSourcePoolSchema = z.enum(["SHARED", "TEACHER_BANK", "CURATED"]);
 export type AssignmentSourcePool = z.infer<typeof assignmentSourcePoolSchema>;
 
-export const createClassroomAssignmentSchema = z.object({
-  title: assignmentTitleSchema,
-  instructions: z.string().trim().max(600).optional(),
-  chapterId: z.string().min(1).max(60).nullable().optional(),
-  questionCount: z.int().min(3).max(30),
-  sourcePool: assignmentSourcePoolSchema.default("SHARED"),
-  dueAt: z.iso.datetime().nullable().optional(),
-});
+/** Bounds on a hand-built test. Three is a warm-up; fifty is the exam engine's job. */
+export const CURATED_ASSIGNMENT_MIN = 3;
+export const CURATED_ASSIGNMENT_MAX = 50;
+
+export const createClassroomAssignmentSchema = z
+  .object({
+    title: assignmentTitleSchema,
+    instructions: z.string().trim().max(600).optional(),
+    chapterId: z.string().min(1).max(60).nullable().optional(),
+    /**
+     * How many to draw, for the two drawing pools.
+     *
+     * Ignored for `CURATED`, where the count is however many questions were
+     * picked. The service overwrites it with `questionIds.length` rather than
+     * trusting a client to keep two numbers in step.
+     */
+    questionCount: z.int().min(3).max(30).default(10),
+    sourcePool: assignmentSourcePoolSchema.default("SHARED"),
+    /** The hand-picked list, in the order the teacher arranged it. */
+    questionIds: z.array(z.string().min(1).max(60)).max(CURATED_ASSIGNMENT_MAX).default([]),
+    /**
+     * Sit it against a clock. Null or omitted means untimed.
+     *
+     * A teacher's reason for this is not a student's. A student times a set to
+     * rehearse pace; a teacher times one so that the class sits comparable
+     * conditions — which is also why the limit is copied onto each student's
+     * session when they start rather than read live from the assignment.
+     */
+    timeLimitMinutes: z.int().min(5).max(180).nullable().optional(),
+    dueAt: z.iso.datetime().nullable().optional(),
+  })
+  .refine(
+    (input) => input.sourcePool !== "CURATED" || input.questionIds.length >= CURATED_ASSIGNMENT_MIN,
+    {
+      // Checked here so the teacher is told on the form, rather than after a
+      // round trip that half-created something.
+      path: ["questionIds"],
+      message: `Pick at least ${String(CURATED_ASSIGNMENT_MIN)} questions for a hand-built test.`,
+    },
+  )
+  .refine(
+    (input) =>
+      input.sourcePool !== "CURATED" ||
+      new Set(input.questionIds).size === input.questionIds.length,
+    {
+      // Duplicate ids look harmless in a picker, but a practice session has one
+      // attempt per question id. Letting the same id occupy two slots would make
+      // the second slot impossible to answer independently and leave a test
+      // permanently short of completion.
+      path: ["questionIds"],
+      message: "Pick each question only once for a hand-built test.",
+    },
+  )
+  .refine((input) => input.sourcePool === "CURATED" || input.questionIds.length === 0, {
+    path: ["questionIds"],
+    message: "Question ids only apply when you are picking questions yourself.",
+  });
 
 export type CreateClassroomAssignmentInput = z.infer<typeof createClassroomAssignmentSchema>;
 
@@ -83,6 +147,13 @@ export const studentAssignmentSchema = z.object({
   instructions: z.string().nullable(),
   questionCount: z.int().positive(),
   dueAt: z.iso.datetime().nullable(),
+  /**
+   * Shown before the student starts, never after.
+   *
+   * Finding out there is a clock on the first question is the kind of surprise
+   * that makes a nervous student do worse at something they knew.
+   */
+  timeLimitMinutes: z.int().positive().nullable(),
   chapterName: z.string().nullable(),
   progress: assignmentProgressSchema,
   sessionId: z.string().nullable(),
@@ -112,6 +183,7 @@ export const teacherAssignmentSchema = z.object({
   chapterName: z.string().nullable(),
   questionCount: z.int().positive(),
   sourcePool: assignmentSourcePoolSchema,
+  timeLimitMinutes: z.int().positive().nullable(),
   dueAt: z.iso.datetime().nullable(),
   startedCount: z.int().nonnegative(),
   completedCount: z.int().nonnegative(),

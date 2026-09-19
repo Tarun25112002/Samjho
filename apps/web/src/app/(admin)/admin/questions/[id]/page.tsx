@@ -8,6 +8,7 @@ import { StatusControls } from "@/features/admin/status-controls";
 import { draftFromQuestion } from "@/features/admin/use-question-editor";
 import { ApiClientError } from "@/lib/api-client";
 import { loadAdminChapters, loadAdminQuestion, loadQuestionRevisions } from "@/lib/admin";
+import { INDIA_TIME_ZONE } from "@/lib/india-time";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,9 @@ export default async function AdminQuestionPage({ params }: PageProps) {
             {revisions.map((revision) => (
               <li key={revision.id} className="space-y-1 py-3">
                 <p className="text-text-soft text-xs">
-                  {new Date(revision.createdAt).toLocaleString()}
+                  {new Date(revision.createdAt).toLocaleString("en-IN", {
+                    timeZone: INDIA_TIME_ZONE,
+                  })}
                   {revision.editedByName ? ` · ${revision.editedByName}` : ""}
                   {revision.reason ? ` · ${revision.reason}` : ""}
                 </p>
