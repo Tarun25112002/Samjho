@@ -11,6 +11,7 @@ import { logger } from "./lib/logger.js";
 import { getTokenVerifier, type TokenVerifier } from "./lib/token-verifier.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestContext } from "./middleware/request-context.js";
+import { buildAIGradingRouter } from "./modules/ai/ai.grading.routes.js";
 import { buildAIRouter } from "./modules/ai/ai.routes.js";
 import { buildAnalysisRouter } from "./modules/analysis/analysis.routes.js";
 import { buildEventRouter } from "./modules/analytics/analytics.routes.js";
@@ -155,6 +156,7 @@ function buildApiRouter(verifyToken: TokenVerifier): express.Router {
   router.use("/study-plan", buildStudyPlanRouter(verifyToken));
   router.use("/classrooms", buildClassroomRouter(verifyToken));
   router.use("/ai", buildAIRouter(verifyToken));
+  router.use("/ai/grading", buildAIGradingRouter(verifyToken));
 
   // Its own prefix rather than extra verbs on `/admin/questions`, so a teacher
   // token never reaches the shared bank's routes. See the router for why the

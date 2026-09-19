@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Eyebrow, PageHeader, PageShell, SectionHeading } from "@/components/ui/page";
 import { Card, Chip, Meter, PanelOrbit } from "@/components/ui/surface";
+import { MarkingPanel } from "@/features/ai/marking-panel";
 import { ApiClientError } from "@/lib/api-client";
 import { loadExamResult } from "@/lib/exam";
 import { requireStudent } from "@/lib/me";
@@ -240,6 +241,15 @@ function ResultItem({ item }: { item: ExamResultItem }) {
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {/*
+        Only where there is something to score. An auto-marked answer has its
+        verdict already, and offering to re-mark it would invite a student to
+        argue with the answer key rather than with their own judgement.
+      */}
+      {item.evaluationMode === "PENDING" && item.attemptId !== null ? (
+        <MarkingPanel attemptId={item.attemptId} maxMarks={item.marks} />
       ) : null}
     </Card>
   );

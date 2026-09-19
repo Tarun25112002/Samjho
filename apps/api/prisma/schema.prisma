@@ -1532,6 +1532,21 @@ model QuestionAttempt {
   /// this before deciding the next question's difficulty.
   hintUsed Boolean @default(false)
 
+  /// What the AI grader suggested for a written answer, and what it saw.
+  ///
+  /// Deliberately *beside* `marksAwarded` rather than in it. docs/07 R3 commits
+  /// to AI grading being assistive and never silently trusted: the student is
+  /// the one who awards the marks, and `evaluationMode` stays `SELF` even when
+  /// they accept every suggestion unchanged. These columns exist so that
+  /// "how often does the grader agree with the student" is a query rather than
+  /// a guess — which is the evidence the decision to trust it would need.
+  ///
+  /// `aiGradingJson` holds the per-step verdicts, because agreement on a total
+  /// can hide disagreement on every step that happens to cancel out.
+  aiSuggestedMarks Float?
+  aiGradedAt       DateTime?
+  aiGradingJson    Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
